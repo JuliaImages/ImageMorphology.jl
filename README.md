@@ -25,3 +25,7 @@ bothat
 morphogradient
 morpholaplace
 ```
+
+## Documentation
+
+Please check the top-level documentation at [Images.jl](https://github.com/JuliaImages/Images.jl).
