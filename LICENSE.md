@@ -1,6 +1,6 @@
 The ImageMorphology.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2017: Júlio Hoffimann.
+> Copyright (c) 2013-2017: Tim Holy.
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal
