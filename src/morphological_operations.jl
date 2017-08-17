@@ -1,4 +1,5 @@
 # Erode and dilate support 3x3 regions only (and higher-dimensional generalizations).
+
 """
 ```
 imgd = dilate(img, [region])
@@ -9,7 +10,8 @@ default is 8-connectivity in 2d, 27-connectivity in 3d, etc. You can specify the
 list of dimensions that you want to include in the connectivity, e.g., `region =
 [1,2]` would exclude the third dimension from filtering.
 """
-dilate(img::ImageMeta, region=coords_spatial(img)) = shareproperties(img, dilate!(copy(data(img)), region))
+dilate(img::AbstractArray, region=coords_spatial(img)) = dilate!(copy(img), region)
+
 """
 ```
 imge = erode(img, [region])
@@ -20,8 +22,6 @@ default is 8-connectivity in 2d, 27-connectivity in 3d, etc. You can specify the
 list of dimensions that you want to include in the connectivity, e.g., `region =
 [1,2]` would exclude the third dimension from filtering.
 """
-erode(img::ImageMeta, region=coords_spatial(img)) = shareproperties(img, erode!(copy(data(img)), region))
-dilate(img::AbstractArray, region=coords_spatial(img)) = dilate!(copy(img), region)
 erode(img::AbstractArray, region=coords_spatial(img)) = erode!(copy(img), region)
 
 dilate!(maxfilt, region=coords_spatial(maxfilt)) = extremefilt!(maxfilt, max, region)
