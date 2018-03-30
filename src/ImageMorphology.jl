@@ -14,6 +14,7 @@ export
     tophat,
     bothat,
     morphogradient,
-    morpholaplace
-
+    morpholaplace,
+    thinning
+    
 end # module
