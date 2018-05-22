@@ -95,8 +95,8 @@ end
         #for perfect square
         img = falses(20,20)
 
-        for i in range(7,5)
-            for j in range(7,5)
+        for i=7:7+4
+            for j=7:7+4
                 img[i,j] = img[j,i] = true
             end
         end
@@ -108,15 +108,13 @@ end
         #for + like figure
         img = falses(20,20)
         img1 = falses(size(img))
-        for i in range(8,5)
-            for j in range(4,13)
+        for i=8:8+5
+            for j=4:13+4
                 img[i,j] = true
                 img[j,i] = true
             end
         end
-        for j in range(6,8)
-            img1[10,j] = img1[j,10] = 1
-        end 
+        img1[[111,131,151,171,191,192,193,194,195,211,231,251,271]]  = 1
 
         output = thinning(img)
         @test output == img1

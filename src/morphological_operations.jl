@@ -100,90 +100,72 @@ which is defined as the arithmetic difference between the internal and the exter
 """
 morpholaplace(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) + erode(img, region) - 2img
 
-
 """
-Applies a binary blob thinning operation, to achieve a skeletization of the input image.
-
-The function transforms a binary blob image into a skeletized form using the technique of Zhang-Suen.
+```
+function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool)
+```
+The thining iteration evaluates three conditions in order to determine which pixels of the image should be removed from img.
+The three conditions are explained in:
+Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 """
-
-function thinning_iteration(img::AbstractArray, iter::Int64)
-    marker = falses(size(img))
+function thinning_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
+    marker = trues(size(img))
     h, w = size(img)
-    for i in range(2,h-1)
-        for j in range(2,w-1)
-            p2 = img[i-1][j]
-            p3 = img[i-1][j+1]
-            p4 = img[i][j+1]
-            p5 = img[i+1][j+1]
-            p6 = img[i+1][j]
-            p7 = img[i+1][j-1]
-            p8 = img[i][j-1]
-            p9 = img[i-1][j-1]
-
-            A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1)
-
-            B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9
-            m1 = iter == 0 ? (p2 * p4 * p6) : (p2 * p4 * p8)
-            m2 = iter == 0 ? (p4 * p6 * p8) : (p2 * p6 * p8)
-            if (A == 1 && (B >= 2 && B <= 6) && m1 == 0 && m2 == 0)
-                marker[i,j] = 1
+    for i=2:h-1
+        for j=2:w-1
+            if !img[i,j]
+                continue
             end
-        end
-    end
-    return img & ~marker            
-end    
-
-"""
-'''
-output = thinning(img)
-'''
-The function transforms a binary blob image into a skeletized form using the technique of Zhang-Suen.
-
--  img          = Binary input image
-"""
-
-function thinning_iteration(img::AbstractArray{Bool,2}, iter::Int64)
-    marker = falses(size(img))
-    h, w = size(img)
-    for i in range(2,h-2)
-        for j in range(2,w-2)
+            p1 = img[i-1,j-1]
             p2 = img[i-1,j]
             p3 = img[i-1,j+1]
-            p4 = img[i,j+1]
+            p4 = img[i  ,j+1]
             p5 = img[i+1,j+1]
             p6 = img[i+1,j]
             p7 = img[i+1,j-1]
-            p8 = img[i,j-1]
-            p9 = img[i-1,j-1]
+            p8 = img[i  ,j-1]
+            A  = (!p2  && (p3 || p4)) +
+                 (!p4  && (p5 || p6)) +
+                 (!p6  && (p7 || p8)) +
+                 (!p8  && (p1 || p2))
 
-            A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1)
+            B1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
+            B2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
+            B  = min(B1,B2)
 
-            B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9
-            m1 = iter == 0 ? (p2 * p4 * p6) : (p2 * p4 * p8)
-            m2 = iter == 0 ? (p4 * p6 * p8) : (p2 * p6 * p8)
-            if (A == 1 && (B >= 2 && B <= 6) && m1 == 0 && m2 == 0)
-                marker[i,j] = 1
+            local G3 = false
+            if (odd_iteration)
+                G3 = (p2 || p3 || (!p5)) && p4                
+            else
+                G3 = (p6 || p7 || (!p1)) && p8
+            end
+            if (A == 1) && ((2<= B)  && (B <=3)) && (!G3) 
+                marker[i,j] = false
             end
         end
     end
-    return img.&(.~marker)            
+    img[:] = img[:].&(marker[:])
 end    
+doc"""
+```julia
+function thinning(img::AbstractArray{T}; max_iterations=Inf) where T<:Bool
+```
 
-function thinning(img::AbstractArray)
-    processed = img.>0.5
-    prev = falses(size(img))
+Applies a binary blob thinning operation, to achieve a skeletization of the input image.
+The procedure carries on until max_iterations is achieved or when there are no changes between two consecutives iterations.
 
-    while(count(prev.!=processed)>0)
-        prev = processed
-        processed = thinning_iteration(processed, 0)
-        processed = thinning_iteration(processed, 1)
+The algorithm is described in:
+1. Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
+2. Lam, L., Lee, S. W., & Suen, C. Y. (1992). Thinning methodologies-a comprehensive survey. IEEE Transactions on pattern analysis and machine intelligence, 14(9), 869-885.
+"""
+function thinning(img::AbstractArray{T}; max_iterations::I=0) where T<:Bool where I<:Integer
+    local prev = falses(size(img))
+    local processed = copy(img)
+    local it = 0
+    while  ((max_iterations==0) || (it<max_iterations)) && (sum(prev.!=processed)>0)
+        prev = copy(processed)
+        it = it +1
+        thinning_iteration!(processed, isodd(it))
     end
     return processed    
 end
