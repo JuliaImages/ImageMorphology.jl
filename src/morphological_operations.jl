@@ -108,11 +108,12 @@ The thining iteration evaluates three conditions in order to determine which pix
 The three conditions are explained in:
 Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 """
-function thinning_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
-    marker = trues(size(img))
-    h, w = size(img)
-    for i=2:h-1
-        for j=2:w-1
+function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool)
+    local marker = trues(size(img_ori))
+    h, w = size(img_ori)
+    local img = padarray(img_ori, Fill(false,(1,1),(1,1)))
+    for i=1:h        
+        for j=1:w
             if !img[i,j]
                 continue
             end
@@ -124,14 +125,14 @@ function thinning_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
             p6 = img[i+1,j]
             p7 = img[i+1,j-1]
             p8 = img[i  ,j-1]
-            A  = (!p2  && (p3 || p4)) +
-                 (!p4  && (p5 || p6)) +
-                 (!p6  && (p7 || p8)) +
-                 (!p8  && (p1 || p2))
+            local A  = (!p2  && (p3 || p4)) +
+                (!p4  && (p5 || p6)) +
+                (!p6  && (p7 || p8)) +
+                (!p8  && (p1 || p2))
 
-            B1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
-            B2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
-            B  = min(B1,B2)
+            local B1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
+            local B2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
+            local B  = min(B1,B2)
 
             local G3 = false
             if (odd_iteration)
@@ -140,11 +141,12 @@ function thinning_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
                 G3 = (p6 || p7 || (!p1)) && p8
             end
             if (A == 1) && ((2<= B)  && (B <=3)) && (!G3) 
-                marker[i,j] = false
+                marker[i,j] =false
             end
         end
+        
     end
-    img[:] = img[:].&(marker[:])
+    img_ori[:] =  img_ori[:].&(marker[:])
 end    
 doc"""
 ```julia
