@@ -100,6 +100,21 @@ which is defined as the arithmetic difference between the internal and the exter
 """
 morpholaplace(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) + erode(img, region) - 2img
 
+
+struct FalsePadded
+    img::AbstractArray{Bool,2}
+end
+import Base.getindex
+function getindex(img::FalsePadded, r::Integer, c::Integer)
+    if (r==0) || (c==0)
+        return false
+    elseif (r> size(img.img,1)) || (c>size(img.img,2))
+        return false
+   else
+        return img.img[r,c]
+   end
+end
+
 """
 ```
 function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool)
@@ -111,7 +126,7 @@ Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithm
 function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool)
     local marker = trues(size(img_ori))
     h, w = size(img_ori)
-    local img = padarray(img_ori, Fill(false,(1,1),(1,1)))
+    local img = FalsePadded(img_ori)
     for i=1:h        
         for j=1:w
             if !img[i,j]

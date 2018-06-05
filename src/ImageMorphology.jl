@@ -3,7 +3,6 @@ __precompile__(true)
 module ImageMorphology
 
 using ImageCore
-using ImageFiltering
 include("morphological_operations.jl")
 
 export
