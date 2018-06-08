@@ -101,20 +101,6 @@ which is defined as the arithmetic difference between the internal and the exter
 morpholaplace(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) + erode(img, region) - 2img
 
 
-struct FalsePadded
-    img::AbstractArray{Bool,2}
-end
-import Base.getindex
-function getindex(img::FalsePadded, r::Integer, c::Integer)
-    if (r==0) || (c==0)
-        return false
-    elseif (r> size(img.img,1)) || (c>size(img.img,2))
-        return false
-   else
-        return img.img[r,c]
-   end
-end
-
 """
 ```
 function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool)
@@ -124,11 +110,12 @@ The three conditions are explained in:
 Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 """
 function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool)
-    local marker = trues(size(img_ori))
-    h, w = size(img_ori)
-    local img = FalsePadded(img_ori)
-    for i=1:h        
-        for j=1:w
+    marker = trues(size(img_ori))
+    img = falses(size(img_ori).+2)
+    img[2:end-1,2:end-1]=img_ori
+    h, w = size(img)
+    for i=2:h-1        
+        for j=2:w-1
             if !img[i,j]
                 continue
             end
@@ -155,14 +142,15 @@ function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool
             else
                 G3 = (p6 || p7 || (!p1)) && p8
             end
-            if (A == 1) && ((2<= B)  && (B <=3)) && (!G3) 
-                marker[i,j] =false
+            if (A == 1) && ((2 <= B)  && (B <= 3)) && (!G3) 
+                marker[i-1,j-1] =false
             end
         end
         
     end
     img_ori[:] =  img_ori[:].&(marker[:])
-end    
+end
+
 doc"""
 ```julia
 function thinning(img::AbstractArray{T}; max_iterations=Inf) where T<:Bool
@@ -175,7 +163,7 @@ The algorithm is described in:
 1. Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 2. Lam, L., Lee, S. W., & Suen, C. Y. (1992). Thinning methodologies-a comprehensive survey. IEEE Transactions on pattern analysis and machine intelligence, 14(9), 869-885.
 """
-function thinning(img::AbstractArray{T}; max_iterations::I=0) where T<:Bool where I<:Integer
+function thinning(img::AbstractArray{Bool}; max_iterations::Integer=0) 
     local prev = falses(size(img))
     local processed = copy(img)
     local it = 0
