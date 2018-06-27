@@ -100,16 +100,29 @@ which is defined as the arithmetic difference between the internal and the exter
 """
 morpholaplace(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) + erode(img, region) - 2img
 
+abstract type ThinAlgo end
+
+doc"""
+    struct GuoAlgo <: ThinAlgo end
+
+A thinning operation algorithm.
+
+The procedure carries on until there are no changes between two consecutives iterations.
+
+The algorithm is described in the the page 361 (Algorithm A1) of:
+* Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
+"""
+struct GuoAlgo <: ThinAlgo end
 
 """
 ```
-function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool)
+function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool, algo::GuoAlgo)
 ```
 The thining iteration evaluates three conditions in order to determine which pixels of the image should be removed from img.
-The three conditions are explained in:
-Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
+The three conditions are explained in the page 361 of:
+* Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 """
-function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool)
+function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool, algo::GuoAlgo)
     marker = trues(size(img_ori))
     img = falses(size(img_ori).+2)
     img[2:end-1,2:end-1] = img_ori
@@ -143,26 +156,28 @@ function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool
     img_ori .= img_ori .& marker
 end
 
-doc"""
-```julia
-function thinning(img::AbstractArray{Bool})
-```
-
-Applies a binary blob thinning operation, to achieve a skeletization of the input image.
-The procedure carries on until there are no changes between two consecutives iterations.
-
-The algorithm is described in:
-1. Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
-2. Lam, L., Lee, S. W., & Suen, C. Y. (1992). Thinning methodologies-a comprehensive survey. IEEE Transactions on pattern analysis and machine intelligence, 14(9), 869-885.
-"""
-function thinning(img::AbstractArray{Bool}) 
+function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo) 
     prev = falses(size(img))
     processed = copy(img)
     it = 0
     while prev != processed
         prev = copy(processed)
         it += 1
-        thinning_iteration!(processed, isodd(it))
+        thinning_iteration!(processed, isodd(it), algo)
     end
     return processed
+end
+
+"""
+```
+function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
+```
+Applies a binary blob thinning operation to achieve a skeletization of the input image.
+
+See also:
+* [`GuoAlgo`](@ref)
+"""
+function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
+    # dispatch appropriate implementation
+    thinning_impl(img, algo)
 end
