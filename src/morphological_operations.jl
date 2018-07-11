@@ -116,21 +116,44 @@ struct GuoAlgo <: ThinAlgo end
 
 """
 ```
-function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool, algo::GuoAlgo)
+function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
+```
+Applies a binary blob thinning operation to achieve a skeletization of the input image.
+
+See also:
+* [`GuoAlgo`](@ref)
+"""
+function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
+    # dispatch appropriate implementation
+    thinning_impl(img, algo)
+end
+
+function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo) 
+    prev = falses(size(img))
+    processed = copy(img)
+    it = 0
+    while prev != processed
+        prev = copy(processed)
+        it += 1
+        thinning_iteration!(processed, isodd(it))
+    end
+    return processed
+end
+
+"""
+```
+function thinning_iteration(img::AbstractArray{Bool,2}; odd_iteration::Bool)
 ```
 The thining iteration evaluates three conditions in order to determine which pixels of the image should be removed from img.
 The three conditions are explained in the page 361 of:
 * Guo, Z., & Hall, R. W. (1989). Parallel thinning with two-subiteration algorithms. Communications of the ACM, 32(3), 359-373.
 """
-function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool, algo::GuoAlgo)
-    marker = trues(size(img_ori))
+function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool)
     img = falses(size(img_ori).+2)
     img[2:end-1,2:end-1] = img_ori
     h, w = size(img)
     for j=2:w-1, i=2:h-1
-        if !img[i,j]
-            continue
-        end
+        !img[i,j] && continue
         p1 = img[i-1,j-1]
         p2 = img[i-1,j]
         p3 = img[i-1,j+1]
@@ -143,41 +166,13 @@ function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool
         B1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
         B2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
         B = min(B1, B2)
-        G3 = false
         if odd_iteration
             G3 = (p2 || p3 || (!p5)) && p4
         else
             G3 = (p6 || p7 || (!p1)) && p8
         end
         if (A == 1) && ((2 <= B) && (B <= 3)) && (!G3) 
-            marker[i-1,j-1] = false
+            img_ori[i-1,j-1] = false
         end
     end
-    img_ori .= img_ori .& marker
-end
-
-function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo) 
-    prev = falses(size(img))
-    processed = copy(img)
-    it = 0
-    while prev != processed
-        prev = copy(processed)
-        it += 1
-        thinning_iteration!(processed, isodd(it), algo)
-    end
-    return processed
-end
-
-"""
-```
-function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
-```
-Applies a binary blob thinning operation to achieve a skeletization of the input image.
-
-See also:
-* [`GuoAlgo`](@ref)
-"""
-function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
-    # dispatch appropriate implementation
-    thinning_impl(img, algo)
 end

@@ -15,6 +15,7 @@ export
     bothat,
     morphogradient,
     morpholaplace,
+
     thinning,
     GuoAlgo
     
