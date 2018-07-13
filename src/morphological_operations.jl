@@ -162,16 +162,16 @@ function thinning_iteration!(img_ori::AbstractArray{Bool,2}, odd_iteration::Bool
         p6 = img[i+1,j]
         p7 = img[i+1,j-1]
         p8 = img[i,j-1]
-        A = (!p2 && (p3 || p4)) + (!p4 && (p5 || p6)) + (!p6 && (p7 || p8)) + (!p8 && (p1 || p2))
-        B1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
-        B2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
-        B = min(B1, B2)
+        C = (!p2 && (p3 || p4)) + (!p4 && (p5 || p6)) + (!p6 && (p7 || p8)) + (!p8 && (p1 || p2))
+        N1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
+        N2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
+        N = min(N1, N2)
         if odd_iteration
-            G3 = (p2 || p3 || (!p5)) && p4
+            O = (p2 || p3 || (!p5)) && p4
         else
-            G3 = (p6 || p7 || (!p1)) && p8
+            O = (p6 || p7 || (!p1)) && p8
         end
-        if (A == 1) && ((2 <= B) && (B <= 3)) && (!G3) 
+        if C == 1 && (2 ≤ N ≤ 3) && !O
             img_ori[i-1,j-1] = false
         end
     end
