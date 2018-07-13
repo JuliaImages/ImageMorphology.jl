@@ -89,3 +89,48 @@ end
     Aee = dilate(A) + erode(A) - 2A
     @test Aee == Ae
 end
+
+@testset "Thinning" begin
+
+    #for perfect square
+    img = falses(20,20)
+
+    for i=7:7+4
+        for j=7:7+4
+            img[i,j] = img[j,i] = true
+        end
+    end
+    output = thinning(img)
+
+    @test count(output.==1)==1
+    @test output[9,9]==1
+
+    #for + like figure
+    img = falses(20,20)
+    img1 = falses(size(img))
+    for i=8:8+5
+        for j=4:13+4
+            img[i,j] = true
+            img[j,i] = true
+        end
+    end
+    img1[[111,131,151,171,191,192,193,194,195,211,231,251,271]]  = 1
+
+    output = thinning(img)
+    @test output == img1
+
+    img = thinning(Bool.([1 1 1 1 1 1 ;
+                          0 0 0 0 0 0;
+                          1 1 1 1 1 1;
+                          1 1 1 1 1 1;
+                          0 0 1 1 0 0;
+                          0 0 0 0 0 0 ]))
+    expected = Bool.([1     1     1     1     1     1;
+                       0     0     0     0     0     0;
+                       0     0     0     0     0     0;
+                       1     1     1     1     1     0;
+                       0     0     0     0     0     0;
+                       0     0     0     0     0     0])
+    @test img == expected
+      
+ end

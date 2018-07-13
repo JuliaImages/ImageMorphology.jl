@@ -14,6 +14,9 @@ export
     tophat,
     bothat,
     morphogradient,
-    morpholaplace
+    morpholaplace,
 
+    thinning,
+    GuoAlgo
+    
 end # module
