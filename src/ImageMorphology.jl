@@ -5,6 +5,7 @@ module ImageMorphology
 using ImageCore
 
 include("dilation_and_erosion.jl")
+include("thinning.jl")
 
 export
     dilate,
@@ -14,6 +15,8 @@ export
     tophat,
     bothat,
     morphogradient,
-    morpholaplace
+    morpholaplace,
+
+    thinning
 
 end # module
