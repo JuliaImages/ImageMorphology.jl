@@ -5,6 +5,7 @@ module ImageMorphology
 using ImageCore
 
 include("morphological_operations.jl")
+include("thinning.jl")
 
 export
     dilate,
