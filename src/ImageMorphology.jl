@@ -17,6 +17,8 @@ export
     morphogradient,
     morpholaplace,
 
-    thinning
+    thinning,
+    GuoAlgo
+
 
 end # module

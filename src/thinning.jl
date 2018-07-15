@@ -1,6 +1,6 @@
 abstract type ThinAlgo end
 
-doc"""
+"""
     struct GuoAlgo <: ThinAlgo end
 
 A thinning operation algorithm.
