@@ -1,10 +1,10 @@
-__precompile__(true)
+__precompile__()
 
 module ImageMorphology
 
 using ImageCore
 
-include("morphological_operations.jl")
+include("dilation_and_erosion.jl")
 
 export
     dilate,
