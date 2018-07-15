@@ -27,13 +27,13 @@ erode(img::AbstractArray, region=coords_spatial(img)) = erode!(copy(img), region
 dilate!(maxfilt, region=coords_spatial(maxfilt)) = extremefilt!(maxfilt, max, region)
 erode!(minfilt, region=coords_spatial(minfilt)) = extremefilt!(minfilt, min, region)
 function extremefilt!(A::AbstractArray, select::Function, region=coords_spatial(A))
-    inds = indices(A)
+    inds = axes(A)
     for d = 1:ndims(A)
         if size(A, d) == 1 || !in(d, region)
             continue
         end
-        Rpre = CartesianRange(inds[1:d-1])
-        Rpost = CartesianRange(inds[d+1:end])
+        Rpre = CartesianIndices(inds[1:d-1])
+        Rpost = CartesianIndices(inds[d+1:end])
         _extremefilt!(A, select, Rpre, inds[d], Rpost)
     end
     A

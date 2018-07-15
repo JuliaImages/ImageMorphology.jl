@@ -1,2 +1,2 @@
-julia 0.6
-ImageCore
+julia 0.7
+ImageCore 0.7.0
