@@ -34,17 +34,17 @@ function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo)
     curr = copy(img)
 
     it = 1
-    thinning_iteration!(curr, isodd(it))
+    guo_iteration!(curr, isodd(it))
     while prev != curr
         it += 1
         prev .= curr
-        thinning_iteration!(curr, isodd(it))
+        guo_iteration!(curr, isodd(it))
     end
 
     curr
 end
 
-function thinning_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
+function guo_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
     # pad input image with zeros
     pad = falses(size(img).+2)
     pad[2:end-1,2:end-1] = img
