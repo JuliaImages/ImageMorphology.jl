@@ -29,7 +29,6 @@ function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
 end
 
 function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo)
-    # pad input image
     prev = copy(img)
     curr = copy(img)
 
@@ -64,9 +63,9 @@ function guo_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
         N2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
         N = min(N1, N2)
         if odd_iteration
-            O = (p2 || p3 || (!p5)) && p4
+            O = (p2 || p3 || !p5) && p4
         else
-            O = (p6 || p7 || (!p1)) && p8
+            O = (p6 || p7 || !p1) && p8
         end
         if C == 1 && (2 ≤ N ≤ 3) && !O
             img[i-1,j-1] = false
