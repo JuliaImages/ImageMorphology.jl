@@ -90,58 +90,49 @@ using Test
         Aee = dilate(A) + erode(A) - 2A
         @test Aee == Ae
     end
-    
+
     @testset "Thinning" begin
-        #for perfect square
+        # for □ like figure
         img = falses(20,20)
-
-        for i=7:7+4
-            for j=7:7+4
-                img[i,j] = img[j,i] = true
-            end
+        for i=7:7+4, j=7:7+4
+            img[i,j] = img[j,i] = true
         end
-        output = thinning(img)
+        thin = thinning(img)
+        @test count(thin .== 1) == 1
+        @test thin[9,9] == 1
 
-        @test count(output.==1)==1
-        @test output[9,9]==1
-
-        #for + like figure
+        # for + like figure
         img = falses(20,20)
-        img1 = falses(size(img))
-        for i=8:8+5
-            for j=4:13+4
-                img[i,j] = true
-                img[j,i] = true
-            end
+        for i=8:8+5, j=4:13+4
+            img[i,j] = true
+            img[j,i] = true
         end
-        img1[[111,131,151,171,191,192,193,194,195,211,231,251,271]] .= 1
+        ans = falses(size(img))
+        ans[[111,131,151,171,191,192,193,194,195,211,231,251,271]] .= 1
+        @test thinning(img) == ans
 
-        output = thinning(img)
-        @test output == img1
+        img = Bool.([1 1 1 1 1 1
+                     0 0 0 0 0 0
+                     1 1 1 1 1 1
+                     1 1 1 1 1 1
+                     0 0 1 1 0 0
+                     0 0 0 0 0 0])
+        ans = Bool.([1 1 1 1 1 1
+                     0 0 0 0 0 0
+                     0 0 0 0 0 0
+                     1 1 1 1 1 0
+                     0 0 0 0 0 0
+                     0 0 0 0 0 0])
+        @test thinning(img) == ans
 
-        img = thinning(Bool.([1 1 1 1 1 1 ;
-                              0 0 0 0 0 0;
-                              1 1 1 1 1 1;
-                              1 1 1 1 1 1;
-                              0 0 1 1 0 0;
-                              0 0 0 0 0 0 ]))
-        expected = Bool.([1 1 1 1 1 1;
-                          0 0 0 0 0 0;
-                          0 0 0 0 0 0;
-                          1 1 1 1 1 0;
-                          0 0 0 0 0 0;
-                          0 0 0 0 0 0])
-        @test img == expected
-
-        # Already thinned
-        img = Bool.([0 0 0 0 0 0;
-                     0 0 0 1 1 0;
-                     0 0 1 0 0 0;
-                     0 0 1 0 0 0;
-                     0 0 0 1 0 0;
-                     0 0 0 0 0 0;
-                     0 0 0 0 0 0]);
-        @test img == thinning(img)    
+        # already thinned
+        img = Bool.([0 0 0 0 0 0
+                     0 0 0 1 1 0
+                     0 0 1 0 0 0
+                     0 0 1 0 0 0
+                     0 0 0 1 0 0
+                     0 0 0 0 0 0
+                     0 0 0 0 0 0])
+        @test thinning(img) == img
     end
-
 end
