@@ -1,7 +1,7 @@
 """
     ThinAlgo
 
-A thinning operation algorithm.
+A thinning algorithm.
 """
 abstract type ThinAlgo end
 
@@ -28,36 +28,46 @@ function thinning(img::AbstractArray{Bool}; algo::ThinAlgo=GuoAlgo())
     thinning_impl(img, algo)
 end
 
-function thinning_impl(img::AbstractArray{Bool}, algo::GuoAlgo)
-    prev = copy(img)
-    curr = copy(img)
+function thinning_impl(img::AbstractArray{Bool,2}, algo::GuoAlgo)
+    # pad input image
+    prev = falses(size(img).+2)
+    prev[2:end-1,2:end-1] = img
 
-    it = 1
-    guo_iteration!(curr, isodd(it))
+    # preallocate memory for the mask
+    mask = falses(size(prev))
+
+    # perform single iteration
+    it = 1; curr = copy(prev)
+    guo_iteration!(mask, curr, isodd(it))
+    curr[mask] .= false
+
+    # loop if necessary
     while prev != curr
-        it += 1
-        prev .= curr
-        guo_iteration!(curr, isodd(it))
+        it += 1; prev .= curr
+        guo_iteration!(mask, curr, isodd(it))
+        curr[mask] .= false
     end
 
-    curr
+    # unpad result
+    curr[2:end-1,2:end-1]
 end
 
-function guo_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
-    # pad input image with zeros
-    pad = falses(size(img).+2)
-    pad[2:end-1,2:end-1] = img
-    h, w = size(pad)
-    for j=2:w-1, i=2:h-1
-        !pad[i,j] && continue
-        p1 = pad[i-1,j-1]
-        p2 = pad[i-1,j]
-        p3 = pad[i-1,j+1]
-        p4 = pad[i,j+1]
-        p5 = pad[i+1,j+1]
-        p6 = pad[i+1,j]
-        p7 = pad[i+1,j-1]
-        p8 = pad[i,j-1]
+# update mask with Guo iteration on padded image
+function guo_iteration!(mask::AbstractArray{Bool,2}, img::AbstractArray{Bool,2}, odd_iteration::Bool)
+    # start clean
+    mask .= false
+
+    # loop over pixels and update mask
+    for j=2:size(img,2)-1, i=2:size(img,1)-1
+        img[i,j] || continue
+        p1 = img[i-1,j-1]
+        p2 = img[i-1,j]
+        p3 = img[i-1,j+1]
+        p4 = img[i,j+1]
+        p5 = img[i+1,j+1]
+        p6 = img[i+1,j]
+        p7 = img[i+1,j-1]
+        p8 = img[i,j-1]
         C = (!p2 && (p3 || p4)) + (!p4 && (p5 || p6)) + (!p6 && (p7 || p8)) + (!p8 && (p1 || p2))
         N1 = (p1 || p2) + (p3 || p4) + (p5 || p6) + (p7 || p8)
         N2 = (p2 || p3) + (p4 || p5) + (p6 || p7) + (p8 || p1)
@@ -68,7 +78,7 @@ function guo_iteration!(img::AbstractArray{Bool,2}, odd_iteration::Bool)
             O = (p6 || p7 || !p1) && p8
         end
         if C == 1 && (2 ≤ N ≤ 3) && !O
-            img[i-1,j-1] = false
+            mask[i,j] = true
         end
     end
 end
