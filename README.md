@@ -24,6 +24,7 @@ tophat
 bothat
 morphogradient
 morpholaplace
+thinning
 ```
 
 ## Documentation
