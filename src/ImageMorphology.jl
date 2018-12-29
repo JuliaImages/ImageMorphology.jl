@@ -6,6 +6,7 @@ using ImageCore
 
 include("dilation_and_erosion.jl")
 include("thinning.jl")
+include("imfill.jl")
 
 export
     dilate,
@@ -19,6 +20,7 @@ export
 
     thinning,
     GuoAlgo
+    imfill
 
 
 end # module
