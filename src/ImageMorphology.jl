@@ -19,7 +19,7 @@ export
     morpholaplace,
 
     thinning,
-    GuoAlgo
+    GuoAlgo,
     imfill
 
 
