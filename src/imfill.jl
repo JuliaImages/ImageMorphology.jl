@@ -2,28 +2,24 @@
  Image filling Algorithm
 
  ```
- filled_img = imfill(img, min_size)
- filled_img = imfill(img, min_size, value)
- filled_img = imfill(img, min_size, value, connectivity)
+ filled_img = imfill(img, interval)
+ filled_img = imfill(img, interval, value)
+ filled_img = imfill(img, interval, value, connectivity)
  ```
 
  Connected components of an image is found using flood-fill algorithm and returns a copy of
- the original image after filling objects that are smaller than the specified min_size.
+ the original image after filling objects that falls in the range of interval.
 
 
  Parameters:
 
   -  img            = Input image (Boolean array type)
-  -  min_size       = Minimum size of objects that are not filled.
-  -  value          = Value to be given to the objects that are filled (Default value is 1)
+  -  interval       = objects of size in this range will be filled with False
   -  connectivity   = connectivity takes the same values as in label_components (Default value is 1:ndims(img))
 
  """
 
-  function imfill(img::BitArray, min_size::Int, threshold::AbstractFloat=0.0, value::Int=1, connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
-     if min_size == 0 || min_size == 1
-         return img
-     end
+  function imfill(img::BitArray, interval::Tuple{Int,Int}=(0,64), connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
 
      labels = label_components(img,connectivity)
 
@@ -32,12 +28,8 @@
 
      new_img = similar(img)
      for ind in eachindex(img)
-         if img[ind] == 0
-             if count_labels[labels[ind]] < min_size
-                 new_img[ind] = value
-             else
-                 new_img[ind] = 0
-             end
+         if img[ind] == true && count_labels[labels[ind]] in interval[1]:interval[2]
+            new_img[ind] = false
          else
              new_img[ind] = img[ind]
          end
