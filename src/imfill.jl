@@ -14,21 +14,20 @@
  Parameters:
 
   -  img            = Input image (Boolean array type)
-  -  interval       = objects of size in this range will be filled with False
+  -  interval       = objects of size in this range will be filled with False (default value is (0,64) )
   -  connectivity   = connectivity takes the same values as in label_components (Default value is 1:ndims(img))
 
  """
 
-  function imfill(img::BitArray, interval::Tuple{Int,Int}=(0,64), connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
+  function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}=(0,64), connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
 
      labels = label_components(img,connectivity)
 
-     number_labels = unique(labels)
-     count_labels = Dict([(i,count(x->x==i,labels)) for i in number_labels])
+     count_labels = Dict([(i,count(x->x==i,labels)) for i in unique(labels)])
 
      new_img = similar(img)
      for ind in eachindex(img)
-         if img[ind] == true && count_labels[labels[ind]] in interval[1]:interval[2]
+         if img[ind] == true && interval[1] <= count_labels[labels[ind]] <= interval[2]
             new_img[ind] = false
          else
              new_img[ind] = img[ind]
