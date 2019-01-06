@@ -9,17 +9,23 @@
 
  Connected components of an image is found using flood-fill algorithm and returns a copy of
  the original image after filling objects that falls in the range of interval.
+ For filling objects, represent the holes(part to be filled) with True in your array.
 
 
  Parameters:
 
   -  img            = Input image (Boolean array type)
-  -  interval       = objects of size in this range will be filled with False (default value is (0,64) )
+  -  interval       = objects of size in this range will be filled with False
   -  connectivity   = connectivity takes the same values as in label_components (Default value is 1:ndims(img))
 
  """
 
-  function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}=(0,64), connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
+  function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
+
+     if interval[1] > interval[2] || interval[1] < 0 || interval[2] < 0
+ 	print("Invalid Interval")
+        return
+     end
 
      labels = label_components(img,connectivity)
 

@@ -135,4 +135,38 @@ using Test
                      0 0 0 0 0 0])
         @test thinning(img) == img
     end
+
+     @testset "imfill" begin
+	#2 Dimensional case
+        image = Bool.([0 0 0 0 0 0 1 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 1 0 0 1 1 0 0 0 0
+             	     0 1 1 1 0 1 0 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 0 0 0 0 0 0 1 1 1
+             	     0 0 0 0 0 0 0 1 0 1
+             	     0 0 0 0 0 0 0 1 1 1])
+        answer = Bool.([0 0 0 0 0 0 1 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 1 1 1 1 1 0 0 0 0
+             	     0 0 0 0 0 0 0 1 1 1
+             	     0 0 0 0 0 0 0 1 1 1
+             	     0 0 0 0 0 0 0 1 1 1])
+	@test imfill(.!image, (0,2)) == (.!answer)
+
+	#3 Dimensional case
+        A = zeros(Bool,3,10,10)
+	A[1,:,:] = image
+	A[2,:,:] = image
+	A[3,:,:] = image
+
+	B = zeros(Bool,3,10,10)
+	B[1,:,:] = answer
+	B[2,:,:] = answer
+	B[3,:,:] = answer
+	
+	@test imfill(.!A, (0,2)) == (.!B)
+     end	
 end
