@@ -20,11 +20,10 @@
 
  """
 
-  function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
+function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
 
      if interval[1] > interval[2] || interval[1] < 0 || interval[2] < 0
- 	print("Invalid Interval")
-        return
+ 	throw(DomainError(interval,"Interval must be non-negative and in format (min_range,max_range)"))
      end
 
      labels = label_components(img,connectivity)
