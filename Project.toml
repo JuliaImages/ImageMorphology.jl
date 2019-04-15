@@ -1,0 +1,16 @@
+name = "ImageMorphology"
+uuid = "8c0af99c-5f10-11e9-23dc-3302b17e12f9"
+version = "0.1.2"
+
+[deps]
+ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
+
+[compat]
+ImageCore = "^0.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
