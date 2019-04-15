@@ -149,6 +149,6 @@ using Test
                      0 1 0 1 0
                      0 0 0 0 0])
 
-        @test skeletonize(img, MedialAxis()) == ans
+        @test skeletonize(img, MedialAxisTransform()) == ans
     end
 end

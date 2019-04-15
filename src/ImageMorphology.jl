@@ -5,8 +5,8 @@ module ImageMorphology
 using ImageCore
 using Images
 
-abstract type SkeletonizationAlgo end
-struct MedialAxis <: SkeletonizationAlgo end
+abstract type AbstractSkeletonizationAlgorithm end
+struct MedialAxisTransform <: AbstractSkeletonizationAlgorithm end
 
 
 include("dilation_and_erosion.jl")
@@ -21,7 +21,7 @@ export
     bothat,
     morphogradient,
     morpholaplace,
-    MedialAxis,
+    MedialAxisTransform,
     skeletonize,
     thinning,
     GuoAlgo
