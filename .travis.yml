@@ -5,7 +5,8 @@ os:
   - osx
 
 julia:
-  - 0.7
+  - 1.0
+  - 1.1
   - nightly
 
 notifications:
@@ -16,8 +17,8 @@ matrix:
   - julia: nightly
 
 script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes --color=yes -e 'Pkg.clone(pwd()); Pkg.build("ImageMorphology"); Pkg.test("ImageMorphology"; coverage=true)'
+  - julia --check-bounds=yes --color=yes --project -e 'using Pkg; Pkg.build(); Pkg.test(; coverage=true);'
 
 after_success:
-  - julia -e 'cd(Pkg.dir("ImageMorphology")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+
