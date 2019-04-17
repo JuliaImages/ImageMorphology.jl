@@ -135,4 +135,20 @@ using Test
                      0 0 0 0 0 0])
         @test thinning(img) == img
     end
+    @testset "Skeletonization" begin
+        img = Bool.([0 0 0 0 0
+                     0 1 1 1 0
+                     0 1 1 1 0
+                     0 1 1 1 0
+                     0 1 1 1 0
+                     0 0 0 0 0])
+        ans = Bool.([0 0 0 0 0
+                     0 1 0 1 0
+                     0 0 1 0 0
+                     0 0 1 0 0
+                     0 1 0 1 0
+                     0 0 0 0 0])
+
+        @test skeletonize(img, MedialAxisTransform()) == ans
+    end
 end
