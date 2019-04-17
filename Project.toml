@@ -1,5 +1,5 @@
 name = "ImageMorphology"
-uuid = "8c0af99c-5f10-11e9-23dc-3302b17e12f9"
+uuid = "787d08f9-d448-5407-9aad-5290dd7ab264"
 version = "0.2.0"
 
 [deps]
