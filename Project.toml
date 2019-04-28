@@ -1,13 +1,13 @@
 name = "ImageMorphology"
 uuid = "787d08f9-d448-5407-9aad-5290dd7ab264"
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 
 [compat]
-ImageCore = "^0.7"
-julia = ">= 1.0"
+ImageCore = ">= 0.7"
+julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
