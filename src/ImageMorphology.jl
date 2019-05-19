@@ -24,6 +24,11 @@ export
     # connected.jl
     label_components,
     label_components!,
+    component_boxes,
+    component_lengths,
+    component_indices,
+    component_subscripts,
+    component_centroids,
 
     # convexhull.jl
     convexhull,
