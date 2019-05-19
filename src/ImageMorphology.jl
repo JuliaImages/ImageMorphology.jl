@@ -4,6 +4,8 @@ module ImageMorphology
 
 using ImageCore
 
+include("convexhull.jl")
+
 include("dilation_and_erosion.jl")
 include("thinning.jl")
 
@@ -17,6 +19,10 @@ export
     morphogradient,
     morpholaplace,
 
+    # convexhull.jl
+    convexhull,
+
+    # thinning.jl
     thinning,
     GuoAlgo
 
