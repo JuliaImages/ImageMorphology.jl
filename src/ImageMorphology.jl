@@ -2,6 +2,7 @@ __precompile__()
 
 module ImageMorphology
 
+using FixedPointNumbers, Colors # TODO: remove these dependency in 0.3
 using ImageCore
 using Base.Cartesian # TODO: delete this
 
