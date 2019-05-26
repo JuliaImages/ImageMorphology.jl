@@ -1,5 +1,4 @@
 using ImageMorphology
-using Images
 using Test
 
 @testset "ImageMorphology" begin
