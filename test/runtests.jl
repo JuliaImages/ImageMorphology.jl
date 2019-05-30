@@ -6,4 +6,5 @@ using Test
     include("connected.jl")
     include("dilation_and_erosion.jl")
     include("thinning.jl")
+    include("imfill.jl")
 end

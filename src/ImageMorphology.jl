@@ -11,6 +11,7 @@ include("connected.jl")
 
 include("dilation_and_erosion.jl")
 include("thinning.jl")
+include("imfill.jl")
 
 export
     dilate,
@@ -36,7 +37,8 @@ export
 
     # thinning.jl
     thinning,
-    GuoAlgo
+    GuoAlgo,
+    imfill
 
 
 end # module

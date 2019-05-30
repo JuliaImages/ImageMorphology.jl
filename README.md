@@ -26,6 +26,7 @@ bothat
 morphogradient
 morpholaplace
 thinning
+imfill
 ```
 
 ## Documentation
