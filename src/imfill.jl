@@ -15,7 +15,7 @@
  Parameters:
 
   -  img            = Input image (Boolean array type)
-  -  interval       = objects of size in this range will be filled with False
+  -  interval       = objects of size in this range will be filled with `false`
   -  connectivity   = connectivity takes the same values as in label_components (Default value is 1:ndims(img))
 
  """
