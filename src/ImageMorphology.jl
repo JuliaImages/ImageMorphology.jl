@@ -15,7 +15,9 @@ include("imfill.jl")
 
 export
     dilate,
+    dilate!,
     erode,
+    erode!,
     opening,
     closing,
     tophat,
