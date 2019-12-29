@@ -6,7 +6,7 @@ os:
 
 julia:
   - 1.0
-  - 1.1
+  - 1
   - nightly
 
 notifications:
@@ -21,4 +21,3 @@ script:
 
 after_success:
   - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-
