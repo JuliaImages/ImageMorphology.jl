@@ -58,7 +58,7 @@ function guo_iteration!(mask::AbstractArray{Bool,2}, img::AbstractArray{Bool,2},
     mask .= false
 
     # loop over pixels and update mask
-    for j=2:size(img,2)-1, i=2:size(img,1)-1
+    @inbounds for j=2:size(img,2)-1, i=2:size(img,1)-1
         img[i,j] || continue
         p1 = img[i-1,j-1]
         p2 = img[i-1,j]
