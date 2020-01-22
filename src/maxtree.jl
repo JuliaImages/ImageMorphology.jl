@@ -417,8 +417,6 @@ function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Int
     return filter!(offset -> 0 < sum(abs, offset) <= connectivity, vec(offsets))
 end
 
-using InteractiveUtils
-
 """
 Build the max tree from an image.
 
