@@ -1,54 +1,51 @@
-"""max_tree.py - max_tree representation of images.
+"""
+Max-tree morphological representation of an image.
 
-This module provides operators based on the max-tree representation of images.
-A grayscale image can be seen as a pile of nested sets, each of which is the
-result of a threshold operation. These sets can be efficiently represented by
-max-trees, where the inclusion relation between connected components at
-different levels are represented by parent-child relationships.
+# Type parameters
+- `N`: the dimensions of the source image
+- `A`: the type of the `axes(image)`
 
-These representations allow efficient implementations of many algorithms, such
-as attribute operators. Unlike morphological openings and closings, these
+# Details
+Let's consider image *thresholding* operation. The result is the image mask s.t.
+``image[p] ≥ threshold`` for all ``p`` in the mask. This mask could also be
+viewed as a set of connected components. When *image thresholding* is
+sequentially applied for all possible thresholds, it generates a collection of
+connected components that could be organized into a hierarchical structure
+called *component tree*. A connected component at one threshold is a parent to
+a component at the higher threshold if the latter is a subset of the first.
+
+A *max-tree* is an efficient representation of the *component tree*.
+A connected component at one level is represented by the single *reference pixel*
+from this level, which is the parent to all other pixels of that level and
+to the *reference pixel* of the level above.
+
+The *max-tree* is the basis for many morphological operators,
+namely connected operators. Unlike morphological openings and closings, these
 operators do not require a fixed structuring element, but rather act with a
 flexible structuring element that meets a certain criterion.
 
-This implementation provides functions for:
-1. max-tree generation
-2. area openings / closings
-3. diameter openings / closings
-4. local maxima
+# See also
+[`area_opening`](@ref), [`area_closing`](@ref),
+[`diameter_opening`](@ref), [`diameter_closing`](@ref).
 
-References:
-    .. [1] Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-           Connected Operators for Image and Sequence Processing.
-           IEEE Transactions on Image Processing, 7(4), 555-570.
-           :DOI:10.1109/83.663500
-    .. [2] Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A.,
-           Bertin, E. (2007). Effective Component Tree Computation with
-           Application to Pattern Recognition in Astronomical Imaging.
-           In International Conference on Image Processing (ICIP) (pp. 41-44).
-           :DOI:10.1109/ICIP.2007.4379949
-    .. [3] Najman, L., & Couprie, M. (2006). Building the component tree in
-           quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-           3531-3539.
-           :DOI:10.1109/TIP.2006.877518
-    .. [4] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-           Component Tree Computation Algorithms. IEEE Transactions on Image
-           Processing, 23(9), 3885-3895.
-           :DOI:10.1109/TIP.2014.2336551
-"""
-
-"""_max_tree.pyx - building a max-tree from an image.
-
-This is an implementation of the max-tree, which is a morphological
-representation of the image. Many morphological operators can be built
-from this representation, namely attribute openings and closings.
-
-This file also contains implementations of max-tree based filters and
-functions to characterize the tree components.
-"""
-
-"""
-Max-tree representation of an image.
+# References
+ - Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
+   Connected Operators for Image and Sequence Processing.
+   IEEE Transactions on Image Processing, 7(4), 555-570.
+   :DOI:10.1109/83.663500
+ - Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A.,
+   Bertin, E. (2007). Effective Component Tree Computation with
+   Application to Pattern Recognition in Astronomical Imaging.
+   In International Conference on Image Processing (ICIP) (pp. 41-44).
+   :DOI:10.1109/ICIP.2007.4379949
+ - Najman, L., & Couprie, M. (2006). Building the component tree in
+   quasi-linear time. IEEE Transactions on Image Processing, 15(11),
+   3531-3539.
+   :DOI:10.1109/TIP.2006.877518
+ - Carlinet, E., & Geraud, T. (2014). A Comparative Review of
+   Component Tree Computation Algorithms. IEEE Transactions on Image
+   Processing, 23(9), 3885-3895.
+   :DOI:10.1109/TIP.2014.2336551
 """
 struct MaxTree{N,A}
     """
@@ -57,54 +54,57 @@ struct MaxTree{N,A}
     axes::A
 
     """
+    If `false`, the tree is constructed from the smallest to the largest values,
+    the tree root being the smallest (darkest) pixel.
+    Otherwise, if `true`, the direction is from large to small values.
+    """
+    rev::Bool
+
+    """
     Array of the same shape as the source image.
     Each value is the linear index of the parent pixel in the max-tree.
     """
     parents::Array{Int,N}
 
     """
-    Vector of the same length as the source image.
-    Each element corresponds to linear index of the pixel in the image.
-    The vector encodes the order of elements in the tree:
-    a parent of a pixel always comes before the element itself.
-    More formally: if `i` comes before `j`, then `j` cannot be the parent of `i`.
+    The order of the elements in the tree, from root to leaves.
+    Each element corresponds to the linear index of the pixel in the image.
+    A parent of a pixel always comes before the pixel itself, i.e.
+    if index `i` comes before `j`, then `j`-th pixel cannot be
+    the parent of `i`-th pixel.
     """
     traverse::Vector{Int}
 
     # create uninitialized MaxTree for image
-    MaxTree{N}(image::AbstractArray{<:Any, N}) where N =
-        new{N, typeof(axes(image))}(axes(image), similar(image, Int),
+    MaxTree{N}(image::AbstractArray{<:Any, N}, rev::Bool) where N =
+        new{N, typeof(axes(image))}(axes(image), rev, similar(image, Int),
                                     Vector{Int}(undef, length(image)))
 end
 
+Base.ndims(::Type{<:MaxTree{N}}) where N = N
+Base.ndims(maxtree::MaxTree) = ndims(typeof(maxtree))
 Base.axes(maxtree::MaxTree) = maxtree.axes
 Base.length(maxtree::MaxTree) = length(maxtree.parents)
 Base.size(maxtree::MaxTree) = size(maxtree.parents)
+
+"""
+    root_index(maxtree::MaxTree) -> Int
+
+Linear index of the root pixel.
+"""
 root_index(maxtree::MaxTree) = maxtree.traverse[1]
 
-"""
-Get the path to root of the current tree starting from `index`.
-
-Here, we do without path compression and accept the higher complexity, but
-the function is inline and avoids some overhead induced by its recursive
-version.
-
-Parameters
-----------
-parent : The array containing parent relationships.
-index :  The index of which we want to find the root.
-
-Returns
--------
-root : int
-    The root found from ``index``.
-"""
-@inline function rootpath!(path::Vector{Int}, parents::AbstractArray{<:Integer}, index::Integer)
+# Gets the path to the root of the max-tree (defined by `ancestors`) starting from
+# `node`. The indices of the nodes along the path are stored into `path`.
+# Returns the index of the root
+@inline function rootpath!(path::Vector{Int},
+                           ancestors::AbstractArray{<:Integer},
+                           node::Integer)
     empty!(path)
-    p = index
+    p = node
     @label next
     push!(path, p)
-    @inbounds q = parents[p]
+    @inbounds q = ancestors[p]
     if p != q
         p = q
         @goto next
@@ -112,19 +112,11 @@ root : int
     return p
 end
 
-"""
-Corrects the given `maxtree`, so that every node's parent is a canonical node.
-
-The parent of a non-canonical pixel is a canonical pixel.
-The parent of a canonical pixel is also a canonical pixel with a different
-value. There is exactly one canonical pixel for each component in the
-component tree.
-
-Parameters
-----------
-maxtree : The max-tree of the same shape as the image
-image : The source image of `maxtree`
-"""
+# Corrects `maxtree.parents`, so that the parent of every pixel
+# is a canonical node.
+#
+# A canonical node ``p`` is either a root of the max-tree, or
+# ``image(parent(p)) != image(p)``
 function canonize!(maxtree::MaxTree{N}, image::AbstractArray{<:Any, N}) where N
     @assert size(maxtree) == size(image)
     parents = maxtree.parents
@@ -137,35 +129,25 @@ function canonize!(maxtree::MaxTree{N}, image::AbstractArray{<:Any, N}) where N
     return maxtree
 end
 
-"""
-Checks whether a neighbor of a given pixel is inside the image.
-
-Parameters
-----------
-offset: the offsets of each cartesian index component of the pixel
-index : index of the image pixel
-axes : image axes
-
-Returns
--------
-is_neighbor : uint8
-    0 if the neighbor falls outside the image, 1 otherwise.
-"""
-@generated function isvalid_offset(offset::NTuple{N, Int},
-                                   index::CartesianIndex{N},
-                                   axes::NTuple{N}) where N
+# Checks whether the `pixel` + `offset` is still a valid pixel
+# contained inside the image area defined by `axes`.
+@generated isvalid_offset(offset::NTuple{N, Int}, pixel::CartesianIndex{N},
+                          axes::NTuple{N}) where N =
     quote
-        Base.Cartesian.@nall $N i -> in(index[i] + offset[i], axes[i])
+        Base.Cartesian.@nall $N i -> in(pixel[i] + offset[i], axes[i])
     end
-end
-
-isvalid_offset(offset::NTuple{N, Int}, index::Integer, axes::NTuple{N}) where N =
-    isvalid_offset(offset, LinearIndices(axes)[index], axes)
 
 """
-Compute the area of all max-tree components.
+    areas(maxtree::MaxTree) -> Vector{Int}
 
-This attribute is used for area opening and closing
+Computes the areas of all `maxtree` components.
+
+# Returns
+The vector of component areas. The `i`-th element is the area (in pixels) of
+the component that is represented by the reference pixel with linear index `i`.
+
+# See also
+[`diameters`](@ref), [`area_opening`](@ref), [`area_closing`](@ref).
 """
 function areas(maxtree::MaxTree)
     areas = fill(1, length(maxtree)) # start with 1-pixel areas
@@ -178,9 +160,18 @@ function areas(maxtree::MaxTree)
 end
 
 """
-Compute the bounding box extension of all max-tree components.
+    boundingboxes(maxtree::MaxTree) -> Matrix{Int}
 
-This attribute is used for diameter opening and closing.
+Computes the minimal bounding boxes of all `maxtree` components.
+
+# Returns
+The matrix, where the `i`-th column encodes the bounding box of the subtree
+with the root at the `i`-th pixel. The first ``N`` elements of the column
+define the minimal cartesian index of the bounding box, the last ``N``
+elements are its maximal cartesian index.
+
+# See also
+[`diameters`](@ref).
 """
 function boundingboxes(maxtree::MaxTree{N}) where N
     # initialize bboxes
@@ -202,44 +193,40 @@ function boundingboxes(maxtree::MaxTree{N}) where N
     return bboxes
 end
 
+"""
+    diameters(maxtree::MaxTree) -> Vector{Int}
+
+Computes the "diameters" of all `maxtree` components.
+
+"Diameter" of the *max-tree* connected component is the length of
+the widest side of the component's bounding box.
+
+# Returns
+The `i`-th element of the result is the "diameter" of the `i`-th component.
+
+# See also
+[`boundingboxes`](@ref), [`areas`](@ref),
+[`diameter_opening`](@ref), [`diameter_closing`](@ref).
+"""
 diameters(maxtree::MaxTree{N}) where N =
     [maximum(ntuple(i -> bbox[i+N] - bbox[i] + 1, Val{N}()))
      for bbox in eachcol(boundingboxes(maxtree))]
 
-"""
-Find the local maxima in image from the max-tree representation.
-
-Parameters
-----------
-
-image : array of arbitrary type
-    The flattened image pixels.
-output : array of the same shape and type as image.
-    The output image must contain only ones.
-parent : array of int
-    Image of the same shape as the input image. The value
-    at each pixel is the parent index of this pixel in the max-tree
-    reprentation.
-sorted_indices : array of int
-    List of length = number of pixels. Each element
-    corresponds to one pixel index in the image. It encodes the order
-    of elements in the tree: a parent of a pixel always comes before
-    the element itself. More formally: i < j implies that j cannot be
-    the parent of i.
-"""
-# _max_tree_local_maxima cacluates the local maxima from the max-tree
-# representation this is interesting if the max-tree representation has
-# already been calculated for other reasons. Otherwise, it is not the most
-# efficient method. If the parameter label is True, the minima are labeled.
-function local_maxima!(output::AbstractArray{<:Any, N},
-                       image::AbstractArray{<:Any, N},
-                       maxtree::MaxTree{N}) where N
-    (size(image) == size(maxtree)) || throw(DimensionMismatch())
+# Cacluates the local maxima or minima of the image using # the max-tree
+# representation (maxima if maxtre.rev=false, minima otherwise).
+# It's not the most effecient method for extrema calculation, but could be
+# useful if the max-tree is already calculated.
+# Each minima/maxima region is labeled with the unique id (1 is the global
+# maximum/minimum)
+function local_extrema!(output::AbstractArray{<:Any, N},
+                        image::AbstractArray{<:Any, N},
+                        maxtree::MaxTree{N}) where N
+    (axes(image) == axes(maxtree)) || throw(DimensionMismatch())
     (size(output) == size(image)) || throw(DimensionMismatch())
 
-    next_label = 1
-    for p in Iterators.reverse(maxtree.traverse)
-        q = parent[p]
+    next_label = one(eltype(output))
+    @inbounds for p in Iterators.reverse(maxtree.traverse)
+        q = maxtree.parents[p]
         # if p is canonical (parent has a different value)
         if image[p] != image[q]
             output[q] = 0
@@ -253,8 +240,8 @@ function local_maxima!(output::AbstractArray{<:Any, N},
         end
     end
 
-    for p in Iterators.reverse(maxtree.traverse)
-        q = parent[p]
+    @inbounds for p in Iterators.reverse(maxtree.traverse)
+        q = maxtree.parents[p]
         # if p is not canonical (parent has the same value)
         if image[p] == image[q]
             # in this case we propagate the value
@@ -266,41 +253,38 @@ function local_maxima!(output::AbstractArray{<:Any, N},
 end
 
 """
-Apply a direct filtering.
+    direct_filter!(output::AbstractArray, image::AbstractArray,
+                   maxtree::MaxTree, attrs::AbstractVector, min_attr) -> output
 
-This produces an image in which for all possible thresholds, each connected
-component has the specified attribute value greater than that threshold.
-This is the basic function called by :func:`area_opening`,
-:func:`diameter_opening`, and similar.
+Applies a direct filtering of the `image` and stores the result in `output`.
 
-For :func:`area_opening`, for instance, the attribute is the area.  In this
-case, an image is produced for which all connected components for all
-thresholds have at least an area (pixel count) of the threshold given by
-the user.
+Produces an image in which all components of its max-tree representation
+have the specified attribute value no less than `min_attr`. It's done by
+replacing the pixels of the component that has smaller attribute value with
+the value of the reference pixel of its first valid ancestor.
 
-Parameters
-----------
+# Arguments
+- `maxtree::MaxTree{N}`: pre-built max-tree of the `image`
+- `attrs::AbstractVector`: `attrs[i]` is the attribute value for the ``i``-th
+   component of the tree (``i`` being the linear index of its *reference pixel*)
 
-image : array
-    The flattened image pixels.
-output : array, same size and type as `image`
-    The array into which to write the output values. **This array will be
-    modified in-place.**
-maxtree : max-tree of `image`
-attrs : array of float
-    Contains the attributes computed for the max-tree.
-min_attr : float
-    The threshold to be applied to the attribute.
+# Details
+This function is the basis for [`area_opening`](@ref), [`diameter_opening`](@ref)
+and similar transformations.
+E.g. for [`area_opening`](@ref) the attribute is the area of the components.
+In this case, the max-tree components of the `output` have area no smaller
+than `min_attr` pixels.
 """
-function direct_filter!(output::AbstractArray{T1, N},
-                        image::AbstractArray{T2, N},
-                        maxtree::MaxTree{N},
-                        attrs::AbstractVector{<:Number},
-                        min_attr::Number) where {T1, T2, N}
+function direct_filter!(output::AbstractArray, image::AbstractArray,
+                        maxtree::MaxTree,
+                        attrs::AbstractVector, min_attr)
+    # should have been already checked by higher-level functions
     @assert axes(output) == axes(image)
     @assert axes(image) == axes(maxtree)
     @assert length(attrs) == length(maxtree)
+
     p_root = root_index(maxtree)
+    # FIXME allow specifying the output values when root attribute is < min_attr
     output[p_root] = attrs[p_root] < min_attr ? 0 : image[p_root]
     parents = maxtree.parents
 
@@ -321,33 +305,34 @@ function direct_filter!(output::AbstractArray{T1, N},
     return output
 end
 
-# _max_tree is the main function. It allows to construct a max
-# tree representation of the image.
 """
-Rebuilds `maxtree` to be the max-tree for `image`.
+    rebuild!(maxtree::MaxTree, image::AbstractArray,
+             neighbors::AbstractVector{NTuple}) -> maxtree
 
-Parameters
-----------
-image : array
-    The flattened image pixels.
-mask : array of int
-    An array of the same shape as `image` where each pixel contains a
-    nonzero value if it is to be considered for the filtering.  NOTE: it is
-    *essential* that the border pixels (those with neighbors falling
-    outside the volume) are all set to zero, or segfaults could occur.
-structure : array of int
-    A list of coordinate offsets to compute the raveled coordinates of each
-    neighbor from the raveled coordinates of the current pixel.
+Rebuilds the `maxtree` for the `image` using `neighbors` as the pixel
+connectivity specification.
+
+# Arguments
+- `neighbors`: the vector of the offsets (``o_i``) to the cartesian index of
+   the pixel (``p``), so that ``p + o_i`` is the cartesian index of the ``i``-th
+   neighbor of ``p``.
+
+# Details
+The pixels in the connected components generated by the method should be
+connected to each other by a path through neighboring pixels (as defined by
+`neighbors`).
+
+# See also
+[`MaxTree`](@ref)
 """
 function rebuild!(maxtree::MaxTree{N},
                   image::AbstractArray{<:Number, N},
                   #=mask::AbstractArray{Bool, N},=#
-                  neighbors::AbstractVector{NTuple{N, Int}};
-                  rev::Bool = false) where N
+                  neighbors::AbstractVector{NTuple{N, Int}}) where N
     # pixels need to be sorted according to their gray level.
-    sortperm!(maxtree.traverse, vec(image), rev=rev)
+    sortperm!(maxtree.traverse, vec(image), rev=maxtree.rev)
     # some sufficiently inner point
-    center = CartesianIndex{N}(ntuple(i -> size(image, i) ÷ 2, Val{N}()))
+    center = CartesianIndex{N}(ntuple(i -> 1 + size(image, i) ÷ 2, Val{N}()))
     # offsets for linear indices (note that they are sorted in ascending order)
     neighbor_offsets = getindex.(Ref(LinearIndices(image)),
         [CartesianIndex{N}(ntuple(i -> center[i] + n[i], Val{N}())) for n in neighbors]) .-
@@ -356,7 +341,7 @@ function rebuild!(maxtree::MaxTree{N},
     # initialization of the image parent
     parents = fill!(maxtree.parents, 0) |> vec
     roots = fill!(similar(parents), 0) # temporary array containing current roots
-    rootpath = Vector{Int}() # temp array to hold the path to the current root
+    rootpath = Vector{Int}() # temp array to hold the path to the current root within ancestors
     cindexes = CartesianIndices(maxtree.parents)
 
     # traverse the array in reversed order (from highest value to lowest value)
@@ -373,7 +358,7 @@ function rebuild!(maxtree::MaxTree{N},
             root = rootpath!(rootpath, roots, index) # neighbor's root
             if (root != p) || (length(rootpath) > 1) # attach neighbor's root to the p
                 parents[root] = p
-                roots[rootpath] .= p
+                roots[rootpath] .= p # also attach the ancestral nodes of neighbor to p
             end
         end
     end
@@ -384,33 +369,10 @@ function rebuild!(maxtree::MaxTree{N},
     return canonize!(maxtree, image)
 end
 
-"""
-Convert any valid connectivity to a structuring element and offset.
-
-Parameters
-----------
-image_dim : int
-    The number of dimensions of the input image.
-connectivity : int, array, or None
-    The neighborhood connectivity. An integer is interpreted as in
-    ``scipy.ndimage.generate_binary_structure``, as the maximum number
-    of orthogonal steps to reach a neighbor. An array is directly
-    interpreted as a structuring element and its shape is validated against
-    the input image shape. ``None`` is interpreted as a connectivity of 1.
-offset : tuple of int, or None
-    The coordinates of the center of the structuring element.
-Returns
--------
-c_connectivity : array of bool
-    The structuring element corresponding to the input `connectivity`.
-offset : array of int
-    The offset corresponding to the center of the structuring element.
-Raises
-------
-ValueError:
-    If the image dimension and the connectivity or offset dimensions don't
-    match.
-"""
+# generates a vector of offsets to the CartesianIndex that defines
+# the neighborhood of the pixel in an N-dimensional image.
+# `connectivity` is the maximal number of orthogonal steps
+# (+1/-1 to a single dimension) that are required to reach a neighbor.
 function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Integer) where N
     cis = CartesianIndices(ntuple(_ -> 3, Val{N}()))
     offsets = [Tuple(ci) .- 2 for ci in cis]
@@ -418,65 +380,32 @@ function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Int
 end
 
 """
-Build the max tree from an image.
+    MaxTree(image::AbstractArray; [connectivity=1], [rev=false]) -> MaxTree
 
-Component trees represent the hierarchical structure of the connected
-components resulting from sequential thresholding operations applied to an
-image. A connected component at one level is parent of a component at a
-higher level if the latter is included in the first. A max-tree is an
-efficient representation of a component tree. A connected component at
-one level is represented by one reference pixel at this level, which is
-parent to all other pixels at that level and to the reference pixel at the
-level above. The max-tree is the basis for many morphological operators,
-namely connected operators.
+Constructs the *max-tree* of the `image`.
 
-Parameters
-----------
-image: ndarray
-    The input image for which the max-tree is to be calculated.
-    This image can be of any type.
-connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
+# Arguments
+- `connectivity::Integer=1`: defines the pixel neighborhood used to construct
+  the connected components. The value is the maximum number of orthogonal steps
+  to reach a neighbor. In 2D, it is 1 for a 4-neighborhood and 2 for a
+  8-neighborhood. See [`rebuild!](@ref).
+- `rev::Bool=false`: if `false`, the max-tree is traversed from the darkest
+  (the root node) to the brightest, otherwise it's traversed from the brightest
+  (the root) to the darkest.
 
-Returns
--------
-parent: ndarray, int64
-    Array of same shape as image. The value of each pixel is the index of
-    its parent in the ravelled array.
-
-tree_traverser: 1D array, int64
-    The ordered pixel indices (referring to the ravelled array). The pixels
-    are ordered such that every pixel is preceded by its parent (except for
-    the root which has no parent).
-
-References
-----------
-.. [1] Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-       Connected Operators for Image and Sequence Processing.
-       IEEE Transactions on Image Processing, 7(4), 555-570.
-       :DOI:`10.1109/83.663500`
-.. [2] Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A.,
-       Bertin, E. (2007). Effective Component Tree Computation with
-       Application to Pattern Recognition in Astronomical Imaging.
-       In International Conference on Image Processing (ICIP) (pp. 41-44).
-       :DOI:`10.1109/ICIP.2007.4379949`
-.. [3] Najman, L., & Couprie, M. (2006). Building the component tree in
-       quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-       3531-3539.
-       :DOI:`10.1109/TIP.2006.877518`
-.. [4] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-       Component Tree Computation Algorithms. IEEE Transactions on Image
-       Processing, 23(9), 3885-3895.
-       :DOI:`10.1109/TIP.2014.2336551`
-
-Examples
---------
+# Examples
 We create a small sample image (Figure 1 from [4]) and build the max-tree.
 
->>> image = np.array([[15, 13, 16], [12, 12, 10], [16, 12, 14]])
->>> P, S = max_tree(image, connectivity=2)
+```jldoctest
+julia> image = [15 13 16; 12 12 10; 16 12 14]
+3×3 Array{Int64,2}:
+ 15  13  16
+ 12  12  10
+ 16  12  14
+
+julia> mtree = MaxTree(image, connectivity=2)
+MaxTree{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}((Base.OneTo(3), Base.OneTo(3)), false, [4 2 4; 8 2 8; 2 2 2], [8, 2, 5, 6, 4, 9, 1, 3, 7])
+```
 """
 function MaxTree(image::AbstractArray{<:Number, N};
                  connectivity::Integer=1, rev::Bool=false) where N
@@ -491,492 +420,495 @@ function MaxTree(image::AbstractArray{<:Number, N};
         np.moveaxis(mask, k, 0)[-1] = 0
     =#
     neighbors = neighbor_cartesian_offsets(CartesianIndex{N}, connectivity)
-    return rebuild!(MaxTree{N}(image), #=mask,=# image, neighbors, rev=rev)
+    return rebuild!(MaxTree{N}(image, rev), #=mask,=# image, neighbors)
+end
+
+function check_output_image(output::AbstractArray, image::AbstractArray)
+    (size(output) == size(image)) ||
+        throw(DimensionMismatch("The sizes of the output and the input image do not match"))
+end
+
+# checks if the provided maxtree is compatible with the given options
+# or build the new maxtree if none was given
+function check_maxtree(maxtree::Union{MaxTree, Nothing},
+                       image::AbstractArray;
+                       connectivity::Integer = 0,
+                       rev::Bool = false)
+    isnothing(maxtree) && return MaxTree(image, connectivity=connectivity, rev=rev)
+    (axes(maxtree) == axes(image)) ||
+        throw(DimensionMismatch("The axes of the max-tree and the input image do not match"))
+    (maxtree.rev == rev) ||
+        throw(ArgumentError("The traversal order of the given max-tree is different from the requested one"))
+    return maxtree
 end
 
 """
-Perform an area opening of the image.
+    area_opening!(output, image;
+                  [min_area=64], [connectivity=1], [maxtree=nothing]) -> output
 
-Area opening removes all bright structures of an image with
-a surface smaller than area_threshold.
-The output image is thus the largest image smaller than the input
-for which all local maxima have at least a surface of
-area_threshold pixels.
+Performs in-place *area opening* of the `image` and stores the result in `output`.
+See [`area_opening`](@ref) for the detailed description of the method.
+"""
+function area_opening!(output::AbstractArray, image::AbstractArray;
+                       min_area::Number=64, connectivity::Integer=1,
+                       maxtree::Union{MaxTree, Nothing}=nothing)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
+    return direct_filter!(output, image, _maxtree, areas(_maxtree), min_area)
+end
 
-Area openings are similar to morphological openings, but
-they do not use a fixed structuring element, but rather a deformable
-one, with surface = area_threshold. Consequently, the area_opening
-with area_threshold=1 is the identity.
+"""
+    area_opening(image; [min_area=64], [connectivity=1],
+                 [maxtree=nothing]) -> Array
 
-In the binary case, area openings are equivalent to
-remove_small_objects; this operator is thus extended to gray-level images.
+Performs an *area opening* of the `image`.
 
-Technically, this operator is based on the max-tree representation of
-the image.
+*Area opening* replaces all bright components of an image that
+have a surface smaller than `min_area` with the darker value taken from
+their first ancestral component (in *max-tree* representation of `image`)
+that has the area no smaller than `min_area`.
 
-Parameters
-----------
-- image: ndarray
-    The input image for which the area_opening is to be calculated.
-    This image can be of any type.
-- min_area: unsigned int
-    The size parameter (number of pixels). The default value is arbitrarily
-    chosen to be 64.
-- connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
-- parent: ndarray, int64, optional
-    Parent image representing the max tree of the image. The
-    value of each pixel is the index of its parent in the ravelled array.
-tree_traverser: 1D array, int64, optional
-    The ordered pixel indices (referring to the ravelled array). The pixels
-    are ordered such that every pixel is preceded by its parent (except for
-    the root which has no parent).
+# Details
+Area opening is similar to morphological opening (see [`opening`](@ref)),
+but instead of using a fixed structuring element (e.g. disk) it employs
+small (less than `min_area`) components of the *max-tree*. Consequently,
+the `area_opening` with `min_area = 1` is the identity transformation.
+
+In the binary case, area opening is equivalent to `remove_small_objects`;
+this operator is thus extended to gray-level images.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `min_area::Number=64`: the smallest size (in pixels) of the image component
+  to keep intact
+- `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
+  of orthogonal steps to reach a neighbor of the pixel.
+  In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*.
+  Note that if `maxtree` is specified, the `connectivity` option is ignored.
 
 # Returns
-output: ndarray
-    Output image of the same shape and type as the input image.
+An array of the same type and shape as the `image`.
 
 # See also
-[`area_closing`](@ref), [`diameter_opening`](@ref), [`diameter_closing`](@ref),
-[`MaxTree`](@ref)
+[`area_opening!`](@ref), [`area_closing`](@ref),
+[`diameter_opening`](@ref),
+[`MaxTree`](@ref), [`opening`](@ref)
 
 # References
-> Vincent L., Proc. "Grayscale area openings and closings,
+- Vincent L., Proc. "Grayscale area openings and closings,
   their efficient implementation and applications",
   EURASIP Workshop on Mathematical Morphology and its
   Applications to Signal Processing, Barcelona, Spain, pp.22-27,
   May 1993.
-> Soille, P., "Morphological Image Analysis: Principles and
+- Soille, P., "Morphological Image Analysis: Principles and
   Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
   DOI:10.1007/978-3-662-05088-0
-> Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
+- Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
   Connected Operators for Image and Sequence Processing.
   IEEE Transactions on Image Processing, 7(4), 555-570.
   DOI:10.1109/83.663500
-> Najman, L., & Couprie, M. (2006). Building the component tree in
+- Najman, L., & Couprie, M. (2006). Building the component tree in
   quasi-linear time. IEEE Transactions on Image Processing, 15(11),
   3531-3539.
   DOI:10.1109/TIP.2006.877518
-> Carlinet, E., & Geraud, T. (2014). A Comparative Review of
+- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
   Component Tree Computation Algorithms. IEEE Transactions on Image
   Processing, 23(9), 3885-3895.
   DOI:10.1109/TIP.2014.2336551
 
 # Examples
-
-We create an image (quadratic function with a maximum in the center and
-4 additional local maxima.
-```juliacmd
-w = 12
-x, y = np.mgrid[0:w,0:w]
-f = 20 - 0.2*((x - w/2)**2 + (y-w/2)**2)
-f[2:3,1:5] = 40; f[2:4,9:11] = 60; f[9:11,2:4] = 80
-f[9:10,9:11] = 100; f[10,10] = 100
-f = f.astype(np.int)
+Creating a test image `f` (quadratic function with a maximum in the center and
+4 additional local maxima):
+```jldoctest
+julia> w = 12;
+julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
 ```
-We can calculate the area opening:
-```juliacmd
-open = area_opening(f, 8, connectivity=1)
+Area opening of `f`:
+```jldoctest
+julia> f_aopen = area_opening(f, min_area=8, connectivity=1)
 ```
 The peaks with a surface smaller than 8 are removed.
 """
-function area_opening!(output::AbstractArray{<:Any, N}, image::AbstractArray{<:Any, N};
-                       min_area::Number=64, connectivity::Integer=1,
-                       maxtree::Union{MaxTree{N}, Nothing}=nothing) where N
-    _maxtree = isnothing(maxtree) ? MaxTree(image, connectivity=connectivity) : maxtree
-    return direct_filter!(output, image, _maxtree, areas(_maxtree), min_area)
-end
-
 area_opening(image::AbstractArray; kwargs...) =
     area_opening!(similar(image), image; kwargs...)
 
 """
-Perform a diameter opening of the image.
+    diameter_opening!(output, image; [min_diameter=8],
+                      [connectivity=1], [maxtree=nothing]) -> output
 
-Diameter opening removes all bright structures of an image with
-maximal extension smaller than diameter_threshold. The maximal
-extension is defined as the maximal extension of the bounding box.
-The operator is also called Bounding Box Opening. In practice,
-the result is similar to a morphological opening, but long and thin
-structures are not removed.
-
-Technically, this operator is based on the max-tree representation of
-the image.
-
-Parameters
-----------
-image: ndarray
-    The input image for which the area_opening is to be calculated.
-    This image can be of any type.
-diameter_threshold: unsigned int
-    The maximal extension parameter (number of pixels). The default value
-    is 8.
-connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
-parent: ndarray, int64, optional
-    Parent image representing the max tree of the image. The
-    value of each pixel is the index of its parent in the ravelled array.
-tree_traverser: 1D array, int64, optional
-    The ordered pixel indices (referring to the ravelled array). The pixels
-    are ordered such that every pixel is preceded by its parent (except for
-    the root which has no parent).
-
-Returns
--------
-output: ndarray
-    Output image of the same shape and type as the input image.
-
-See also
---------
-skimage.morphology.area_opening
-skimage.morphology.area_closing
-skimage.morphology.diameter_closing
-skimage.morphology.max_tree
-
-References
-----------
-.. [1] Walter, T., & Klein, J.-C. (2002). Automatic Detection of
-       Microaneurysms in Color Fundus Images of the Human Retina by Means
-       of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
-       A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
-       Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
-       :DOI:`10.1007/3-540-36104-9_23`
-.. [2] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-       Component Tree Computation Algorithms. IEEE Transactions on Image
-       Processing, 23(9), 3885-3895.
-       :DOI:`10.1109/TIP.2014.2336551`
-
-Examples
---------
-We create an image (quadratic function with a maximum in the center and
-4 additional local maxima.
-
->>> w = 12
->>> x, y = np.mgrid[0:w,0:w]
->>> f = 20 - 0.2*((x - w/2)**2 + (y-w/2)**2)
->>> f[2:3,1:5] = 40; f[2:4,9:11] = 60; f[9:11,2:4] = 80
->>> f[9:10,9:11] = 100; f[10,10] = 100
->>> f = f.astype(np.int)
-
-We can calculate the diameter opening:
-
->>> open = diameter_opening(f, 3, connectivity=1)
-
-The peaks with a maximal extension of 2 or less are removed.
-The remaining peaks have all a maximal extension of at least 3.
+Performs in-place *diameter opening* of the `image` and stores the result in `output`.
+See [`diameter_opening`](@ref) for the detailed description of the method.
 """
-function diameter_opening!(output::AbstractArray{<:Any, N}, image::AbstractArray{<:Any, N};
-                           maxtree::Union{MaxTree{N}, Nothing} = nothing,
-                           min_diameter=8, connectivity=1) where N
-    _maxtree = isnothing(maxtree) ? MaxTree(image, connectivity=connectivity) : maxtree
+function diameter_opening!(output::AbstractArray, image::AbstractArray;
+                           maxtree::Union{MaxTree, Nothing} = nothing,
+                           min_diameter=8, connectivity=1)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
     return direct_filter!(output, image, _maxtree, diameters(_maxtree), min_diameter)
 end
 
+"""
+    diameter_opening(image; [min_diameter=8], [connectivity=1],
+                     [maxtree=nothing]) -> Array
+
+Performs a *diameter opening* of the `image`.
+
+*Diameter opening* replaces all bright structures of an image that have
+the diameter (the widest dimension of their bounding box) smaller than
+`min_diameter` with the darker value taken from their first ancestral component
+(in *max-tree* representation of `image`) that has the diameter no smaller than
+`min_diameter`.
+
+The operator is also called *Bounding Box Opening*. In practice,
+the result is similar to a *morphological opening*, but long and thin
+structures are not removed.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `min_diameter::Number=8`: the minimal length (in pixels) of the widest
+  dimension of the bounding box of the image component to keep intact
+- `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
+  of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
+  a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
+  when `maxtree` is specified, the `connectivity` option is ignored.
+
+# Returns
+An array of the same type and shape as the `image`.
+
+# See also
+[`diameter_opening!`](@ref), [`diameter_closing`](@ref),
+[`area_opening`](@ref),
+[`MaxTree`](@ref), [`opening`](@ref)
+
+# References
+- Walter, T., & Klein, J.-C. (2002). Automatic Detection of
+  Microaneurysms in Color Fundus Images of the Human Retina by Means
+  of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
+  A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
+  Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
+  :DOI:`10.1007/3-540-36104-9_23`
+- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
+  Component Tree Computation Algorithms. IEEE Transactions on Image
+  Processing, 23(9), 3885-3895.
+  :DOI:`10.1109/TIP.2014.2336551`
+
+# Examples
+Creating a test image `f` (quadratic function with a maximum in the center and
+4 additional local maxima):
+```jldoctest
+julia> w = 12;
+julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
+```
+Diameter opening of `f`:
+```jldoctest
+julia> f_dopen = diameter_opening(f, min_diameter=3, connectivity=1)
+```
+The peaks with a maximal diameter of 2 or less are removed.
+For the remaining peaks the widest side of the bounding box is at least 3.
+"""
 diameter_opening(image::AbstractArray; kwargs...) =
     diameter_opening!(similar(image), image; kwargs...)
 
 """
-Perform an area closing of the image.
+    area_closing!(output, image; [min_area=64], [connectivity=1],
+                  [maxtree=nothing]) -> output
 
-Area closing removes all dark structures of an image with
-a surface smaller than area_threshold.
-The output image is larger than or equal to the input image
-for every pixel and all local minima have at least a surface of
-area_threshold pixels.
-
-Area closings are similar to morphological closings, but
-they do not use a fixed structuring element, but rather a deformable
-one, with surface = area_threshold.
-
-In the binary case, area closings are equivalent to
-remove_small_holes; this operator is thus extended to gray-level images.
-
-Technically, this operator is based on the max-tree representation of
-the image.
-
-Parameters
-----------
-image: ndarray
-    The input image for which the area_closing is to be calculated.
-    This image can be of any type.
-area_threshold: unsigned int
-    The size parameter (number of pixels). The default value is arbitrarily
-    chosen to be 64.
-connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
-parent: ndarray, int64, optional
-    Parent image representing the max tree of the inverted image. The
-    value of each pixel is the index of its parent in the ravelled array.
-    See Note for further details.
-tree_traverser: 1D array, int64, optional
-    The ordered pixel indices (referring to the ravelled array). The pixels
-    are ordered such that every pixel is preceded by its parent (except for
-    the root which has no parent).
-
-Returns
--------
-output: ndarray
-    Output image of the same shape and type as input image.
-
-See also
---------
-skimage.morphology.area_opening
-skimage.morphology.diameter_opening
-skimage.morphology.diameter_closing
-skimage.morphology.max_tree
-skimage.morphology.remove_small_objects
-skimage.morphology.remove_small_holes
-
-References
-----------
-.. [1] Vincent L., Proc. "Grayscale area openings and closings,
-       their efficient implementation and applications",
-       EURASIP Workshop on Mathematical Morphology and its
-       Applications to Signal Processing, Barcelona, Spain, pp.22-27,
-       May 1993.
-.. [2] Soille, P., "Morphological Image Analysis: Principles and
-       Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
-       :DOI:`10.1007/978-3-662-05088-0`
-.. [3] Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-       Connected Operators for Image and Sequence Processing.
-       IEEE Transactions on Image Processing, 7(4), 555-570.
-       :DOI:`10.1109/83.663500`
-.. [4] Najman, L., & Couprie, M. (2006). Building the component tree in
-       quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-       3531-3539.
-       :DOI:`10.1109/TIP.2006.877518`
-.. [5] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-       Component Tree Computation Algorithms. IEEE Transactions on Image
-       Processing, 23(9), 3885-3895.
-       :DOI:`10.1109/TIP.2014.2336551`
-
-
-Examples
---------
-We create an image (quadratic function with a minimum in the center and
-4 additional local minima.
-
->>> w = 12
->>> x, y = np.mgrid[0:w,0:w]
->>> f = 180 + 0.2*((x - w/2)**2 + (y-w/2)**2)
->>> f[2:3,1:5] = 160; f[2:4,9:11] = 140; f[9:11,2:4] = 120
->>> f[9:10,9:11] = 100; f[10,10] = 100
->>> f = f.astype(np.int)
-
-We can calculate the area closing:
-
->>> closed = area_closing(f, 8, connectivity=1)
-
-All small minima are removed, and the remaining minima have at least
-a size of 8.
-
-
-Notes
------
-If a max-tree representation (parent and tree_traverser) are given to the
-function, they must be calculated from the inverted image for this
-function, i.e.:
->>> P, S = max_tree(invert(f))
->>> closed = diameter_closing(f, 3, parent=P, tree_traverser=S)
+Performs in-place *area closing* of the `image` and stores the result in `output`.
+See [`area_closing`](@ref) for the detailed description of the method.
 """
-function area_closing!(output::AbstractArray{<:Any, N},
-                       image::AbstractArray{<:Any, N};
+function area_closing!(output::AbstractArray, image::AbstractArray;
                        min_area::Number=64, connectivity::Integer=1,
-                       maxtree::Union{MaxTree{N}, Nothing}=nothing) where N
-    _maxtree = isnothing(maxtree) ? MaxTree(image, connectivity=connectivity, rev=true) : maxtree
+                       maxtree::Union{MaxTree, Nothing}=nothing)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
     return direct_filter!(output, image, _maxtree, areas(_maxtree), min_area)
 end
 
+"""
+    area_closing(image; [min_area=64], [connectivity=1],
+                 [maxtree=nothing]) -> Array
+
+Performs an *area closing* of the `image`.
+
+*Area closing* replaces all dark components of an image that
+have a surface smaller than `min_area` with the brighter value taken from
+their first ancestral component (in *max-tree* representation of `image`)
+that has the area no smaller than `min_area`.
+
+# Details
+*Area closing* is the dual operation to *area opening* (see [`area_opening`](@ref)).
+It is similar to morphological closings (see [`closing`](@ref)),
+but instead of using a fixed structuring element (e.g. disk) it employs
+small (less than `min_area`) components of the *max-tree*. Consequently,
+the `area_closing` with `min_area = 1` is the identity transformation.
+
+In the binary case, area closing is equivalent to
+`remove_small_holes`; this operator is thus extended to gray-level images.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `min_area::Number=64`: the smallest size (in pixels) of the image component
+  to keep intact
+- `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
+  of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
+  a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
+  when `maxtree` is specified, the `connectivity` option is ignored.
+
+# Returns
+An array of the same type and shape as the `image`.
+
+# See also
+[`area_closing!`](@ref), [`area_opening`](@ref),
+[`diameter_closing`](@ref),
+[`MaxTree`](@ref), [`closing`](@ref)
+
+# References
+- Vincent L., Proc. "Grayscale area openings and closings,
+  their efficient implementation and applications",
+  EURASIP Workshop on Mathematical Morphology and its
+  Applications to Signal Processing, Barcelona, Spain, pp.22-27,
+  May 1993.
+- Soille, P., "Morphological Image Analysis: Principles and
+  Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
+  DOI:10.1007/978-3-662-05088-0
+- Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
+  Connected Operators for Image and Sequence Processing.
+  IEEE Transactions on Image Processing, 7(4), 555-570.
+  DOI:10.1109/83.663500
+- Najman, L., & Couprie, M. (2006). Building the component tree in
+  quasi-linear time. IEEE Transactions on Image Processing, 15(11),
+  3531-3539.
+  DOI:10.1109/TIP.2006.877518
+- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
+  Component Tree Computation Algorithms. IEEE Transactions on Image
+  Processing, 23(9), 3885-3895.
+  DOI:10.1109/TIP.2014.2336551
+
+# Examples
+Creating a test image `f` (quadratic function with a minimum in the center and
+4 additional local minima):
+```jldoctest
+julia> w = 12;
+julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
+```
+Area closing of `f`:
+```jldoctest
+julia> f_aclose = area_closing(f, min_area=8, connectivity=1)
+```
+All small minima are removed, and the remaining minima have at least
+a size of 8.
+"""
 area_closing(image::AbstractArray; kwargs...) =
     area_closing!(similar(image), image; kwargs...)
 
 """
-Perform a diameter closing of the image.
+    diameter_closing!(output, image; [min_diameter=8], [connectivity=1],
+                      [maxtree=nothing]) -> output
 
-Diameter closing removes all dark structures of an image with
-maximal extension smaller than diameter_threshold. The maximal
-extension is defined as the maximal extension of the bounding box.
-The operator is also called Bounding Box Closing. In practice,
-the result is similar to a morphological closing, but long and thin
-structures are not removed.
-
-Technically, this operator is based on the max-tree representation of
-the image.
-
-Parameters
-----------
-image: ndarray
-    The input image for which the diameter_closing is to be calculated.
-    This image can be of any type.
-diameter_threshold: unsigned int
-    The maximal extension parameter (number of pixels). The default value
-    is 8.
-connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
-parent: ndarray, int64, optional
-    Precomputed parent image representing the max tree of the inverted
-    image. This function is fast, if precomputed parent and tree_traverser
-    are provided. See Note for further details.
-tree_traverser: 1D array, int64, optional
-    Precomputed traverser, where the pixels are ordered such that every
-    pixel is preceded by its parent (except for the root which has no
-    parent). This function is fast, if precomputed parent and
-    tree_traverser are provided. See Note for further details.
-
-Returns
--------
-output: ndarray
-    Output image of the same shape and type as input image.
-
-See also
---------
-skimage.morphology.area_opening
-skimage.morphology.area_closing
-skimage.morphology.diameter_opening
-skimage.morphology.max_tree
-
-References
-----------
-.. [1] Walter, T., & Klein, J.-C. (2002). Automatic Detection of
-       Microaneurysms in Color Fundus Images of the Human Retina by Means
-       of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
-       A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
-       Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
-       :DOI:`10.1007/3-540-36104-9_23`
-.. [2] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-       Component Tree Computation Algorithms. IEEE Transactions on Image
-       Processing, 23(9), 3885-3895.
-       :DOI:`10.1109/TIP.2014.2336551`
-
-Examples
---------
-We create an image (quadratic function with a minimum in the center and
-4 additional local minima.
-
->>> w = 12
->>> x, y = np.mgrid[0:w,0:w]
->>> f = 180 + 0.2*((x - w/2)**2 + (y-w/2)**2)
->>> f[2:3,1:5] = 160; f[2:4,9:11] = 140; f[9:11,2:4] = 120
->>> f[9:10,9:11] = 100; f[10,10] = 100
->>> f = f.astype(np.int)
-
-We can calculate the diameter closing:
-
->>> closed = diameter_closing(f, 3, connectivity=1)
-
-All small minima with a maximal extension of 2 or less are removed.
-The remaining minima have all a maximal extension of at least 3.
-
-
-Notes
------
-If a max-tree representation (parent and tree_traverser) are given to the
-function, they must be calculated from the inverted image for this
-function, i.e.:
->>> P, S = max_tree(invert(f))
->>> closed = diameter_closing(f, 3, parent=P, tree_traverser=S)
+Performs in-place *diameter closing* of the `image` and stores the result in `output`.
+See [`diameter_closing`](@ref) for the detailed description of the method.
 """
-function diameter_closing!(output::AbstractArray{<:Any, N},
-                           image::AbstractArray{<:Any, N};
+function diameter_closing!(output::AbstractArray, image::AbstractArray;
                            min_diameter::Number=8, connectivity::Integer=1,
-                           maxtree::Union{MaxTree{N}, Nothing} = nothing) where N
-    _maxtree = isnothing(maxtree) ? MaxTree(image, connectivity=connectivity, rev=true) : maxtree
+                           maxtree::Union{MaxTree, Nothing} = nothing)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
     return direct_filter!(output, image, _maxtree, diameters(_maxtree), min_diameter)
 end
 
+"""
+    diameter_closing(image; [min_diameter=8], [connectivity=1],
+                     [maxtree=nothing]) -> Array
+
+Performs a *diameter closing* of the `image`.
+
+*Diameter closing* replaces all dark structures of an image that have
+the diameter (the widest dimension of their bounding box) smaller than
+`min_diameter` with the brighter value taken from their first ancestral component
+(in *max-tree* representation of `image`) that has the diameter no smaller than
+`min_diameter`.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `min_diameter::Number=8`: the minimal length (in pixels) of the widest
+  dimension of the bounding box of the image component to keep intact
+- `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
+  of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
+  a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
+  when `maxtree` is specified, the `connectivity` option is ignored.
+
+# Returns
+An array of the same type and shape as the `image`.
+
+# See also
+[`diameter_closing!`](@ref), [`diameter_opening`](@ref),
+[`area_closing`](@ref),
+[`MaxTree`](@ref), [`closing`](@ref)
+
+# References
+- Walter, T., & Klein, J.-C. (2002). Automatic Detection of
+  Microaneurysms in Color Fundus Images of the Human Retina by Means
+  of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
+  A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
+  Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
+  :DOI:`10.1007/3-540-36104-9_23`
+- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
+  Component Tree Computation Algorithms. IEEE Transactions on Image
+  Processing, 23(9), 3885-3895.
+  :DOI:`10.1109/TIP.2014.2336551`
+
+# Examples
+Creating a test image `f` (quadratic function with a minimum in the center and
+4 additional local minima):
+```jldoctest
+julia> w = 12;
+julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
+```
+Area closing of `f`:
+```jldoctest
+julia> f_dclose = diameter_closing(f, min_diameter=3, connectivity=1)
+```
+All small minima with a diameter of 2 or less are removed.
+For the remaining minima the widest bounding box side is at least 3.
+"""
 diameter_closing(image::AbstractArray; kwargs...) =
     diameter_closing!(similar(image), image; kwargs...)
 
 """
-Determine all local maxima of the image.
+    local_maxima!(output, image; [connectivity=1], [maxtree=nothing]) -> output
 
-The local maxima are defined as connected sets of pixels with equal
-gray level strictly greater than the gray levels of all pixels in direct
-neighborhood of the set. The function labels the local maxima.
-
-Technically, the implementation is based on the max-tree representation
-of an image. The function is very efficient if the max-tree representation
-has already been computed. Otherwise, it is preferable to use
-the function local_maxima.
-
-Parameters
-----------
-image : ndarray
-    The input image for which the maxima are to be calculated.
-connectivity: unsigned int, optional
-    The neighborhood connectivity. The integer represents the maximum
-    number of orthogonal steps to reach a neighbor. In 2D, it is 1 for
-    a 4-neighborhood and 2 for a 8-neighborhood. Default value is 1.
-parent: ndarray, int64, optional
-    The value of each pixel is the index of its parent in the ravelled
-    array.
-tree_traverser: 1D array, int64, optional
-    The ordered pixel indices (referring to the ravelled array). The pixels
-    are ordered such that every pixel is preceded by its parent (except for
-    the root which has no parent).
-
-Returns
--------
-local_max : ndarray, uint64
-    Labeled local maxima of the image.
-
-See also
---------
-skimage.morphology.local_maxima
-skimage.morphology.max_tree
-
-References
-----------
-.. [1] Vincent L., Proc. "Grayscale area openings and closings,
-       their efficient implementation and applications",
-       EURASIP Workshop on Mathematical Morphology and its
-       Applications to Signal Processing, Barcelona, Spain, pp.22-27,
-       May 1993.
-.. [2] Soille, P., "Morphological Image Analysis: Principles and
-       Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
-       :DOI:`10.1007/978-3-662-05088-0`
-.. [3] Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-       Connected Operators for Image and Sequence Processing.
-       IEEE Transactions on Image Processing, 7(4), 555-570.
-       :DOI:`10.1109/83.663500`
-.. [4] Najman, L., & Couprie, M. (2006). Building the component tree in
-       quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-       3531-3539.
-       :DOI:`10.1109/TIP.2006.877518`
-.. [5] Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-       Component Tree Computation Algorithms. IEEE Transactions on Image
-       Processing, 23(9), 3885-3895.
-       :DOI:`10.1109/TIP.2014.2336551`
-
-Examples
---------
-We create an image (quadratic function with a maximum in the center and
-4 additional constant maxima.
-
->>> w = 10
->>> x, y = np.mgrid[0:w,0:w]
->>> f = 20 - 0.2*((x - w/2)**2 + (y-w/2)**2)
->>> f[2:4,2:4] = 40; f[2:4,7:9] = 60; f[7:9,2:4] = 80; f[7:9,7:9] = 100
->>> f = f.astype(np.int)
-
-We can calculate all local maxima:
-
->>> maxima = max_tree_local_maxima(f)
-
-The resulting image contains the labeled local maxima.
+Detects the local maxima of `image` and stores the result in `output`.
+See [`local_maxima`](@ref) for the detailed description of the method.
 """
-function local_maxima!(output::AbstractArray{<:Any, N},
-                       image::AbstractArray{<:Any, N};
+function local_maxima!(output::AbstractArray, image::AbstractArray;
                        connectivity::Integer=1,
-                       maxtree::Union{MaxTree{N}, Nothing} = nothing) where N
-    _maxtree = isnothing(maxtree) ? MaxTree(image_inv, connectivity=connectivity) : maxtree
-    return local_maxima!(output, image, maxtree)
+                       maxtree::Union{MaxTree, Nothing} = nothing)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
+    return local_extrema!(output, image, _maxtree)
 end
+
+"""
+    local_maxima(image::AbstractArray; [connectivity=1], [maxtree=nothing]) -> Array
+
+Determines and labels all *local maxima* of the `image`.
+
+# Details
+The *local maximum* is defined as the connected set of pixels that have the
+same value, which is grater then the values of all pixels in direct
+neighborhood of the set.
+
+Technically, the implementation is based on the *max-tree* representation
+of an image. It's efficient if the max-tree representation
+has already been computed. Otherwise, it is preferable to use
+the function `local_maxima`.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `connectivity::Integer=1`: the neighborhood connectivity.
+  The maximum number of orthogonal steps to reach a neighbor of the pixel.
+  In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
+  when `maxtree` is specified, the `connectivity` option is ignored.
+
+# Returns
+An integer array of the same shape as the `image`. Pixels that are not local
+maxima have 0 value. Pixels of the same local maximum share the same positive
+value (the local maximum id).
+
+
+# See also
+[`MaxTree`](@ref), [`local_maxima!`](@ref), [`local_minima`](@ref)
+
+# Examples
+Create `f` (quadratic function with a maximum in the center and
+4 additional constant maxima):
+```jldoctest
+julia> w = 10;
+julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
+```
+Get all local maxima of ``f``:
+```jldoctest
+julia> f_maxima = local_maxima(f)
+```
+The resulting image contains the 4 labeled local maxima.
+"""
+local_maxima(image::AbstractArray; connectivity::Integer=1,
+             maxtree::Union{MaxTree, Nothing} = nothing) =
+    local_maxima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
+
+"""
+    local_minima!(output, image; [connectivity=1], [maxtree=nothing]) -> output
+
+Detects the local minima of `image` and stores the result in `output`.
+See [`local_minima`](@ref) for the detailed description of the method.
+"""
+function local_minima!(output::AbstractArray, image::AbstractArray;
+                       connectivity::Integer=1,
+                       maxtree::Union{MaxTree, Nothing} = nothing)
+    check_output_image(output, image)
+    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
+    return local_extrema!(output, image, _maxtree)
+end
+
+"""
+    local_minima(image::AbstractArray; [connectivity=1], [maxtree=nothing]) -> Array
+
+Determines and labels all *local minima* of the `image`.
+
+# Details
+The *local minimum* is defined as the connected set of pixels that have the
+same value, which is less then the values of all pixels in direct
+neighborhood of the set.
+
+Technically, the implementation is based on the *max-tree* representation
+of an image. It's efficient if the max-tree representation
+has already been computed. Otherwise, it is preferable to use
+the function `local_minima`.
+
+# Arguments
+- `image::AbstractArray`: the ``N``-dimensional input image
+- `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
+  of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
+  a 4-neighborhood and 2 for a 8-neighborhood.
+- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that, when
+  `maxtree` is specified, the `connectivity` option is ignored.
+
+# Returns
+An integer array of the same shape as the `image`. Pixels that are not local
+minima have 0 value. Pixels of the same local minimum share the same positive
+value (the local minimum id).
+
+# See also
+[`MaxTree`](@ref), [`local_minima!`](@ref), [`local_maxima`](@ref)
+
+# Examples
+Create `f` (quadratic function with a minimum in the center and
+4 additional constant minimum):
+```jldoctest
+julia> w = 10;
+julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+julia> f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
+```
+Calculate all local minima of `f`:
+```jldoctest
+julia> f_minima = local_minima(f)
+```
+The resulting image contains the labeled local minima.
+"""
+local_minima(image::AbstractArray; connectivity::Integer=1,
+             maxtree::Union{MaxTree, Nothing} = nothing) =
+    local_minima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
