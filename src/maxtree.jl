@@ -298,9 +298,10 @@ elements are its maximal cartesian index.
 function boundingboxes(maxtree::MaxTree{N}) where N
     # initialize bboxes
     bboxes = Matrix{Int}(undef, 2N, length(maxtree))
-    for (bbox, ci) in zip(eachcol(bboxes), CartesianIndices(maxtree.axes))
-        @inbounds bbox[1:N] .= Tuple(ci)
-        @inbounds bbox[(N+1):2N] .= Tuple(ci)
+    @inbounds for (i, ci) in enumerate(CartesianIndices(maxtree.axes))
+        offset = 2N * (i-1)
+        bboxes[offset .+ (1:N)] .= Tuple(ci)
+        bboxes[offset .+ ((N+1):2N)] .= Tuple(ci)
     end
 
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
@@ -331,8 +332,9 @@ The `i`-th element of the result is the "diameter" of the `i`-th component.
 [`diameter_opening`](@ref), [`diameter_closing`](@ref).
 """
 diameters(maxtree::MaxTree{N}) where N =
-    [maximum(ntuple(i -> bbox[i+N] - bbox[i] + 1, Val{N}()))
-     for bbox in eachcol(boundingboxes(maxtree))]
+    dropdims(mapslices(boundingboxes(maxtree), dims=1) do bbox
+        maximum(ntuple(i -> bbox[i+N] - bbox[i] + 1, Val{N}()))
+    end, dims=1)
 
 """
     direct_filter!(output::AbstractArray, image::AbstractArray,
