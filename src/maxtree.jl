@@ -400,7 +400,7 @@ function check_maxtree(maxtree::Union{MaxTree, Nothing},
                        image::AbstractArray;
                        connectivity::Integer = 0,
                        rev::Bool = false)
-    isnothing(maxtree) && return MaxTree(image, connectivity=connectivity, rev=rev)
+    (maxtree === nothing) && return MaxTree(image, connectivity=connectivity, rev=rev)
     (axes(maxtree) == axes(image)) ||
         throw(DimensionMismatch("The axes of the max-tree and the input image do not match"))
     (maxtree.rev == rev) ||
