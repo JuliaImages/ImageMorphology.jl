@@ -193,8 +193,7 @@ function rebuild!(maxtree::MaxTree{N},
             # check that p is in the mask and that it's neighbor is a valid image pixel
             (#=mask[p] && =#isvalid_offset(neighbors[i], p_ci, maxtree.axes)) || continue
             index = p + neighbor_offsets[i] # linear index of the neighbor
-            # ignore unset parent (it's value is higher)
-            (parents[index] > 0) || continue
+            (parents[index] == 0) && continue # ignore neighbor without parent (= its value is lower)
             root = rootpath!(rootpath, roots, index) # neighbor's root
             if (root != p) || (length(rootpath) > 1) # attach neighbor's root to the p
                 parents[root] = p
