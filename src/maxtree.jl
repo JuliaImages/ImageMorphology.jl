@@ -350,6 +350,8 @@ the value of the reference pixel of its first valid ancestor.
 - `maxtree::MaxTree{N}`: pre-built max-tree of the `image`
 - `attrs::AbstractVector`: `attrs[i]` is the attribute value for the ``i``-th
    component of the tree (``i`` being the linear index of its *reference pixel*)
+- `all_below_min`: the value to fill the `output` if all attributes of all
+  components (including the root one) are below `min_attr`
 
 # Details
 This function is the basis for [`area_opening`](@ref), [`diameter_opening`](@ref)
@@ -360,15 +362,17 @@ than `min_attr` pixels.
 """
 function direct_filter!(output::AbstractArray, image::AbstractArray,
                         maxtree::MaxTree,
-                        attrs::AbstractVector, min_attr)
+                        attrs::AbstractVector, min_attr,
+                        all_below_min = zero(eltype(output)))
     # should have been already checked by higher-level functions
     @assert axes(output) == axes(image)
     @assert axes(image) == axes(maxtree)
     @assert length(attrs) == length(maxtree)
 
     p_root = root_index(maxtree)
-    # FIXME allow specifying the output values when root attribute is < min_attr
-    output[p_root] = attrs[p_root] < min_attr ? 0 : image[p_root]
+    # if p_root is below min_attr, then all others are as well
+    (attrs[p_root] < min_attr) && return fill!(output, all_below_min)
+    output[p_root] = image[p_root]
     parents = maxtree.parents
 
     for p in maxtree.traverse
