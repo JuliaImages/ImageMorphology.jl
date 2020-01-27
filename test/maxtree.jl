@@ -101,3 +101,98 @@ end
     @test local_minima(A, maxtree=atree_rev, connectivity=2) == local_minima(A)
     @test_throws ArgumentError local_minima(A, maxtree=atree)
 end
+
+@testset "area_opening/closing()" begin
+    A = [3 1 3 1 4 4;
+         1 3 1 1 3 3;
+         1 1 1 1 1 1;
+         1 4 4 1 1 2;
+         1 4 1 1 5 5;
+         1 1 1 2 5 2]
+    B = similar(A)
+    @test B === area_opening!(B, A)
+    @test_throws DimensionMismatch area_opening!(similar(A, (7, 6)), A)
+    atree = MaxTree(A)
+    atree_rev = MaxTree(A, rev=true)
+    atree_small = MaxTree(A[1:5, 2:6])
+    @test B == area_opening(A, maxtree=atree)
+    @test_throws ArgumentError area_opening(A, maxtree=atree_rev)
+    @test_throws DimensionMismatch area_opening(A, maxtree=atree_small)
+    @test area_opening(A, min_area=3) ==
+        [1 1 1 1 3 3;
+         1 1 1 1 3 3;
+         1 1 1 1 1 1;
+         1 4 4 1 1 2;
+         1 4 1 1 5 5;
+         1 1 1 2 5 2]
+    @test area_opening(A, min_area=1) == A
+    @test area_opening(A, min_area=5) ==
+        [1 1 1 1 1 1;
+         1 1 1 1 1 1;
+         1 1 1 1 1 1;
+         1 1 1 1 1 2;
+         1 1 1 1 2 2;
+         1 1 1 2 2 2]
+    @test area_opening(A, min_area=45) == fill(0, (6, 6)) # image less than min_area
+
+    mA = .-A
+    mB = similar(mA)
+    @test mB === area_closing!(mB, mA)
+    @test_throws DimensionMismatch area_closing!(similar(A, (7, 6)), A)
+    matree = MaxTree(mA)
+    matree_rev = MaxTree(mA, rev=true)
+    @test mB == area_closing(mA, maxtree=atree_rev)
+    @test_throws ArgumentError area_closing(mA, maxtree=matree)
+    @test area_closing(mA, min_area=3) == .-area_opening(A, min_area=3)
+end
+
+@testset "diameter_opening/closing()" begin
+    A = [3 1 3 1 3 4;
+         1 3 1 1 4 3;
+         1 1 4 1 1 3;
+         1 4 4 1 1 2;
+         1 4 1 1 1 2;
+         1 1 1 2 5 1]
+    B = similar(A)
+    @test B === diameter_opening!(B, A)
+    @test_throws DimensionMismatch diameter_opening!(similar(A, (7, 6)), A)
+    atree = MaxTree(A)
+    atree_rev = MaxTree(A, rev=true)
+    atree_small = MaxTree(A[1:5, 2:6])
+    @test B == diameter_opening(A, maxtree=atree)
+    @test_throws ArgumentError diameter_opening(A, maxtree=atree_rev)
+    @test_throws DimensionMismatch diameter_opening(A, maxtree=atree_small)
+    @test diameter_opening(A, min_diameter=3) ==
+        [1 1 1 1 3 3;
+         1 1 1 1 3 3;
+         1 1 4 1 1 3;
+         1 4 4 1 1 2;
+         1 4 1 1 1 2;
+         1 1 1 1 1 1]
+    @test diameter_opening(A, min_diameter=1) == A
+    @test diameter_opening(A, min_diameter=3, connectivity=2) ==
+        [3 1 3 1 3 3;
+         1 3 1 1 3 3;
+         1 1 4 1 1 3;
+         1 4 4 1 1 2;
+         1 4 1 1 1 2;
+         1 1 1 2 2 1]
+     @test diameter_opening(A, min_diameter=5, connectivity=2) ==
+        [3 1 3 1 2 2;
+         1 3 1 1 2 2;
+         1 1 3 1 1 2;
+         1 3 3 1 1 2;
+         1 3 1 1 1 2;
+         1 1 1 2 2 1]
+    @test diameter_opening(A, min_diameter=45) == fill(0, (6, 6)) # image less than min_diameter
+
+    mA = .-A
+    mB = similar(mA)
+    @test mB === diameter_closing!(mB, mA)
+    @test_throws DimensionMismatch diameter_closing!(similar(A, (7, 6)), A)
+    matree = MaxTree(mA)
+    matree_rev = MaxTree(mA, rev=true)
+    @test mB == diameter_closing(mA, maxtree=atree_rev)
+    @test_throws ArgumentError diameter_closing(mA, maxtree=matree)
+    @test diameter_closing(mA, min_diameter=3) == .-diameter_opening(A, min_diameter=3)
+end
