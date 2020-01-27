@@ -29,23 +29,14 @@ flexible structuring element that meets a certain criterion.
 [`diameter_opening`](@ref), [`diameter_closing`](@ref).
 
 # References
- - Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-   Connected Operators for Image and Sequence Processing.
-   IEEE Transactions on Image Processing, 7(4), 555-570.
-   :DOI:10.1109/83.663500
- - Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A.,
-   Bertin, E. (2007). Effective Component Tree Computation with
-   Application to Pattern Recognition in Astronomical Imaging.
-   In International Conference on Image Processing (ICIP) (pp. 41-44).
-   :DOI:10.1109/ICIP.2007.4379949
- - Najman, L., & Couprie, M. (2006). Building the component tree in
-   quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-   3531-3539.
-   :DOI:10.1109/TIP.2006.877518
- - Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-   Component Tree Computation Algorithms. IEEE Transactions on Image
-   Processing, 23(9), 3885-3895.
-   :DOI:10.1109/TIP.2014.2336551
+1. Salembier, P., Oliveras, A., & Garrido, L. (1998). *Antiextensive Connected Operators for Image and Sequence Processing*. IEEE Transactions on Image Processing, 7(4), 555-570.
+   > https://doi.org/10.1109/83.663500
+2. Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A., Bertin, E. (2007). *Effective Component Tree Computation with Application to Pattern Recognition in Astronomical Imaging*. In International Conference on Image Processing (ICIP), 41-44.
+   > https://doi.org/10.1109/ICIP.2007.4379949
+3. Najman, L., & Couprie, M. (2006). *Building the component tree in quasi-linear time*. IEEE Transactions on Image Processing, 15(11), 3531-3539.
+   > https://doi.org/10.1109/TIP.2006.877518
+4. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
+   > https://doi.org/10.1109/TIP.2014.2336551
 """
 struct MaxTree{N,A}
     """
@@ -465,26 +456,15 @@ An array of the same type and shape as the `image`.
 [`MaxTree`](@ref), [`opening`](@ref)
 
 # References
-- Vincent L., Proc. "Grayscale area openings and closings,
-  their efficient implementation and applications",
-  EURASIP Workshop on Mathematical Morphology and its
-  Applications to Signal Processing, Barcelona, Spain, pp.22-27,
-  May 1993.
-- Soille, P., "Morphological Image Analysis: Principles and
-  Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
-  DOI:10.1007/978-3-662-05088-0
-- Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-  Connected Operators for Image and Sequence Processing.
-  IEEE Transactions on Image Processing, 7(4), 555-570.
-  DOI:10.1109/83.663500
-- Najman, L., & Couprie, M. (2006). Building the component tree in
-  quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-  3531-3539.
-  DOI:10.1109/TIP.2006.877518
-- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-  Component Tree Computation Algorithms. IEEE Transactions on Image
-  Processing, 23(9), 3885-3895.
-  DOI:10.1109/TIP.2014.2336551
+1. Vincent, L. (1993). *Grayscale area openings and closings, their efficient implementation and applications*, Proc. of EURASIP Workshop on Mathematical Morphology and its Applications to Signal Processing, Barcelona, Spain, 22-27
+2. Soille, P. (2003). Chapter 6 *Geodesic Metrics* of *Morphological Image Analysis: Principles and Applications*, 2nd edition, Springer.
+   > https://doi.org/10.1007/978-3-662-05088-0
+3. Salembier, P., Oliveras, A., & Garrido, L. (1998). *Antiextensive Connected Operators for Image and Sequence Processing*. IEEE Transactions on Image Processing, 7(4), 555-570.
+   > https://doi.org/10.1109/83.663500
+4. Najman, L., & Couprie, M. (2006). *Building the component tree in quasi-linear time*. IEEE Transactions on Image Processing, 15(11), 3531-3539.
+   > https://doi.org/10.1109/TIP.2006.877518
+5. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
+   > https://doi.org/10.1109/TIP.2014.2336551
 
 # Examples
 Creating a test image `f` (quadratic function with a maximum in the center and
@@ -554,16 +534,10 @@ An array of the same type and shape as the `image`.
 [`MaxTree`](@ref), [`opening`](@ref)
 
 # References
-- Walter, T., & Klein, J.-C. (2002). Automatic Detection of
-  Microaneurysms in Color Fundus Images of the Human Retina by Means
-  of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
-  A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
-  Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
-  :DOI:`10.1007/3-540-36104-9_23`
-- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-  Component Tree Computation Algorithms. IEEE Transactions on Image
-  Processing, 23(9), 3885-3895.
-  :DOI:`10.1109/TIP.2014.2336551`
+1. Walter, T., & Klein, J.-C. (2002). *Automatic Detection of Microaneurysms in Color Fundus Images of the Human Retina by Means of the Bounding Box Closing*. In A. Colosimo, P. Sirabella, A. Giuliani (Eds.), *Medical Data Analysis. Lecture Notes in Computer Science*, vol 2526, 210-220. Springer Berlin Heidelberg.
+   > https://doi.org/10.1007/3-540-36104-9_23
+2. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
+   > https://doi.org/10.1109/TIP.2014.2336551
 
 # Examples
 Creating a test image `f` (quadratic function with a maximum in the center and
@@ -639,26 +613,15 @@ An array of the same type and shape as the `image`.
 [`MaxTree`](@ref), [`closing`](@ref)
 
 # References
-- Vincent L., Proc. "Grayscale area openings and closings,
-  their efficient implementation and applications",
-  EURASIP Workshop on Mathematical Morphology and its
-  Applications to Signal Processing, Barcelona, Spain, pp.22-27,
-  May 1993.
-- Soille, P., "Morphological Image Analysis: Principles and
-  Applications" (Chapter 6), 2nd edition (2003), ISBN 3540429883.
-  DOI:10.1007/978-3-662-05088-0
-- Salembier, P., Oliveras, A., & Garrido, L. (1998). Antiextensive
-  Connected Operators for Image and Sequence Processing.
-  IEEE Transactions on Image Processing, 7(4), 555-570.
-  DOI:10.1109/83.663500
-- Najman, L., & Couprie, M. (2006). Building the component tree in
-  quasi-linear time. IEEE Transactions on Image Processing, 15(11),
-  3531-3539.
-  DOI:10.1109/TIP.2006.877518
-- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-  Component Tree Computation Algorithms. IEEE Transactions on Image
-  Processing, 23(9), 3885-3895.
-  DOI:10.1109/TIP.2014.2336551
+1. Vincent, L. (1993). *Grayscale area openings and closings, their efficient implementation and applications*, Proc. of EURASIP Workshop on Mathematical Morphology and its Applications to Signal Processing, Barcelona, Spain, 22-27
+2. Soille, P. (2003). Chapter 6 *Geodesic Metrics* of *Morphological Image Analysis: Principles and Applications*, 2nd edition, Springer.
+   > https://doi.org/10.1007/978-3-662-05088-0
+3. Salembier, P., Oliveras, A., & Garrido, L. (1998). *Antiextensive Connected Operators for Image and Sequence Processing*. IEEE Transactions on Image Processing, 7(4), 555-570.
+   > https://doi.org/10.1109/83.663500
+4. Najman, L., & Couprie, M. (2006). *Building the component tree in quasi-linear time*. IEEE Transactions on Image Processing, 15(11), 3531-3539.
+   > https://doi.org/10.1109/TIP.2006.877518
+5. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
+   > https://doi.org/10.1109/TIP.2014.2336551
 
 # Examples
 Creating a test image `f` (quadratic function with a minimum in the center and
@@ -725,16 +688,10 @@ An array of the same type and shape as the `image`.
 [`MaxTree`](@ref), [`closing`](@ref)
 
 # References
-- Walter, T., & Klein, J.-C. (2002). Automatic Detection of
-  Microaneurysms in Color Fundus Images of the Human Retina by Means
-  of the Bounding Box Closing. In A. Colosimo, P. Sirabella,
-  A. Giuliani (Eds.), Medical Data Analysis. Lecture Notes in Computer
-  Science, vol 2526, pp. 210-220. Springer Berlin Heidelberg.
-  :DOI:`10.1007/3-540-36104-9_23`
-- Carlinet, E., & Geraud, T. (2014). A Comparative Review of
-  Component Tree Computation Algorithms. IEEE Transactions on Image
-  Processing, 23(9), 3885-3895.
-  :DOI:`10.1109/TIP.2014.2336551`
+1. Walter, T., & Klein, J.-C. (2002). *Automatic Detection of Microaneurysms in Color Fundus Images of the Human Retina by Means of the Bounding Box Closing*. In A. Colosimo, P. Sirabella, A. Giuliani (Eds.), *Medical Data Analysis. Lecture Notes in Computer Science*, vol 2526, 210-220. Springer Berlin Heidelberg.
+   > https://doi.org/10.1007/3-540-36104-9_23
+2. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
+   > https://doi.org/10.1109/TIP.2014.2336551
 
 # Examples
 Creating a test image `f` (quadratic function with a minimum in the center and
