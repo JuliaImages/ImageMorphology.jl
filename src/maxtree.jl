@@ -55,7 +55,7 @@ struct MaxTree{N,A}
     Array of the same shape as the source image.
     Each value is the linear index of the parent pixel in the max-tree.
     """
-    parents::Array{Int,N}
+    parentindices::Array{Int,N}
 
     """
     The order of the elements in the tree, from root to leaves.
@@ -75,14 +75,14 @@ end
 Base.ndims(::Type{<:MaxTree{N}}) where N = N
 Base.ndims(maxtree::MaxTree) = ndims(typeof(maxtree))
 Base.axes(maxtree::MaxTree) = maxtree.axes
-Base.length(maxtree::MaxTree) = length(maxtree.parents)
-Base.size(maxtree::MaxTree) = size(maxtree.parents)
+Base.length(maxtree::MaxTree) = length(maxtree.parentindices)
+Base.size(maxtree::MaxTree) = size(maxtree.parentindices)
 Base.:(==)(a::MaxTree{N, A}, b::MaxTree{N, A}) where {N, A} =
     (a.rev == b.rev) && (a.axes == b.axes) &&
-    (a.parents == b.parents) && (a.traverse == b.traverse)
+    (a.parentindices == b.parentindices) && (a.traverse == b.traverse)
 Base.isequal(a::MaxTree{N, A}, b::MaxTree{N, A}) where {N, A} =
     isequal(a.rev, b.rev) && isequal(a.axes, b.axes) &&
-    isequal(a.parents, b.parents) && isequal(a.traverse, b.traverse)
+    isequal(a.parentindices, b.parentindices) && isequal(a.traverse, b.traverse)
 
 """
     root_index(maxtree::MaxTree) -> Int
@@ -109,7 +109,7 @@ root_index(maxtree::MaxTree) = maxtree.traverse[1]
     return p
 end
 
-# Corrects `maxtree.parents`, so that the parent of every pixel
+# Corrects `maxtree.parentindices`, so that the parent of every pixel
 # is a canonical node. I.e. for each connected component at a level l,
 # all pixels point to the same representative, which in turn points to the
 # representative pixel at the next level.
@@ -118,11 +118,11 @@ end
 # ``image(parent(p)) != image(p)``
 function canonize!(maxtree::MaxTree{N}, image::AbstractArray{<:Any, N}) where N
     @assert size(maxtree) == size(image)
-    parents = maxtree.parents
+    parentindices = maxtree.parentindices
     @inbounds for p in maxtree.traverse
-        q = parents[p]
-        if image[q] == image[parents[q]]
-            parents[p] = parents[q]
+        q = parentindices[p]
+        if image[q] == image[parentindices[q]]
+            parentindices[p] = parentindices[q]
         end
     end
     return maxtree
@@ -170,25 +170,25 @@ function rebuild!(maxtree::MaxTree{N},
         getindex(LinearIndices(image), center)
 
     # initialization of the image parent
-    parents = fill!(maxtree.parents, 0) |> vec
-    roots = fill!(similar(parents), 0) # temporary array containing current roots
+    p_indices = fill!(maxtree.parentindices, 0) |> vec
+    p_cis = CartesianIndices(maxtree.parentindices)
+    r_indices = fill!(similar(p_indices), 0) # temporary array containing current roots
     rootpath = Vector{Int}() # temp array to hold the path to the current root within ancestors
-    cindexes = CartesianIndices(maxtree.parents)
 
     # traverse the array in reversed order (from highest value to lowest value)
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
-        p_ci = cindexes[p]
-        parents[p] = roots[p] = p # it's a new root
+        p_ci = p_cis[p]
+        p_indices[p] = r_indices[p] = p # it's a new root
 
         for i in eachindex(neighbors)
             # check that p is in the mask and that it's neighbor is a valid image pixel
             (#=mask[p] && =#isvalid_offset(neighbors[i], p_ci, maxtree.axes)) || continue
             index = p + neighbor_offsets[i] # linear index of the neighbor
-            (parents[index] == 0) && continue # ignore neighbor without parent (= its value is lower)
-            root = rootpath!(rootpath, roots, index) # neighbor's root
+            (p_indices[index] == 0) && continue # ignore neighbor without parent (= its value is lower)
+            root = rootpath!(rootpath, r_indices, index) # neighbor's root
             if (root != p) || (length(rootpath) > 1) # attach neighbor's root to the p
-                parents[root] = p
-                roots[rootpath] .= p # also attach the ancestral nodes of neighbor to p
+                p_indices[root] = p
+                r_indices[rootpath] .= p # also attach the ancestral nodes of neighbor to p
             end
         end
     end
@@ -263,9 +263,9 @@ the component that is represented by the reference pixel with linear index `i`.
 """
 function areas(maxtree::MaxTree)
     areas = fill(1, length(maxtree)) # start with 1-pixel areas
-    parents = maxtree.parents
+    parentindices = maxtree.parentindices
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
-        q = parents[p]
+        q = parentindices[p]
         (q != p) && (areas[q] += areas[p])
     end
     return areas
@@ -295,7 +295,7 @@ function boundingboxes(maxtree::MaxTree{N}) where N
     end
 
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
-        q = maxtree.parents[p]
+        q = maxtree.parentindices[p]
         for i in 1:N
             bboxes[i, q] = min(bboxes[i, q], bboxes[i, p])
         end
@@ -364,10 +364,10 @@ function direct_filter!(output::AbstractArray, image::AbstractArray,
     # if p_root is below min_attr, then all others are as well
     (attrs[p_root] < min_attr) && return fill!(output, all_below_min)
     output[p_root] = image[p_root]
-    parents = maxtree.parents
+    parentindices = maxtree.parentindices
 
     for p in maxtree.traverse
-        q = parents[p]
+        q = parentindices[p]
         # this means p is not canonical
         # in other words, it has a parent that has the
         # same image value.
@@ -727,7 +727,7 @@ function local_extrema!(output::AbstractArray{<:Any, N},
     next_label = one(eltype(output))
     fill!(output, next_label) # initialize output (just has to be non-zero)
     @inbounds for p in Iterators.reverse(maxtree.traverse)
-        q = maxtree.parents[p]
+        q = maxtree.parentindices[p]
         # if p is canonical (parent has a different value)
         if image[p] != image[q]
             output[q] = 0
@@ -742,7 +742,7 @@ function local_extrema!(output::AbstractArray{<:Any, N},
     end
 
     @inbounds for p in Iterators.reverse(maxtree.traverse)
-        q = maxtree.parents[p]
+        q = maxtree.parentindices[p]
         # if p is not canonical (parent has the same value)
         if image[p] == image[q]
             # in this case we propagate the value

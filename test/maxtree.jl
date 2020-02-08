@@ -11,9 +11,9 @@
     @test axes(mtree) == axes(A)
     @test length(mtree) == length(A)
     @test !mtree.rev
-    @test mtree.parents == [4 5 4;
-                            8 2 8;
-                            2 2 2]
+    @test mtree.parentindices == [4 5 4;
+                                  8 2 8;
+                                  2 2 2]
     @test mtree.traverse == [8, 2, 6, 5, 4, 9, 1, 3, 7]
     @test areas(mtree) == [1, 8, 1, 3, 4, 1, 1, 9, 1]
     @test diameters(mtree) == [1, 3, 1, 3, 3, 1, 1, 3, 1]
@@ -25,9 +25,9 @@
     mtree2 = MaxTree(A, connectivity=2)
     @test !mtree2.rev
     @test mtree2 != mtree
-    @test mtree2.parents == [4 5 4;
-                             8 2 8;
-                             5 2 5]
+    @test mtree2.parentindices == [4 5 4;
+                                   8 2 8;
+                                   5 2 5]
     @test mtree2.traverse == [8, 2, 6, 5, 4, 9, 1, 3, 7]
     @test areas(mtree2) == [1, 8, 1, 3, 6, 1, 1, 9, 1]
     @test diameters(mtree2) == [1, 3, 1, 3, 3, 1, 1, 3, 1]
@@ -42,9 +42,9 @@
     A = [15 13 16;
          11 12 10;
          16 11 14]
-    @test mtree_rev.parents == [3 9 3;
-                                5 4 5;
-                                3 5 1]
+    @test mtree_rev.parentindices == [3 9 3;
+                                      5 4 5;
+                                      3 5 1]
     @test mtree_rev.traverse == [3, 7, 1, 9, 4, 5, 2, 6, 8]
     @test areas(mtree_rev) == [7, 1, 9, 5, 4, 1, 1, 1, 6]
     @test diameters(mtree_rev) == [3, 1, 3, 3, 3, 1, 1, 1, 3]
@@ -56,9 +56,9 @@
     # test reverse 8-neighborhood MaxTree
     mtree2_rev = MaxTree(A, rev=true, connectivity=2)
     @test mtree2_rev.rev
-    @test mtree2_rev.parents == [3 9 3;
-                                 5 4 2;
-                                 3 2 1]
+    @test mtree2_rev.parentindices == [3 9 3;
+                                       5 4 2;
+                                       3 2 1]
     @test mtree2_rev.traverse == [3, 7, 1, 9, 4, 5, 2, 6, 8]
     @test areas(mtree2_rev) == [7, 3, 9, 5, 4, 1, 1, 1, 6]
     @test diameters(mtree2_rev) == [3, 3, 3, 3, 3, 1, 1, 1, 3]
