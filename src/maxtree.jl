@@ -67,7 +67,7 @@ struct MaxTree{N,A}
     traverse::Vector{Int}
 
     # create uninitialized MaxTree for image
-    MaxTree{N}(image::AbstractArray{<:Any, N}, rev::Bool) where N =
+    MaxTree{N}(image::GenericGrayImage{<:Any, N}, rev::Bool) where N =
         new{N, typeof(axes(image))}(axes(image), rev, similar(image, Int),
                                     Vector{Int}(undef, length(image)))
 end
@@ -116,7 +116,7 @@ end
 #
 # A canonical node ``p`` is either a root of the max-tree, or
 # ``image(parent(p)) != image(p)``
-function canonize!(maxtree::MaxTree{N}, image::AbstractArray{<:Any, N}) where N
+function canonize!(maxtree::MaxTree, image::GenericGrayImage)
     @assert size(maxtree) == size(image)
     parentindices = maxtree.parentindices
     @inbounds for p in maxtree.traverse
@@ -137,7 +137,7 @@ end
     end
 
 """
-    rebuild!(maxtree::MaxTree, image::AbstractArray,
+    rebuild!(maxtree::MaxTree, image::GenericGrayImage,
              neighbors::AbstractVector{NTuple}) -> maxtree
 
 Rebuilds the `maxtree` for the `image` using `neighbors` as the pixel
@@ -157,7 +157,7 @@ connected to each other by a path through neighboring pixels (as defined by
 [`MaxTree`](@ref)
 """
 function rebuild!(maxtree::MaxTree{N},
-                  image::AbstractArray{<:Number, N},
+                  image::GenericGrayImage{<:Any, N},
                   #=mask::AbstractArray{Bool, N},=#
                   neighbors::AbstractVector{NTuple{N, Int}}) where N
     # pixels need to be sorted according to their gray level.
@@ -206,7 +206,7 @@ function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Int
 end
 
 """
-    MaxTree(image::AbstractArray; [connectivity=1], [rev=false]) -> MaxTree
+    MaxTree(image::GenericGrayImage; [connectivity=1], [rev=false]) -> MaxTree
 
 Constructs the *max-tree* of the `image`.
 
@@ -233,8 +233,9 @@ julia> mtree = MaxTree(image, connectivity=2)
 MaxTree{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}((Base.OneTo(3), Base.OneTo(3)), false, [4 2 4; 8 2 8; 2 2 2], [8, 2, 5, 6, 4, 9, 1, 3, 7])
 ```
 """
-function MaxTree(image::AbstractArray{<:Number, N};
-                 connectivity::Integer=1, rev::Bool=false) where N
+function MaxTree(image::GenericGrayImage;
+                 connectivity::Integer=1, rev::Bool=false)
+    N = ndims(image)
     # User defined masks are not allowed, as there might be more than one
     # connected component in the mask (and therefore not a single tree that
     # represents the image). Mask here is an image that is 0 on the border
@@ -327,7 +328,7 @@ diameters(maxtree::MaxTree{N}) where N =
     end, dims=1)
 
 """
-    direct_filter!(output::AbstractArray, image::AbstractArray,
+    direct_filter!(output::GenericGrayImage, image::GenericGrayImage,
                    maxtree::MaxTree, attrs::AbstractVector, min_attr) -> output
 
 Applies a direct filtering of the `image` and stores the result in `output`.
@@ -351,7 +352,7 @@ E.g. for [`area_opening`](@ref) the attribute is the area of the components.
 In this case, the max-tree components of the `output` have area no smaller
 than `min_attr` pixels.
 """
-function direct_filter!(output::AbstractArray, image::AbstractArray,
+function direct_filter!(output::GenericGrayImage, image::GenericGrayImage,
                         maxtree::MaxTree,
                         attrs::AbstractVector, min_attr,
                         all_below_min = zero(eltype(output)))
@@ -383,7 +384,7 @@ function direct_filter!(output::AbstractArray, image::AbstractArray,
     return output
 end
 
-function check_output_image(output::AbstractArray, image::AbstractArray)
+function check_output_image(output::GenericGrayImage, image::GenericGrayImage)
     (size(output) == size(image)) ||
         throw(DimensionMismatch("The sizes of the output and the input image do not match"))
 end
@@ -391,9 +392,9 @@ end
 # checks if the provided maxtree is compatible with the given options
 # or builds the new maxtree if none was given
 function check_maxtree(maxtree::Union{MaxTree, Nothing},
-                       image::AbstractArray;
-                       connectivity::Integer = 0,
-                       rev::Bool = false)
+                       image::GenericGrayImage;
+                       connectivity::Integer=1,
+                       rev::Bool=false)
     (maxtree === nothing) && return MaxTree(image, connectivity=connectivity, rev=rev)
     (axes(maxtree) == axes(image)) ||
         throw(DimensionMismatch("The axes of the max-tree and the input image do not match"))
@@ -409,7 +410,7 @@ end
 Performs in-place *area opening* of the `image` and stores the result in `output`.
 See [`area_opening`](@ref) for the detailed description of the method.
 """
-function area_opening!(output::AbstractArray, image::AbstractArray;
+function area_opening!(output::GenericGrayImage, image::GenericGrayImage;
                        min_area::Number=64, connectivity::Integer=1,
                        maxtree::Union{MaxTree, Nothing}=nothing)
     check_output_image(output, image)
@@ -438,7 +439,7 @@ In the binary case, area opening is equivalent to `remove_small_objects`;
 this operator is thus extended to gray-level images.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `min_area::Number=64`: the smallest size (in pixels) of the image component
   to keep intact
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
@@ -481,7 +482,7 @@ julia> f_aopen = area_opening(f, min_area=8, connectivity=1)
 ```
 The peaks with a surface smaller than 8 are removed.
 """
-area_opening(image::AbstractArray; kwargs...) =
+area_opening(image::GenericGrayImage; kwargs...) =
     area_opening!(similar(image), image; kwargs...)
 
 """
@@ -491,7 +492,7 @@ area_opening(image::AbstractArray; kwargs...) =
 Performs in-place *diameter opening* of the `image` and stores the result in `output`.
 See [`diameter_opening`](@ref) for the detailed description of the method.
 """
-function diameter_opening!(output::AbstractArray, image::AbstractArray;
+function diameter_opening!(output::GenericGrayImage, image::GenericGrayImage;
                            maxtree::Union{MaxTree, Nothing} = nothing,
                            min_diameter=8, connectivity=1)
     check_output_image(output, image)
@@ -516,7 +517,7 @@ the result is similar to a *morphological opening*, but long and thin
 structures are not removed.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `min_diameter::Number=8`: the minimal length (in pixels) of the widest
   dimension of the bounding box of the image component to keep intact
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
@@ -555,7 +556,7 @@ julia> f_dopen = diameter_opening(f, min_diameter=3, connectivity=1)
 The peaks with a maximal diameter of 2 or less are removed.
 For the remaining peaks the widest side of the bounding box is at least 3.
 """
-diameter_opening(image::AbstractArray; kwargs...) =
+diameter_opening(image::GenericGrayImage; kwargs...) =
     diameter_opening!(similar(image), image; kwargs...)
 
 """
@@ -565,7 +566,7 @@ diameter_opening(image::AbstractArray; kwargs...) =
 Performs in-place *area closing* of the `image` and stores the result in `output`.
 See [`area_closing`](@ref) for the detailed description of the method.
 """
-function area_closing!(output::AbstractArray, image::AbstractArray;
+function area_closing!(output::GenericGrayImage, image::GenericGrayImage;
                        min_area::Number=64, connectivity::Integer=1,
                        maxtree::Union{MaxTree, Nothing}=nothing)
     check_output_image(output, image)
@@ -595,7 +596,7 @@ In the binary case, area closing is equivalent to
 `remove_small_holes`; this operator is thus extended to gray-level images.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `min_area::Number=64`: the smallest size (in pixels) of the image component
   to keep intact
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
@@ -639,7 +640,7 @@ julia> f_aclose = area_closing(f, min_area=8, connectivity=1)
 All small minima are removed, and the remaining minima have at least
 a size of 8.
 """
-area_closing(image::AbstractArray; kwargs...) =
+area_closing(image::GenericGrayImage; kwargs...) =
     area_closing!(similar(image), image; kwargs...)
 
 """
@@ -649,7 +650,7 @@ area_closing(image::AbstractArray; kwargs...) =
 Performs in-place *diameter closing* of the `image` and stores the result in `output`.
 See [`diameter_closing`](@ref) for the detailed description of the method.
 """
-function diameter_closing!(output::AbstractArray, image::AbstractArray;
+function diameter_closing!(output::GenericGrayImage, image::GenericGrayImage;
                            min_diameter::Number=8, connectivity::Integer=1,
                            maxtree::Union{MaxTree, Nothing} = nothing)
     check_output_image(output, image)
@@ -670,7 +671,7 @@ the diameter (the widest dimension of their bounding box) smaller than
 `min_diameter`.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `min_diameter::Number=8`: the minimal length (in pixels) of the widest
   dimension of the bounding box of the image component to keep intact
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
@@ -709,7 +710,7 @@ julia> f_dclose = diameter_closing(f, min_diameter=3, connectivity=1)
 All small minima with a diameter of 2 or less are removed.
 For the remaining minima the widest bounding box side is at least 3.
 """
-diameter_closing(image::AbstractArray; kwargs...) =
+diameter_closing(image::GenericGrayImage; kwargs...) =
     diameter_closing!(similar(image), image; kwargs...)
 
 # Calculates the local maxima or minima of the image using the max-tree
@@ -718,9 +719,9 @@ diameter_closing(image::AbstractArray; kwargs...) =
 # useful if the max-tree is already calculated.
 # Each minima/maxima region is labeled with the unique id (1 is the global
 # maximum/minimum).
-function local_extrema!(output::AbstractArray{<:Any, N},
-                        image::AbstractArray{<:Any, N},
-                        maxtree::MaxTree{N}) where N
+function local_extrema!(output::GenericGrayImage,
+                        image::GenericGrayImage,
+                        maxtree::MaxTree)
     (axes(image) == axes(maxtree)) || throw(DimensionMismatch())
     (size(output) == size(image)) || throw(DimensionMismatch())
 
@@ -759,7 +760,7 @@ end
 Detects the local maxima of `image` and stores the result in `output`.
 See [`local_maxima`](@ref) for the detailed description of the method.
 """
-function local_maxima!(output::AbstractArray, image::AbstractArray;
+function local_maxima!(output::GenericGrayImage, image::GenericGrayImage;
                        connectivity::Integer=1,
                        maxtree::Union{MaxTree, Nothing} = nothing)
     check_output_image(output, image)
@@ -768,7 +769,7 @@ function local_maxima!(output::AbstractArray, image::AbstractArray;
 end
 
 """
-    local_maxima(image::AbstractArray; [connectivity=1], [maxtree=nothing]) -> Array
+    local_maxima(image::GenericGrayImage; [connectivity=1], [maxtree=nothing]) -> Array
 
 Determines and labels all *local maxima* of the `image`.
 
@@ -783,7 +784,7 @@ has already been computed. Otherwise, it is preferable to use
 the function `local_maxima`.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `connectivity::Integer=1`: the neighborhood connectivity.
   The maximum number of orthogonal steps to reach a neighbor of the pixel.
   In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.
@@ -813,7 +814,7 @@ julia> f_maxima = local_maxima(f)
 ```
 The resulting image contains the 4 labeled local maxima.
 """
-local_maxima(image::AbstractArray; connectivity::Integer=1,
+local_maxima(image::GenericGrayImage; connectivity::Integer=1,
              maxtree::Union{MaxTree, Nothing} = nothing) =
     local_maxima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
 
@@ -823,7 +824,7 @@ local_maxima(image::AbstractArray; connectivity::Integer=1,
 Detects the local minima of `image` and stores the result in `output`.
 See [`local_minima`](@ref) for the detailed description of the method.
 """
-function local_minima!(output::AbstractArray, image::AbstractArray;
+function local_minima!(output::GenericGrayImage, image::GenericGrayImage;
                        connectivity::Integer=1,
                        maxtree::Union{MaxTree, Nothing} = nothing)
     check_output_image(output, image)
@@ -832,7 +833,7 @@ function local_minima!(output::AbstractArray, image::AbstractArray;
 end
 
 """
-    local_minima(image::AbstractArray; [connectivity=1], [maxtree=nothing]) -> Array
+    local_minima(image::GenericGrayImage; [connectivity=1], [maxtree=nothing]) -> Array
 
 Determines and labels all *local minima* of the `image`.
 
@@ -847,7 +848,7 @@ has already been computed. Otherwise, it is preferable to use
 the function `local_minima`.
 
 # Arguments
-- `image::AbstractArray`: the ``N``-dimensional input image
+- `image::GenericGrayImage`: the ``N``-dimensional input image
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
   a 4-neighborhood and 2 for a 8-neighborhood.
@@ -876,6 +877,6 @@ julia> f_minima = local_minima(f)
 ```
 The resulting image contains the labeled local minima.
 """
-local_minima(image::AbstractArray; connectivity::Integer=1,
+local_minima(image::GenericGrayImage; connectivity::Integer=1,
              maxtree::Union{MaxTree, Nothing} = nothing) =
     local_minima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)

@@ -1,6 +1,7 @@
 module ImageMorphology
 
 using ImageCore
+using ImageCore: GenericGrayImage
 using Base.Cartesian # TODO: delete this
 
 include("convexhull.jl")
