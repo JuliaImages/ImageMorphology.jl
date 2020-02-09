@@ -135,13 +135,9 @@ function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Int
 end
 
 # convert offsets of cartesian indices into linear offsets of the given array
-function linear_offsets(offsets::AbstractVector{CartesianIndex{N}},
-                        image::GenericGrayImage{<:Any, N}) where N
-    # some sufficiently inner point
-    center = CartesianIndex{N}(ntuple(i -> 1 + size(image, i) ÷ 2, Val{N}()))
-    lindices = LinearIndices(image)
-    return getindex.(Ref(lindices), offsets .+ Ref(center)) .- lindices[center]
-end
+linear_offsets(offsets::AbstractVector{<:CartesianIndex},
+               arr::AbstractArray) =
+    dot.(Tuple.(offsets), Ref(strides(arr)))
 
 """
     rebuild!(maxtree::MaxTree, image::GenericGrayImage,
