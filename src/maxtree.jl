@@ -134,8 +134,8 @@ isvalid_offset(offset::CartesianIndex{N}, pixel::CartesianIndex{N},
 # ensuring efficient memory access pattern.
 function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Integer) where N
     (connectivity >= 1) || throw(ArgumentError("connectivity should be positive integer"))
-    ci1 = one(CartesianIndex{N})
-    return [ci for ci in -ci1:ci1 if 1 <= sum(abs, Tuple(ci)) <= connectivity]
+    return [ci for ci in CartesianIndices(ntuple(_ -> -1:1, N))
+            if 1 <= sum(abs, Tuple(ci)) <= connectivity]
 end
 
 # convert offsets of cartesian indices into linear offsets of the given array
