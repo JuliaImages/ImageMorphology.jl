@@ -763,7 +763,7 @@ neighborhood of the set.
 
 Technically, the implementation is based on the *max-tree* representation
 of an image. It's beneficial if the max-tree is already computed,
-otherwise the alternative methods would be more efficient.
+otherwise [`Images.findlocalmaxima`](@ref) would be more efficient.
 
 # Arguments
 - `image::GenericGrayImage`: the ``N``-dimensional input image
@@ -779,7 +779,8 @@ maxima have 0 value. Pixels of the same local maximum share the same positive
 value (the local maximum id).
 
 # See also
-[`MaxTree`](@ref), [`local_maxima!`](@ref), [`local_minima`](@ref)
+[`MaxTree`](@ref), [`local_maxima!`](@ref), [`local_minima`](@ref),
+[`Images.findlocalmaxima`](@ref)
 
 # Examples
 Create `f` (quadratic function with a maximum in the center and
@@ -825,7 +826,7 @@ neighborhood of the set.
 
 Technically, the implementation is based on the *max-tree* representation
 of an image. It's beneficial if the max-tree is already computed,
-otherwise the alternative methods would be more efficient.
+otherwise [`Images.findlocalminima`](@ref) would be more efficient.
 
 # Arguments
 - `image::GenericGrayImage`: the ``N``-dimensional input image
@@ -841,7 +842,8 @@ minima have 0 value. Pixels of the same local minimum share the same positive
 value (the local minimum id).
 
 # See also
-[`MaxTree`](@ref), [`local_minima!`](@ref), [`local_maxima`](@ref)
+[`MaxTree`](@ref), [`local_minima!`](@ref), [`local_maxima`](@ref),
+[`Images.findlocalminima`](@ref)
 
 # Examples
 Create `f` (quadratic function with a minimum in the center and
