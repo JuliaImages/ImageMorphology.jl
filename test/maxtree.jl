@@ -105,6 +105,12 @@ bbox2d(x1, y1, x2, y2) = (CI2(x1, y1), CI2(x2, y2))
     mtree101 = MaxTree(A101, connectivity=2, rev=false)
     @test mtree101 isa MaxTree{3}
     @test diameters(mtree101) == Array{Int}(undef, 1, 0, 1)
+
+    # test offset arrays
+    Am11 = OffsetArray(A, -1, -1)
+    am11_tree = MaxTree(Am11, connectivity=1, rev=false)
+    @test size(am11_tree) == size(Am11)
+    @test am11_tree.parentindices == mtree.parentindices
 end
 
 @testset "local_minima/maxima()" begin
@@ -139,6 +145,12 @@ end
 
     @test local_minima(A, maxtree=atree_rev, connectivity=2) == local_minima(A)
     @test_throws ArgumentError local_minima(A, maxtree=atree)
+
+    # test offset arrays
+    Am11 = OffsetArray(A, -1, -1)
+    @test local_maxima(Am11) isa OffsetArray{Int,2}
+    @test collect(local_maxima(Am11)) == local_maxima(A)
+    @test collect(local_minima(Am11)) == local_minima(A)
 end
 
 @testset "area_opening/closing()" begin
@@ -183,6 +195,12 @@ end
     @test mB == area_closing(mA, maxtree=atree_rev)
     @test_throws ArgumentError area_closing(mA, maxtree=matree)
     @test area_closing(mA, min_area=3) == .-area_opening(A, min_area=3)
+
+    # test offset arrays
+    Am11 = OffsetArray(A, -1, -1)
+    @test area_opening(Am11) isa OffsetArray{Int,2}
+    @test collect(area_opening(Am11)) == area_opening(A)
+    @test collect(area_closing(Am11)) == area_closing(A)
 end
 
 @testset "diameter_opening/closing()" begin
@@ -234,4 +252,10 @@ end
     @test mB == diameter_closing(mA, maxtree=atree_rev)
     @test_throws ArgumentError diameter_closing(mA, maxtree=matree)
     @test diameter_closing(mA, min_diameter=3) == .-diameter_opening(A, min_diameter=3)
+
+    # test offset arrays
+    Am11 = OffsetArray(A, -1, -1)
+    @test diameter_opening(Am11) isa OffsetArray{Int,2}
+    @test collect(diameter_opening(Am11)) == diameter_opening(A)
+    @test collect(diameter_closing(Am11)) == diameter_closing(A)
 end

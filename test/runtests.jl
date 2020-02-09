@@ -1,5 +1,6 @@
 using ImageMorphology
 using Test
+using OffsetArrays
 
 @testset "ImageMorphology" begin
     include("convexhull.jl")

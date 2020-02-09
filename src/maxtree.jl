@@ -103,7 +103,7 @@ struct MaxTree{N}
 
     # create uninitialized MaxTree for image
     MaxTree{N}(image::GenericGrayImage{<:Any, N}, rev::Bool) where N =
-        new{N}(rev, similar(image, Int),
+        new{N}(rev, Array{Int,N}(undef, size(image)),
                Vector{Int}(undef, length(image)))
 end
 
@@ -207,7 +207,7 @@ function rebuild!(maxtree::MaxTree{N},
     # pixels need to be sorted according to their gray level.
     sortperm!(maxtree.traverse, vec(image), rev=maxtree.rev)
 
-    neighbor_offsets = linear_offsets(neighbors, image)
+    neighbor_offsets = linear_offsets(neighbors, maxtree.parentindices)
     p_indices = fill!(maxtree.parentindices, 0) |> vec # 0=uninitialized parent
     p_cis = CartesianIndices(maxtree.parentindices)
     p_axes = axes(maxtree.parentindices)
