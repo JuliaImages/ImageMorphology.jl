@@ -304,18 +304,20 @@ diameters(maxtree::MaxTree) =
     [maximum(Tuple(bbox[2] - bbox[1])) + 1 for bbox in boundingboxes(maxtree)]
 
 """
-    direct_filter!(output::GenericGrayImage, image::GenericGrayImage,
-                   maxtree::MaxTree, attrs::AbstractVector, min_attr) -> output
+    filter_components!(output::GenericGrayImage, image::GenericGrayImage,
+                       maxtree::MaxTree, attrs::AbstractVector,
+                       min_attr, all_below_min) -> output
 
-Applies a direct filtering of the `image` and stores the result in `output`.
+Filters the connected components of the `image` and stores the result in `output`.
 
-Produces an image in which all components of its max-tree representation
-have the specified attribute value no less than `min_attr`. It's done by
-replacing the pixels of the component that has smaller attribute value with
-the value of the reference pixel of its first valid ancestor.
+The ``output`` is the copy of the ``image`` exluding the connected components,
+whose attribute value is below `min_attr`. That is, the pixels of the exluded
+component are reset to the value of the reference pixel of its first valid
+ancestor (the connected component with the attribute value greater or equal
+to `min_attr`).
 
 # Arguments
-- `maxtree::MaxTree{N}`: pre-built max-tree of the `image`
+- `maxtree::MaxTree`: pre-built max-tree representation of the `image`
 - `attrs::AbstractVector`: `attrs[i]` is the attribute value for the ``i``-th
    component of the tree (``i`` being the linear index of its *reference pixel*)
 - `all_below_min`: the value to fill the `output` if all attributes of all
@@ -327,11 +329,15 @@ and similar transformations.
 E.g. for [`area_opening`](@ref) the attribute is the area of the components.
 In this case, the max-tree components of the `output` have area no smaller
 than `min_attr` pixels.
+
+The method assumes that the attribute values are monotone with respect to the
+components hieararchy, i.e. ``attrs[i] <= attrs[maxtree.parentindices[i]]`` for
+each `i`.
 """
-function direct_filter!(output::GenericGrayImage, image::GenericGrayImage,
-                        maxtree::MaxTree,
-                        attrs::AbstractVector, min_attr,
-                        all_below_min = zero(eltype(output)))
+function filter_components!(output::GenericGrayImage, image::GenericGrayImage,
+                            maxtree::MaxTree,
+                            attrs::AbstractVector, min_attr,
+                            all_below_min = zero(eltype(output)))
     # should have been already checked by higher-level functions
     @assert size(output) == size(image)
     @assert size(image) == size(maxtree)
@@ -391,7 +397,7 @@ function area_opening!(output::GenericGrayImage, image::GenericGrayImage;
                        maxtree::Union{MaxTree, Nothing}=nothing)
     check_output_image(output, image)
     _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
-    return direct_filter!(output, image, _maxtree, areas(_maxtree), min_area)
+    return filter_components!(output, image, _maxtree, areas(_maxtree), min_area)
 end
 
 """
@@ -472,7 +478,7 @@ function diameter_opening!(output::GenericGrayImage, image::GenericGrayImage;
                            min_diameter=8, connectivity=1)
     check_output_image(output, image)
     _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
-    return direct_filter!(output, image, _maxtree, diameters(_maxtree), min_diameter)
+    return filter_components!(output, image, _maxtree, diameters(_maxtree), min_diameter)
 end
 
 """
@@ -546,7 +552,7 @@ function area_closing!(output::GenericGrayImage, image::GenericGrayImage;
                        maxtree::Union{MaxTree, Nothing}=nothing)
     check_output_image(output, image)
     _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
-    return direct_filter!(output, image, _maxtree, areas(_maxtree), min_area)
+    return filter_components!(output, image, _maxtree, areas(_maxtree), min_area)
 end
 
 """
@@ -629,7 +635,7 @@ function diameter_closing!(output::GenericGrayImage, image::GenericGrayImage;
                            maxtree::Union{MaxTree, Nothing} = nothing)
     check_output_image(output, image)
     _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
-    return direct_filter!(output, image, _maxtree, diameters(_maxtree), min_diameter)
+    return filter_components!(output, image, _maxtree, diameters(_maxtree), min_diameter)
 end
 
 """
