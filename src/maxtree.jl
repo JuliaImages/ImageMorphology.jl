@@ -118,15 +118,34 @@ end
 
 # Checks whether the `pixel` + `offset` is still a valid pixel
 # contained inside the image area defined by `axes`.
-@generated isvalid_offset(offset::NTuple{N, Int}, pixel::CartesianIndex{N},
-                          axes::NTuple{N}) where N =
-    quote
-        Base.Cartesian.@nall $N i -> in(pixel[i] + offset[i], axes[i])
-    end
+isvalid_offset(offset::CartesianIndex{N}, pixel::CartesianIndex{N},
+               axes::NTuple{N}) where N =
+    Base.checkbounds_indices(Bool, axes, (pixel + offset,))
+
+# generates a vector of offsets to the CartesianIndex that defines
+# the neighborhood of the pixel in an N-dimensional image.
+# `connectivity` is the maximal number of orthogonal steps
+# (+1/-1 to a single dimension) that are required to reach a neighbor.
+# Note that the corresponding offsets of linear indices would be sorted in ascending order
+# ensuring efficient memory access pattern.
+function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Integer) where N
+    (connectivity >= 1) || throw(ArgumentError("connectivity should be positive integer"))
+    ci1 = oneunit(CartesianIndex{N})
+    return [ci for ci in -ci1:ci1 if 1 <= sum(abs, Tuple(ci)) <= connectivity]
+end
+
+# convert offsets of cartesian indices into linear offsets of the given array
+function linear_offsets(offsets::AbstractVector{CartesianIndex{N}},
+                        image::GenericGrayImage{<:Any, N}) where N
+    # some sufficiently inner point
+    center = CartesianIndex{N}(ntuple(i -> 1 + size(image, i) ÷ 2, Val{N}()))
+    lindices = LinearIndices(image)
+    return getindex.(Ref(lindices), offsets .+ Ref(center)) .- lindices[center]
+end
 
 """
     rebuild!(maxtree::MaxTree, image::GenericGrayImage,
-             neighbors::AbstractVector{NTuple}) -> maxtree
+             neighbors::AbstractVector{CartesianIndex}) -> maxtree
 
 Rebuilds the `maxtree` for the `image` using `neighbors` as the pixel
 connectivity specification.
@@ -147,17 +166,12 @@ connected to each other by a path through neighboring pixels (as defined by
 function rebuild!(maxtree::MaxTree{N},
                   image::GenericGrayImage{<:Any, N},
                   #=mask::AbstractArray{Bool, N},=#
-                  neighbors::AbstractVector{NTuple{N, Int}}) where N
+                  neighbors::AbstractVector{CartesianIndex{N}}) where N
+    check_maxtree(maxtree, image, rev=maxtree.rev)
     # pixels need to be sorted according to their gray level.
     sortperm!(maxtree.traverse, vec(image), rev=maxtree.rev)
-    # some sufficiently inner point
-    center = CartesianIndex{N}(ntuple(i -> 1 + size(image, i) ÷ 2, Val{N}()))
-    # offsets for linear indices (note that they are sorted in ascending order)
-    neighbor_offsets = getindex.(Ref(LinearIndices(image)),
-        [CartesianIndex{N}(ntuple(i -> center[i] + n[i], Val{N}())) for n in neighbors]) .-
-        getindex(LinearIndices(image), center)
 
-    # initialization of the image parent
+    neighbor_offsets = linear_offsets(neighbors, image)
     p_indices = fill!(maxtree.parentindices, 0) |> vec
     p_cis = CartesianIndices(maxtree.parentindices)
     p_axes = axes(maxtree.parentindices)
@@ -182,16 +196,6 @@ function rebuild!(maxtree::MaxTree{N},
         end
     end
     return canonize!(maxtree, image)
-end
-
-# generates a vector of offsets to the CartesianIndex that defines
-# the neighborhood of the pixel in an N-dimensional image.
-# `connectivity` is the maximal number of orthogonal steps
-# (+1/-1 to a single dimension) that are required to reach a neighbor.
-function neighbor_cartesian_offsets(::Type{CartesianIndex{N}}, connectivity::Integer) where N
-    cis = CartesianIndices(ntuple(_ -> 3, Val{N}()))
-    offsets = [Tuple(ci) .- 2 for ci in cis]
-    return filter!(offset -> 0 < sum(abs, offset) <= connectivity, vec(offsets))
 end
 
 """

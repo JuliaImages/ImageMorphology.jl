@@ -1,3 +1,22 @@
+@testset "connectivity neighborhoods" begin
+    @test @inferred(ImageMorphology.neighbor_cartesian_offsets(CartesianIndex{1}, 1)) ==
+          ImageMorphology.neighbor_cartesian_offsets(CartesianIndex{1}, 2) ==
+          [CartesianIndex{1}(-1), CartesianIndex{1}(1)]
+    conn2d_4 = ImageMorphology.neighbor_cartesian_offsets(CartesianIndex{2}, 1)
+    @test conn2d_4 ==
+        [CartesianIndex{2}(0, -1), CartesianIndex{2}(-1, 0),
+         CartesianIndex{2}(1, 0), CartesianIndex{2}(0, 1)]
+    @test @inferred(ImageMorphology.neighbor_cartesian_offsets(CartesianIndex{2}, 2)) ==
+          [CartesianIndex{2}(-1, -1), CartesianIndex{2}(0, -1), CartesianIndex{2}(1, -1),
+           CartesianIndex{2}(-1, 0), CartesianIndex{2}(1, 0),
+           CartesianIndex{2}(-1, 1), CartesianIndex{2}(0, 1), CartesianIndex{2}(1, 1)]
+    # images with sizes less than 3 are not supported
+    @test_throws BoundsError ImageMorphology.linear_offsets(conn2d_4, fill(0, (1, 1)))
+    @test_throws BoundsError ImageMorphology.linear_offsets(conn2d_4, fill(0, (2, 2)))
+    @test @inferred(ImageMorphology.linear_offsets(conn2d_4, fill(0, (3, 3)))) == [-3, -1, 1, 3]
+    @test @inferred(ImageMorphology.linear_offsets(conn2d_4, fill(0, (7, 9)))) == [-7, -1, 1, 7]
+end
+
 @testset "MaxTree construction" begin
     A = [15 13 16;
          11 12 10;
