@@ -195,7 +195,7 @@ function rebuild!(maxtree::MaxTree{N},
 end
 
 """
-    MaxTree(image::GenericGrayImage; [connectivity=1], [rev=false]) -> MaxTree
+    MaxTree(image::GenericGrayImage; connectivity=1, rev=false) -> MaxTree
 
 Constructs the *max-tree* of the `image`.
 
@@ -394,7 +394,7 @@ end
 
 """
     area_opening!(output, image;
-                  [min_area=64], [connectivity=1], [maxtree=nothing]) -> output
+                  min_area=64, connectivity=1, maxtree=nothing) -> output
 
 Performs in-place *area opening* of the `image` and stores the result in `output`.
 See [`area_opening`](@ref) for the detailed description of the method.
@@ -408,8 +408,7 @@ function area_opening!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    area_opening(image; [min_area=64], [connectivity=1],
-                 [maxtree=nothing]) -> Array
+    area_opening(image; min_area=64, connectivity=1, maxtree=nothing) -> Array
 
 Performs an *area opening* of the `image`.
 
@@ -475,8 +474,8 @@ area_opening(image::GenericGrayImage; kwargs...) =
     area_opening!(similar(image), image; kwargs...)
 
 """
-    diameter_opening!(output, image; [min_diameter=8],
-                      [connectivity=1], [maxtree=nothing]) -> output
+    diameter_opening!(output, image; min_diameter=8,
+                      connectivity=1, maxtree=nothing) -> output
 
 Performs in-place *diameter opening* of the `image` and stores the result in `output`.
 See [`diameter_opening`](@ref) for the detailed description of the method.
@@ -490,8 +489,8 @@ function diameter_opening!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    diameter_opening(image; [min_diameter=8], [connectivity=1],
-                     [maxtree=nothing]) -> Array
+    diameter_opening(image; min_diameter=8, connectivity=1,
+                     maxtree=nothing) -> Array
 
 Performs a *diameter opening* of the `image`.
 
@@ -549,8 +548,8 @@ diameter_opening(image::GenericGrayImage; kwargs...) =
     diameter_opening!(similar(image), image; kwargs...)
 
 """
-    area_closing!(output, image; [min_area=64], [connectivity=1],
-                  [maxtree=nothing]) -> output
+    area_closing!(output, image; min_area=64, connectivity=1,
+                  maxtree=nothing) -> output
 
 Performs in-place *area closing* of the `image` and stores the result in `output`.
 See [`area_closing`](@ref) for the detailed description of the method.
@@ -564,8 +563,7 @@ function area_closing!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    area_closing(image; [min_area=64], [connectivity=1],
-                 [maxtree=nothing]) -> Array
+    area_closing(image; min_area=64, connectivity=1, maxtree=nothing) -> Array
 
 Performs an *area closing* of the `image`.
 
@@ -633,8 +631,8 @@ area_closing(image::GenericGrayImage; kwargs...) =
     area_closing!(similar(image), image; kwargs...)
 
 """
-    diameter_closing!(output, image; [min_diameter=8], [connectivity=1],
-                      [maxtree=nothing]) -> output
+    diameter_closing!(output, image; min_diameter=8, connectivity=1,
+                      maxtree=nothing) -> output
 
 Performs in-place *diameter closing* of the `image` and stores the result in `output`.
 See [`diameter_closing`](@ref) for the detailed description of the method.
@@ -648,8 +646,8 @@ function diameter_closing!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    diameter_closing(image; [min_diameter=8], [connectivity=1],
-                     [maxtree=nothing]) -> Array
+    diameter_closing(image; min_diameter=8, connectivity=1,
+                     maxtree=nothing) -> Array
 
 Performs a *diameter closing* of the `image`.
 
@@ -744,7 +742,7 @@ function local_extrema!(output::GenericGrayImage,
 end
 
 """
-    local_maxima!(output, image; [connectivity=1], [maxtree=nothing]) -> output
+    local_maxima!(output, image; connectivity=1, maxtree=nothing) -> output
 
 Detects the local maxima of `image` and stores the result in `output`.
 See [`local_maxima`](@ref) for the detailed description of the method.
@@ -758,7 +756,7 @@ function local_maxima!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    local_maxima(image::GenericGrayImage; [connectivity=1], [maxtree=nothing]) -> Array
+    local_maxima(image::GenericGrayImage; connectivity=1, maxtree=nothing) -> Array
 
 Determines and labels all *local maxima* of the `image`.
 
@@ -808,7 +806,7 @@ local_maxima(image::GenericGrayImage; connectivity::Integer=1,
     local_maxima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
 
 """
-    local_minima!(output, image; [connectivity=1], [maxtree=nothing]) -> output
+    local_minima!(output, image; connectivity=1, maxtree=nothing) -> output
 
 Detects the local minima of `image` and stores the result in `output`.
 See [`local_minima`](@ref) for the detailed description of the method.
@@ -822,7 +820,7 @@ function local_minima!(output::GenericGrayImage, image::GenericGrayImage;
 end
 
 """
-    local_minima(image::GenericGrayImage; [connectivity=1], [maxtree=nothing]) -> Array
+    local_minima(image::GenericGrayImage; connectivity=1, maxtree=nothing) -> Array
 
 Determines and labels all *local minima* of the `image`.
 
