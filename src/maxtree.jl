@@ -755,13 +755,12 @@ Determines and labels all *local maxima* of the `image`.
 
 # Details
 The *local maximum* is defined as the connected set of pixels that have the
-same value, which is grater then the values of all pixels in direct
+same value, which is greater than the values of all pixels in direct
 neighborhood of the set.
 
 Technically, the implementation is based on the *max-tree* representation
-of an image. It's efficient if the max-tree representation
-has already been computed. Otherwise, it is preferable to use
-the function `local_maxima`.
+of an image. It's beneficial if the max-tree is already computed,
+otherwise the alternative methods would be more efficient.
 
 # Arguments
 - `image::GenericGrayImage`: the ``N``-dimensional input image
@@ -775,7 +774,6 @@ the function `local_maxima`.
 An integer array of the same shape as the `image`. Pixels that are not local
 maxima have 0 value. Pixels of the same local maximum share the same positive
 value (the local maximum id).
-
 
 # See also
 [`MaxTree`](@ref), [`local_maxima!`](@ref), [`local_minima`](@ref)
@@ -819,13 +817,12 @@ Determines and labels all *local minima* of the `image`.
 
 # Details
 The *local minimum* is defined as the connected set of pixels that have the
-same value, which is less then the values of all pixels in direct
+same value, which is less than the values of all pixels in direct
 neighborhood of the set.
 
 Technically, the implementation is based on the *max-tree* representation
-of an image. It's efficient if the max-tree representation
-has already been computed. Otherwise, it is preferable to use
-the function `local_minima`.
+of an image. It's beneficial if the max-tree is already computed,
+otherwise the alternative methods would be more efficient.
 
 # Arguments
 - `image::GenericGrayImage`: the ``N``-dimensional input image
