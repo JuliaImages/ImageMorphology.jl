@@ -94,6 +94,22 @@ _boundingboxes(::Type{CartesianIndex{N}}, bboxes_matrix::Matrix{Int}) where N =
          1 1 1 1 1 2 3 3 1;
          3 3 3 3 3 3 1 2 3;
          3 3 3 3 3 2 3 3 3])
+
+    # degenerated cases
+    A00 = fill(0, (0, 0))
+    mtree00 = MaxTree(A00, connectivity=1, rev=false)
+    @test mtree00 isa MaxTree{2}
+    @test areas(mtree00) == Vector{Int}()
+
+    A11 = fill(0, (1, 1))
+    mtree11 = MaxTree(A11, connectivity=2, rev=false)
+    @test mtree11 isa MaxTree{2}
+    @test areas(mtree11) == [1]
+
+    A101 = fill(0, (1, 0, 1))
+    mtree101 = MaxTree(A101, connectivity=2, rev=false)
+    @test mtree101 isa MaxTree{3}
+    @test diameters(mtree101) == Vector{Int}()
 end
 
 @testset "local_minima/maxima()" begin
