@@ -240,19 +240,20 @@ function MaxTree(image::GenericGrayImage;
 end
 
 """
-    areas(maxtree::MaxTree) -> Vector{Int}
+    areas(maxtree::MaxTree) -> Array{Int}
 
 Computes the areas of all `maxtree` components.
 
 # Returns
-The vector of component areas. The `i`-th element is the area (in pixels) of
-the component that is represented by the reference pixel with linear index `i`.
+The array of the same shape as the original image. The `i`-th element is
+the area (in pixels) of the component that is represented by the reference
+pixel with index `i`.
 
 # See also
 [`diameters`](@ref), [`area_opening`](@ref), [`area_closing`](@ref).
 """
 function areas(maxtree::MaxTree)
-    areas = fill(1, length(maxtree)) # start with 1-pixel areas
+    areas = fill(1, size(maxtree)) # start with 1-pixel areas
     parentindices = maxtree.parentindices
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
         q = parentindices[p]
@@ -262,21 +263,21 @@ function areas(maxtree::MaxTree)
 end
 
 """
-    boundingboxes(maxtree::MaxTree) -> Vector{NTuple{2, CartesianIndex}}
+    boundingboxes(maxtree::MaxTree) -> Array{NTuple{2, CartesianIndex}}
 
 Computes the minimal bounding boxes of all `maxtree` components.
 
 # Returns
-The vector of bounding boxes. The `i`-th element is the tuple of the minimal
-and maximal cartesian indices for the bounding box of the subtree
-with the root at the `i`-th pixel.
+The array of the same shape as the original image. The `i`-th element is
+the tuple of the minimal and maximal cartesian indices for the bounding box
+of the component that is represented by the reference pixel with index `i`.
 
 # See also
 [`diameters`](@ref).
 """
 function boundingboxes(maxtree::MaxTree{N}) where N
     # initialize bboxes
-    bboxes = vec([(ci, ci) for ci in CartesianIndices(maxtree.parentindices)])
+    bboxes = [(ci, ci) for ci in CartesianIndices(maxtree.parentindices)]
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
         q = maxtree.parentindices[p]
         bbp, bbq = bboxes[p], bboxes[q]
@@ -286,7 +287,7 @@ function boundingboxes(maxtree::MaxTree{N}) where N
 end
 
 """
-    diameters(maxtree::MaxTree) -> Vector{Int}
+    diameters(maxtree::MaxTree) -> Array{Int}
 
 Computes the "diameters" of all `maxtree` components.
 
@@ -294,7 +295,9 @@ Computes the "diameters" of all `maxtree` components.
 the widest side of the component's bounding box.
 
 # Returns
-The `i`-th element of the result is the "diameter" of the `i`-th component.
+The array of the same shape as the original image. The `i`-th element is the
+"diameter" of the component that is represented by the reference pixel with
+index `i`.
 
 # See also
 [`boundingboxes`](@ref), [`areas`](@ref),
@@ -336,7 +339,7 @@ each `i`.
 """
 function filter_components!(output::GenericGrayImage, image::GenericGrayImage,
                             maxtree::MaxTree,
-                            attrs::AbstractVector, min_attr,
+                            attrs::AbstractArray, min_attr,
                             all_below_min = zero(eltype(output)))
     # should have been already checked by higher-level functions
     @assert size(output) == size(image)
