@@ -9,9 +9,27 @@ Let's consider a *thresholding* operation,
 One can identify the connected components (the sets of neighboring true values)
 in `mask`. When *image thresholding* is sequentially applied for all possible
 thresholds, it generates a collection of connected components that could be
-organized into a hierarchical structure called *component tree*.
-A connected component at one threshold is a parent to a component at the higher
-threshold if the latter is a subset of the first.
+organized into a hierarchical structure called *component tree*. Consider 1D
+"image" with values 1, 2 and 3:
+```
+       2233233312223322
+```
+The connected components would be
+```
+    1: AAAAAAAAAAAAAAAA
+    2: BBBBBBBB.CCCCCCC
+    3: ..DD.EEE....FF..
+```
+Here, the letters are the labels of the resulting connected components,
+and `.` specifies that the pixel value is below the threshold.
+In this example, the corresponding *component tree* is:
+```
+      A
+     ⭩ ⭨
+    B   C
+   ⭩ ⭨   ⭨
+  D   E   F
+```
 
 A *max-tree* is an efficient representation of the *component tree*.
 A connected component ``C`` at threshold level ``t`` is represented by the
@@ -55,9 +73,9 @@ struct MaxTree{N}
     """
     The order of the elements in the tree, from root to leaves.
     Each element corresponds to the linear index of the pixel in the image.
-    A parent of a pixel always comes before the pixel itself, i.e.
-    if index `i` comes before `j`, then `j`-th pixel cannot be
-    the parent of `i`-th pixel.
+    A parent of the pixel always comes before the pixel itself, i.e.
+    `parentindices[traverse[1]] == traverse[1]` (the root pixel) and
+    `parentindices[traverse[k]] ∈ traverse[1:k-1]` for all `k >= 2`.
     """
     traverse::Vector{Int}
 
