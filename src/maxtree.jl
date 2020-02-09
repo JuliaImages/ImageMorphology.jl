@@ -168,7 +168,7 @@ function rebuild!(maxtree::MaxTree{N},
     sortperm!(maxtree.traverse, vec(image), rev=maxtree.rev)
 
     neighbor_offsets = linear_offsets(neighbors, image)
-    p_indices = fill!(maxtree.parentindices, 0) |> vec
+    p_indices = fill!(maxtree.parentindices, 0) |> vec # 0=uninitialized parent
     p_cis = CartesianIndices(maxtree.parentindices)
     p_axes = axes(maxtree.parentindices)
     r_indices = fill!(similar(p_indices), 0) # temporary array containing current roots
@@ -183,7 +183,7 @@ function rebuild!(maxtree::MaxTree{N},
             # check that p is in the mask and that it's neighbor is a valid image pixel
             (#=mask[p] && =#isvalid_offset(neighbors[i], p_ci, p_axes)) || continue
             index = p + neighbor_offsets[i] # linear index of the neighbor
-            (p_indices[index] == 0) && continue # ignore neighbor without parent (= its value is lower)
+            (p_indices[index] == 0) && continue # ignore neighbor without parent (this means image[index] < image[p])
             root = rootpath!(rootpath, r_indices, index) # neighbor's root
             if (root != p) || (length(rootpath) > 1) # attach neighbor's root to the p
                 p_indices[root] = p
