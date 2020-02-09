@@ -1,10 +1,6 @@
 """
 Max-tree morphological representation of an image.
 
-# Type parameters
-- `N`: the dimensions of the source image
-- `A`: the type of the `axes(image)`
-
 # Details
 Let's consider image *thresholding* operation. The result is the image mask s.t.
 ``image[p] ≥ threshold`` for all ``p`` in the mask. This mask could also be
@@ -38,12 +34,7 @@ flexible structuring element that meets a certain criterion.
 4. Carlinet, E., & Geraud, T. (2014). *A Comparative Review of Component Tree Computation Algorithms*. IEEE Transactions on Image Processing, 23(9), 3885-3895.
    > https://doi.org/10.1109/TIP.2014.2336551
 """
-struct MaxTree{N,A}
-    """
-    Axes of the source image.
-    """
-    axes::A
-
+struct MaxTree{N}
     """
     If `false`, the tree is constructed from the smallest to the largest values,
     the tree root being the smallest (darkest) pixel.
@@ -68,21 +59,18 @@ struct MaxTree{N,A}
 
     # create uninitialized MaxTree for image
     MaxTree{N}(image::GenericGrayImage{<:Any, N}, rev::Bool) where N =
-        new{N, typeof(axes(image))}(axes(image), rev, similar(image, Int),
-                                    Vector{Int}(undef, length(image)))
+        new{N}(rev, similar(image, Int),
+               Vector{Int}(undef, length(image)))
 end
 
 Base.ndims(::Type{<:MaxTree{N}}) where N = N
 Base.ndims(maxtree::MaxTree) = ndims(typeof(maxtree))
-Base.axes(maxtree::MaxTree) = maxtree.axes
 Base.length(maxtree::MaxTree) = length(maxtree.parentindices)
 Base.size(maxtree::MaxTree) = size(maxtree.parentindices)
-Base.:(==)(a::MaxTree{N, A}, b::MaxTree{N, A}) where {N, A} =
-    (a.rev == b.rev) && (a.axes == b.axes) &&
-    (a.parentindices == b.parentindices) && (a.traverse == b.traverse)
-Base.isequal(a::MaxTree{N, A}, b::MaxTree{N, A}) where {N, A} =
-    isequal(a.rev, b.rev) && isequal(a.axes, b.axes) &&
-    isequal(a.parentindices, b.parentindices) && isequal(a.traverse, b.traverse)
+Base.:(==)(a::MaxTree, b::MaxTree) =
+    (ndims(a) == ndims(b)) && (a.rev == b.rev) &&
+    (a.parentindices == b.parentindices) &&
+    (a.traverse == b.traverse)
 
 """
     root_index(maxtree::MaxTree) -> Int
@@ -172,6 +160,7 @@ function rebuild!(maxtree::MaxTree{N},
     # initialization of the image parent
     p_indices = fill!(maxtree.parentindices, 0) |> vec
     p_cis = CartesianIndices(maxtree.parentindices)
+    p_axes = axes(maxtree.parentindices)
     r_indices = fill!(similar(p_indices), 0) # temporary array containing current roots
     rootpath = Vector{Int}() # temp array to hold the path to the current root within ancestors
 
@@ -182,7 +171,7 @@ function rebuild!(maxtree::MaxTree{N},
 
         for i in eachindex(neighbors)
             # check that p is in the mask and that it's neighbor is a valid image pixel
-            (#=mask[p] && =#isvalid_offset(neighbors[i], p_ci, maxtree.axes)) || continue
+            (#=mask[p] && =#isvalid_offset(neighbors[i], p_ci, p_axes)) || continue
             index = p + neighbor_offsets[i] # linear index of the neighbor
             (p_indices[index] == 0) && continue # ignore neighbor without parent (= its value is lower)
             root = rootpath!(rootpath, r_indices, index) # neighbor's root
@@ -230,7 +219,7 @@ julia> image = [15 13 16; 12 12 10; 16 12 14]
  16  12  14
 
 julia> mtree = MaxTree(image, connectivity=2)
-MaxTree{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}((Base.OneTo(3), Base.OneTo(3)), false, [4 2 4; 8 2 8; 2 2 2], [8, 2, 5, 6, 4, 9, 1, 3, 7])
+MaxTree{2}(false, [4 2 4; 8 2 8; 2 2 2], [8, 2, 5, 6, 4, 9, 1, 3, 7])
 ```
 """
 function MaxTree(image::GenericGrayImage;
@@ -289,7 +278,7 @@ elements are its maximal cartesian index.
 function boundingboxes(maxtree::MaxTree{N}) where N
     # initialize bboxes
     bboxes = Matrix{Int}(undef, 2N, length(maxtree))
-    @inbounds for (i, ci) in enumerate(CartesianIndices(maxtree.axes))
+    @inbounds for (i, ci) in enumerate(CartesianIndices(maxtree.parentindices))
         offset = 2N * (i-1)
         bboxes[offset .+ (1:N)] .= Tuple(ci)
         bboxes[offset .+ ((N+1):2N)] .= Tuple(ci)
@@ -357,8 +346,8 @@ function direct_filter!(output::GenericGrayImage, image::GenericGrayImage,
                         attrs::AbstractVector, min_attr,
                         all_below_min = zero(eltype(output)))
     # should have been already checked by higher-level functions
-    @assert axes(output) == axes(image)
-    @assert axes(image) == axes(maxtree)
+    @assert size(output) == size(image)
+    @assert size(image) == size(maxtree)
     @assert length(attrs) == length(maxtree)
 
     p_root = root_index(maxtree)
@@ -396,8 +385,8 @@ function check_maxtree(maxtree::Union{MaxTree, Nothing},
                        connectivity::Integer=1,
                        rev::Bool=false)
     (maxtree === nothing) && return MaxTree(image, connectivity=connectivity, rev=rev)
-    (axes(maxtree) == axes(image)) ||
-        throw(DimensionMismatch("The axes of the max-tree and the input image do not match"))
+    (size(maxtree) == size(image)) ||
+        throw(DimensionMismatch("The sizes of the max-tree and the input image do not match"))
     (maxtree.rev == rev) ||
         throw(ArgumentError("The traversal order of the given max-tree is different from the requested one"))
     return maxtree
@@ -722,7 +711,7 @@ diameter_closing(image::GenericGrayImage; kwargs...) =
 function local_extrema!(output::GenericGrayImage,
                         image::GenericGrayImage,
                         maxtree::MaxTree)
-    (axes(image) == axes(maxtree)) || throw(DimensionMismatch())
+    (size(image) == size(maxtree)) || throw(DimensionMismatch())
     (size(output) == size(image)) || throw(DimensionMismatch())
 
     next_label = one(eltype(output))
