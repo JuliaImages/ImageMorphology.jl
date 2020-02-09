@@ -56,7 +56,7 @@ I.e.
 
 So the whole max-tree could be encoded as a vector of indices of parent pixels:
 ```
-9  1  1  3  1  1  6  6  9  9 10 10 10 13 10 10 10
+9  1  1  3  1  1  6  6  9  9 10 10 10 13 10 10
 ```
 
 The *max-tree* is the basis for many morphological operators,
