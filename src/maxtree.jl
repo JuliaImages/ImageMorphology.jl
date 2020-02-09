@@ -705,7 +705,7 @@ function local_extrema!(output::GenericGrayImage,
     (size(image) == size(maxtree)) || throw(DimensionMismatch())
     (size(output) == size(image)) || throw(DimensionMismatch())
 
-    next_label = one(eltype(output))
+    next_label = oneunit(eltype(output))
     fill!(output, next_label) # initialize output (just has to be non-zero)
     @inbounds for p in Iterators.reverse(maxtree.traverse)
         q = maxtree.parentindices[p]
