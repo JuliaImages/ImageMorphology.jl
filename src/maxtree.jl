@@ -2,18 +2,22 @@
 Max-tree morphological representation of an image.
 
 # Details
-Let's consider image *thresholding* operation. The result is the image mask s.t.
-``image[p] ≥ threshold`` for all ``p`` in the mask. This mask could also be
-viewed as a set of connected components. When *image thresholding* is
-sequentially applied for all possible thresholds, it generates a collection of
-connected components that could be organized into a hierarchical structure
-called *component tree*. A connected component at one threshold is a parent to
-a component at the higher threshold if the latter is a subset of the first.
+Let's consider a *thresholding* operation,
+```
+    mask = [val ≥ threshold for val in image]
+```
+One can identify the connected components (the sets of neighboring true values)
+in `mask`. When *image thresholding* is sequentially applied for all possible
+thresholds, it generates a collection of connected components that could be
+organized into a hierarchical structure called *component tree*.
+A connected component at one threshold is a parent to a component at the higher
+threshold if the latter is a subset of the first.
 
 A *max-tree* is an efficient representation of the *component tree*.
-A connected component at one level is represented by the single *reference pixel*
-from this level, which is the parent to all other pixels of that level and
-to the *reference pixel* of the level above.
+A connected component ``C`` at threshold level ``t`` is represented by the
+single *reference pixel* ``r`` from this level (`image[r] == t`), which is the
+parent to all other pixels of ``C`` and also to the *reference pixels* of the
+connected components at higher thresholds, which are the children ``C``.
 
 The *max-tree* is the basis for many morphological operators,
 namely connected operators. Unlike morphological openings and closings, these
