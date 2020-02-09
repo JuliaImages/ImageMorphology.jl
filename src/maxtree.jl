@@ -262,36 +262,25 @@ function areas(maxtree::MaxTree)
 end
 
 """
-    boundingboxes(maxtree::MaxTree) -> Matrix{Int}
+    boundingboxes(maxtree::MaxTree) -> Vector{NTuple{2, CartesianIndex}}
 
 Computes the minimal bounding boxes of all `maxtree` components.
 
 # Returns
-The matrix, where the `i`-th column encodes the bounding box of the subtree
-with the root at the `i`-th pixel. The first ``N`` elements of the column
-define the minimal cartesian index of the bounding box, the last ``N``
-elements are its maximal cartesian index.
+The vector of bounding boxes. The `i`-th element is the tuple of the minimal
+and maximal cartesian indices for the bounding box of the subtree
+with the root at the `i`-th pixel.
 
 # See also
 [`diameters`](@ref).
 """
 function boundingboxes(maxtree::MaxTree{N}) where N
     # initialize bboxes
-    bboxes = Matrix{Int}(undef, 2N, length(maxtree))
-    @inbounds for (i, ci) in enumerate(CartesianIndices(maxtree.parentindices))
-        offset = 2N * (i-1)
-        bboxes[offset .+ (1:N)] .= Tuple(ci)
-        bboxes[offset .+ ((N+1):2N)] .= Tuple(ci)
-    end
-
+    bboxes = vec([(ci, ci) for ci in CartesianIndices(maxtree.parentindices)])
     @inbounds for p in Iterators.Reverse(maxtree.traverse)
         q = maxtree.parentindices[p]
-        for i in 1:N
-            bboxes[i, q] = min(bboxes[i, q], bboxes[i, p])
-        end
-        for i in (N+1):2N
-            bboxes[i, q] = max(bboxes[i, q], bboxes[i, p])
-        end
+        bbp, bbq = bboxes[p], bboxes[q]
+        bboxes[q] = (min(bbq[1], bbp[1]), max(bbq[2], bbp[2]))
     end
     return bboxes
 end
@@ -311,10 +300,8 @@ The `i`-th element of the result is the "diameter" of the `i`-th component.
 [`boundingboxes`](@ref), [`areas`](@ref),
 [`diameter_opening`](@ref), [`diameter_closing`](@ref).
 """
-diameters(maxtree::MaxTree{N}) where N =
-    dropdims(mapslices(boundingboxes(maxtree), dims=1) do bbox
-        maximum(ntuple(i -> bbox[i+N] - bbox[i] + 1, Val{N}()))
-    end, dims=1)
+diameters(maxtree::MaxTree) =
+    [maximum(Tuple(bbox[2] - bbox[1])) + 1 for bbox in boundingboxes(maxtree)]
 
 """
     direct_filter!(output::GenericGrayImage, image::GenericGrayImage,

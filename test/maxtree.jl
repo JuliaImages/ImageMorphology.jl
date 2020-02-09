@@ -17,6 +17,12 @@
     @test @inferred(ImageMorphology.linear_offsets(conn2d_4, fill(0, (7, 9)))) == [-7, -1, 1, 7]
 end
 
+_boundingbox(::Type{CartesianIndex{N}}, bbox_vec::AbstractVector{Int}) where N =
+    (CartesianIndex(bbox_vec[1:N]...), CartesianIndex(bbox_vec[(N+1):2N]...))
+
+_boundingboxes(::Type{CartesianIndex{N}}, bboxes_matrix::Matrix{Int}) where N =
+    _boundingbox.(Ref(CartesianIndex{N}), eachslice(bboxes_matrix, dims=2))
+
 @testset "MaxTree construction" begin
     A = [15 13 16;
          11 12 10;
@@ -36,10 +42,11 @@ end
     @test mtree.traverse == [8, 2, 6, 5, 4, 9, 1, 3, 7]
     @test areas(mtree) == [1, 8, 1, 3, 4, 1, 1, 9, 1]
     @test diameters(mtree) == [1, 3, 1, 3, 3, 1, 1, 3, 1]
-    @test boundingboxes(mtree) == [1 1 3 1 1 3 1 1 3;
-                                   1 1 1 1 1 2 3 1 3;
-                                   1 3 3 1 2 3 1 3 3;
-                                   1 3 1 3 3 2 3 3 3]
+    @test boundingboxes(mtree) == _boundingboxes(CartesianIndex{2},
+        [1 1 3 1 1 3 1 1 3;
+         1 1 1 1 1 2 3 1 3;
+         1 3 3 1 2 3 1 3 3;
+         1 3 1 3 3 2 3 3 3])
     # test 8-neighborhood
     mtree2 = MaxTree(A, connectivity=2)
     @test !mtree2.rev
@@ -50,10 +57,11 @@ end
     @test mtree2.traverse == [8, 2, 6, 5, 4, 9, 1, 3, 7]
     @test areas(mtree2) == [1, 8, 1, 3, 6, 1, 1, 9, 1]
     @test diameters(mtree2) == [1, 3, 1, 3, 3, 1, 1, 3, 1]
-    @test boundingboxes(mtree2) == [1 1 3 1 1 3 1 1 3;
-                                    1 1 1 1 1 2 3 1 3;
-                                    1 3 3 1 3 3 1 3 3;
-                                    1 3 1 3 3 2 3 3 3]
+    @test boundingboxes(mtree2) == _boundingboxes(CartesianIndex{2},
+        [1 1 3 1 1 3 1 1 3;
+         1 1 1 1 1 2 3 1 3;
+         1 3 3 1 3 3 1 3 3;
+         1 3 1 3 3 2 3 3 3])
 
     # test reverse (brightest to darkest) MaxTree
     mtree_rev = MaxTree(A, rev=true)
@@ -67,10 +75,11 @@ end
     @test mtree_rev.traverse == [3, 7, 1, 9, 4, 5, 2, 6, 8]
     @test areas(mtree_rev) == [7, 1, 9, 5, 4, 1, 1, 1, 6]
     @test diameters(mtree_rev) == [3, 1, 3, 3, 3, 1, 1, 1, 3]
-    @test boundingboxes(mtree_rev) == [1 2 1 1 2 3 1 2 1;
-                                       1 1 1 1 1 2 3 3 1;
-                                       3 2 3 3 3 3 1 2 3;
-                                       3 1 3 3 3 2 3 3 3]
+    @test boundingboxes(mtree_rev) == _boundingboxes(CartesianIndex{2},
+        [1 2 1 1 2 3 1 2 1;
+         1 1 1 1 1 2 3 3 1;
+         3 2 3 3 3 3 1 2 3;
+         3 1 3 3 3 2 3 3 3])
 
     # test reverse 8-neighborhood MaxTree
     mtree2_rev = MaxTree(A, rev=true, connectivity=2)
@@ -81,10 +90,11 @@ end
     @test mtree2_rev.traverse == [3, 7, 1, 9, 4, 5, 2, 6, 8]
     @test areas(mtree2_rev) == [7, 3, 9, 5, 4, 1, 1, 1, 6]
     @test diameters(mtree2_rev) == [3, 3, 3, 3, 3, 1, 1, 1, 3]
-    @test boundingboxes(mtree2_rev) == [1 2 1 1 2 3 1 2 1;
-                                        1 1 1 1 1 2 3 3 1;
-                                        3 3 3 3 3 3 1 2 3;
-                                        3 3 3 3 3 2 3 3 3]
+    @test boundingboxes(mtree2_rev) == _boundingboxes(CartesianIndex{2},
+        [1 2 1 1 2 3 1 2 1;
+         1 1 1 1 1 2 3 3 1;
+         3 3 3 3 3 3 1 2 3;
+         3 3 3 3 3 2 3 3 3])
 end
 
 @testset "local_minima/maxima()" begin
