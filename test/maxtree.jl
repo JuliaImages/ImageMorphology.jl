@@ -20,7 +20,8 @@ _boundingbox(::Type{CartesianIndex{N}}, bbox_vec::AbstractVector{Int}) where N =
     (CartesianIndex(bbox_vec[1:N]...), CartesianIndex(bbox_vec[(N+1):2N]...))
 
 _boundingboxes(::Type{CartesianIndex{N}}, bboxes_matrix::Matrix{Int}) where N =
-    _boundingbox.(Ref(CartesianIndex{N}), eachslice(bboxes_matrix, dims=2))
+    [_boundingbox(CartesianIndex{N}, view(bboxes_matrix, :, i))
+     for i in axes(bboxes_matrix, 2)]
 
 @testset "MaxTree construction" begin
     A = [15 13 16;
