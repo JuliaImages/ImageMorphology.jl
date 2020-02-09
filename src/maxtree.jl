@@ -35,7 +35,29 @@ A *max-tree* is an efficient representation of the *component tree*.
 A connected component ``C`` at threshold level ``t`` is represented by the
 single *reference pixel* ``r`` from this level (`image[r] == t`), which is the
 parent to all other pixels of ``C`` and also to the *reference pixels* of the
-connected components at higher thresholds, which are the children ``C``.
+connected components at higher thresholds, which are the children of ``C``.
+In our example, the reference pixels (denoted by the letter of the corresponding
+component) would be:
+```
+    1: ........A.......
+    2: B........C......
+    3: ..D..E......F...
+```
+I.e.
+
+| Comp | Ref.Pixel |
+| ---- | ---------:|
+| *A* |  9 |
+| *B* |  1 |
+| *C* | 10 |
+| *D* |  3 |
+| *E* |  6 |
+| *F* | 13 |
+
+So the whole max-tree could be encoded as a vector of indices of parent pixels:
+```
+9  1  1  3  1  1  6  6  9  9 10 10 10 13 10 10 10
+```
 
 The *max-tree* is the basis for many morphological operators,
 namely connected operators. Unlike morphological openings and closings, these
