@@ -148,8 +148,9 @@ end
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
-    @test local_maxima(Am11) isa OffsetArray{Int,2}
+    @test axes(local_maxima(Am11)) == axes(Am11)
     @test collect(local_maxima(Am11)) == local_maxima(A)
+    @test axes(local_minima(Am11)) == axes(Am11)
     @test collect(local_minima(Am11)) == local_minima(A)
 end
 
@@ -198,8 +199,9 @@ end
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
-    @test area_opening(Am11) isa OffsetArray{Int,2}
+    @test axes(area_opening(Am11)) == axes(Am11)
     @test collect(area_opening(Am11)) == area_opening(A)
+    @test axes(area_closing(Am11)) == axes(Am11)
     @test collect(area_closing(Am11)) == area_closing(A)
 end
 
@@ -255,7 +257,8 @@ end
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
-    @test diameter_opening(Am11) isa OffsetArray{Int,2}
+    @test axes(diameter_opening(Am11)) == axes(Am11)
     @test collect(diameter_opening(Am11)) == diameter_opening(A)
+    @test axes(diameter_closing(Am11)) == axes(Am11)
     @test collect(diameter_closing(Am11)) == diameter_closing(A)
 end
