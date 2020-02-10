@@ -8,7 +8,7 @@ ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
-ColorVectorSpace = "0.8, 0.9"
+ColorVectorSpace = "0.7, 0.8"
 ImageCore = "0.8.1"
 julia = "1"
 
