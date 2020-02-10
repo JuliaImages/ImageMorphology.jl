@@ -3,7 +3,7 @@ Max-tree morphological representation of an image.
 
 # Details
 Let's consider a *thresholding* operation,
-```
+```julia
     mask = [val ≥ threshold for val in image]
 ```
 One can identify the connected components (the sets of neighboring true values)
