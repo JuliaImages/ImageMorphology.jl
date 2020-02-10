@@ -4,6 +4,7 @@ using ImageCore
 using ImageCore: GenericGrayImage
 using LinearAlgebra
 using ColorVectorSpace
+using Compat # for CartesianIndices ranges and oneunit()
 using Base.Cartesian # TODO: delete this
 
 include("convexhull.jl")
