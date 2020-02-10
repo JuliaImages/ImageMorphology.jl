@@ -106,6 +106,9 @@ bbox2d(x1, y1, x2, y2) = (CI2(x1, y1), CI2(x2, y2))
     @test mtree101 isa MaxTree{3}
     @test diameters(mtree101) == Array{Int}(undef, 1, 0, 1)
 
+    # test grayscale
+    @test MaxTree(Gray.(A./255)) isa MaxTree{2}
+
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
     am11_tree = MaxTree(Am11, connectivity=1, rev=false)
@@ -145,6 +148,10 @@ end
 
     @test local_minima(A, maxtree=atree_rev, connectivity=2) == local_minima(A)
     @test_throws ArgumentError local_minima(A, maxtree=atree)
+
+    # test grayscale
+    @test local_maxima(Gray.(A./255)) == [3 0 1; 0 0 0; 2 0 4]
+    @test local_minima(Gray.(A./255)) == [0 0 0; 3 0 1; 0 2 0]
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
@@ -196,6 +203,10 @@ end
     @test mB == area_closing(mA, maxtree=atree_rev)
     @test_throws ArgumentError area_closing(mA, maxtree=matree)
     @test area_closing(mA, min_area=3) == .-area_opening(A, min_area=3)
+
+    # test grayscale
+    @test area_opening(Gray.(A./255)) == area_opening(A)
+    @test area_closing(Gray.(A./255)) == area_closing(A)
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)
@@ -254,6 +265,10 @@ end
     @test mB == diameter_closing(mA, maxtree=atree_rev)
     @test_throws ArgumentError diameter_closing(mA, maxtree=matree)
     @test diameter_closing(mA, min_diameter=3) == .-diameter_opening(A, min_diameter=3)
+
+    # test grayscale
+    @test diameter_opening(Gray.(A./255)) == diameter_opening(A)
+    @test diameter_closing(Gray.(A./255)) == diameter_closing(A)
 
     # test offset arrays
     Am11 = OffsetArray(A, -1, -1)

@@ -1,5 +1,6 @@
 using ImageMorphology
 using Test
+using ColorTypes
 using OffsetArrays
 
 @testset "ImageMorphology" begin
