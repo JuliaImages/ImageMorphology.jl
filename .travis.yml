@@ -1,20 +1,15 @@
+# Until https://github.com/julia-actions/julia-uploadcodecov/issues/1 get fixed
+# submit coverage report via travis
 language: julia
 
 os:
   - linux
-  - osx
 
 julia:
   - 1.0
-  - 1
-  - nightly
 
 notifications:
   email: false
-
-matrix:
-  allow_failures:
-  - julia: nightly
 
 script:
   - julia --check-bounds=yes --color=yes --project -e 'using Pkg; Pkg.build(); Pkg.test(; coverage=true);'

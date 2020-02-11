@@ -1,7 +1,6 @@
 # ImageMorphology
 
-[![][travis-img]][travis-url]
-[![][appveyor-img]][appveyor-url]
+[![][action-img]][action-url]
 [![][pkgeval-img]][pkgeval-url]
 [![][codecov-img]][codecov-url]
 
@@ -38,10 +37,8 @@ Please check the top-level documentation at [Images.jl][images-url].
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/I/ImageMorphology.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
-[travis-img]: https://travis-ci.org/JuliaImages/ImageMorphology.jl.svg?branch=master
-[travis-url]: https://travis-ci.org/JuliaImages/ImageMorphology.jl
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/JuliaImages/ImageMorphology.jl?svg=true
-[appveyor-url]: https://ci.appveyor.com/project/JuliaImages/ImageMorphology-jl
+[action-img]: https://github.com/JuliaImages/ImageQualityIndexes.jl/workflows/Unit%20test/badge.svg
+[action-url]: https://action-ci.org/JuliaImages/ImageQualityIndexes.jl
 [codecov-img]: https://codecov.io/github/JuliaImages/ImageMorphology.jl/coverage.svg?branch=master
 [codecov-url]: https://codecov.io/github/JuliaImages/ImageMorphology.jl?branch=master
 
