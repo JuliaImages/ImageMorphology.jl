@@ -37,8 +37,8 @@ Please check the top-level documentation at [Images.jl][images-url].
 
 [pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/I/ImageMorphology.svg
 [pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
-[action-img]: https://github.com/JuliaImages/ImageQualityIndexes.jl/workflows/Unit%20test/badge.svg
-[action-url]: https://action-ci.org/JuliaImages/ImageQualityIndexes.jl
+[action-img]: https://github.com/JuliaImages/ImageMorphology.jl/workflows/Unit%20test/badge.svg
+[action-url]: https://action-ci.org/JuliaImages/ImageMorphology.jl
 [codecov-img]: https://codecov.io/github/JuliaImages/ImageMorphology.jl/coverage.svg?branch=master
 [codecov-url]: https://codecov.io/github/JuliaImages/ImageMorphology.jl?branch=master
 
