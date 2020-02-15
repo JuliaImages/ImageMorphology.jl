@@ -132,8 +132,8 @@ end
     @test local_maxima(A, connectivity=2) == [3 0 1; 0 0 0; 2 0 4]
     atree = MaxTree(A)
     atree_rev = MaxTree(A, rev=true)
-    @test local_maxima(A, maxtree=atree, connectivity=2) == local_maxima(A)
-    @test_throws ArgumentError local_maxima(A, maxtree=atree_rev)
+    @test_throws MethodError local_maxima(A, atree, connectivity=2)
+    @test_throws ArgumentError local_maxima(A, atree_rev)
 
     # test local_minima
     @test local_minima(A) == [0 0 0;
@@ -146,8 +146,8 @@ end
     @test B == float(local_minima(A))
     @test_throws DimensionMismatch local_minima!(fill(0, (4, 2)), A)
 
-    @test local_minima(A, maxtree=atree_rev, connectivity=2) == local_minima(A)
-    @test_throws ArgumentError local_minima(A, maxtree=atree)
+    @test local_minima(A, atree_rev, connectivity=2) == local_minima(A)
+    @test_throws ArgumentError local_minima(A, atree)
 
     # test grayscale
     @test local_maxima(Gray.(A./255)) == [3 0 1; 0 0 0; 2 0 4]
@@ -174,9 +174,9 @@ end
     atree = MaxTree(A)
     atree_rev = MaxTree(A, rev=true)
     atree_small = MaxTree(A[1:5, 2:6])
-    @test B == area_opening(A, maxtree=atree)
-    @test_throws ArgumentError area_opening(A, maxtree=atree_rev)
-    @test_throws DimensionMismatch area_opening(A, maxtree=atree_small)
+    @test B == area_opening(A, atree)
+    @test_throws ArgumentError area_opening(A, atree_rev)
+    @test_throws DimensionMismatch area_opening(A, atree_small)
     @test area_opening(A, min_area=3) ==
         [1 1 1 1 3 3;
          1 1 1 1 3 3;
@@ -200,8 +200,8 @@ end
     @test_throws DimensionMismatch area_closing!(similar(A, (7, 6)), A)
     matree = MaxTree(mA)
     matree_rev = MaxTree(mA, rev=true)
-    @test mB == area_closing(mA, maxtree=atree_rev)
-    @test_throws ArgumentError area_closing(mA, maxtree=matree)
+    @test mB == area_closing(mA, atree_rev)
+    @test_throws ArgumentError area_closing(mA, matree)
     @test area_closing(mA, min_area=3) == .-area_opening(A, min_area=3)
 
     # test grayscale
@@ -229,9 +229,9 @@ end
     atree = MaxTree(A)
     atree_rev = MaxTree(A, rev=true)
     atree_small = MaxTree(A[1:5, 2:6])
-    @test B == diameter_opening(A, maxtree=atree)
-    @test_throws ArgumentError diameter_opening(A, maxtree=atree_rev)
-    @test_throws DimensionMismatch diameter_opening(A, maxtree=atree_small)
+    @test B == diameter_opening(A, atree)
+    @test_throws ArgumentError diameter_opening(A, atree_rev)
+    @test_throws DimensionMismatch diameter_opening(A, atree_small)
     @test diameter_opening(A, min_diameter=3) ==
         [1 1 1 1 3 3;
          1 1 1 1 3 3;
@@ -262,8 +262,8 @@ end
     @test_throws DimensionMismatch diameter_closing!(similar(A, (7, 6)), A)
     matree = MaxTree(mA)
     matree_rev = MaxTree(mA, rev=true)
-    @test mB == diameter_closing(mA, maxtree=atree_rev)
-    @test_throws ArgumentError diameter_closing(mA, maxtree=matree)
+    @test mB == diameter_closing(mA, atree_rev)
+    @test_throws ArgumentError diameter_closing(mA, matree)
     @test diameter_closing(mA, min_diameter=3) == .-diameter_opening(A, min_diameter=3)
 
     # test grayscale

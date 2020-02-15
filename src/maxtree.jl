@@ -416,35 +416,31 @@ end
 
 # checks if the provided maxtree is compatible with the given options
 # or builds the new maxtree if none was given
-function check_maxtree(maxtree::Union{MaxTree, Nothing},
+function check_maxtree(maxtree::MaxTree,
                        image::GenericGrayImage;
-                       connectivity::Integer=1,
                        rev::Bool=false)
-    (maxtree === nothing) && return MaxTree(image, connectivity=connectivity, rev=rev)
     (size(maxtree) == size(image)) ||
         throw(DimensionMismatch("The sizes of the max-tree and the input image do not match"))
     (maxtree.rev == rev) ||
         throw(ArgumentError("The traversal order of the given max-tree is different from the requested one"))
-    return maxtree
 end
 
 """
-    area_opening!(output, image;
-                  min_area=64, connectivity=1, maxtree=nothing) -> output
+    area_opening!(output, image, [maxtree];
+                  min_area=64, connectivity=1) -> output
 
 Performs in-place *area opening* of the `image` and stores the result in `output`.
 See [`area_opening`](@ref) for the detailed description of the method.
 """
-function area_opening!(output::GenericGrayImage, image::GenericGrayImage;
-                       min_area::Number=64, connectivity::Integer=1,
-                       maxtree::Union{MaxTree, Nothing}=nothing)
+function area_opening!(output::GenericGrayImage, image::GenericGrayImage,
+                       maxtree::MaxTree; min_area::Number=64)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
-    return filter_components!(output, image, _maxtree, areas(_maxtree), min_area)
+    check_maxtree(maxtree, image, rev=false)
+    return filter_components!(output, image, maxtree, areas(maxtree), min_area)
 end
 
 """
-    area_opening(image; min_area=64, connectivity=1, maxtree=nothing) -> Array
+    area_opening(image, [maxtree]; min_area=64, connectivity=1) -> Array
 
 Performs an *area opening* of the `image`.
 
@@ -469,8 +465,8 @@ this operator is thus extended to gray-level images.
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel.
   In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*.
-  Note that if `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An array of the same type and shape as the `image`.
@@ -506,27 +502,24 @@ julia> f_aopen = area_opening(f, min_area=8, connectivity=1)
 ```
 The peaks with a surface smaller than 8 are removed.
 """
-area_opening(image::GenericGrayImage; kwargs...) =
-    area_opening!(similar(image), image; kwargs...)
+area_opening
 
 """
-    diameter_opening!(output, image; min_diameter=8,
-                      connectivity=1, maxtree=nothing) -> output
+    diameter_opening!(output, image, [maxtree];
+                      min_diameter=8, connectivity=1) -> output
 
 Performs in-place *diameter opening* of the `image` and stores the result in `output`.
 See [`diameter_opening`](@ref) for the detailed description of the method.
 """
-function diameter_opening!(output::GenericGrayImage, image::GenericGrayImage;
-                           maxtree::Union{MaxTree, Nothing} = nothing,
-                           min_diameter=8, connectivity=1)
+function diameter_opening!(output::GenericGrayImage, image::GenericGrayImage,
+                           maxtree::MaxTree; min_diameter=8)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
-    return filter_components!(output, image, _maxtree, diameters(_maxtree), min_diameter)
+    check_maxtree(maxtree, image, rev=false)
+    return filter_components!(output, image, maxtree, diameters(maxtree), min_diameter)
 end
 
 """
-    diameter_opening(image; min_diameter=8, connectivity=1,
-                     maxtree=nothing) -> Array
+    diameter_opening(image, [maxtree]; min_diameter=8, connectivity=1) -> Array
 
 Performs a *diameter opening* of the `image`.
 
@@ -547,8 +540,8 @@ structures are not removed.
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
   a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
-  when `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An array of the same type and shape as the `image`.
@@ -580,26 +573,24 @@ julia> f_dopen = diameter_opening(f, min_diameter=3, connectivity=1)
 The peaks with a maximal diameter of 2 or less are removed.
 For the remaining peaks the widest side of the bounding box is at least 3.
 """
-diameter_opening(image::GenericGrayImage; kwargs...) =
-    diameter_opening!(similar(image), image; kwargs...)
+diameter_opening
 
 """
-    area_closing!(output, image; min_area=64, connectivity=1,
-                  maxtree=nothing) -> output
+    area_closing!(output, image, [maxtree];
+                  min_area=64, connectivity=1) -> output
 
 Performs in-place *area closing* of the `image` and stores the result in `output`.
 See [`area_closing`](@ref) for the detailed description of the method.
 """
-function area_closing!(output::GenericGrayImage, image::GenericGrayImage;
-                       min_area::Number=64, connectivity::Integer=1,
-                       maxtree::Union{MaxTree, Nothing}=nothing)
+function area_closing!(output::GenericGrayImage, image::GenericGrayImage,
+                       maxtree::MaxTree; min_area::Number=64)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
-    return filter_components!(output, image, _maxtree, areas(_maxtree), min_area)
+    check_maxtree(maxtree, image, rev=true)
+    return filter_components!(output, image, maxtree, areas(maxtree), min_area)
 end
 
 """
-    area_closing(image; min_area=64, connectivity=1, maxtree=nothing) -> Array
+    area_closing(image, [maxtree]; min_area=64, connectivity=1) -> Array
 
 Performs an *area closing* of the `image`.
 
@@ -625,8 +616,8 @@ In the binary case, area closing is equivalent to
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
   a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
-  when `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An array of the same type and shape as the `image`.
@@ -663,27 +654,24 @@ julia> f_aclose = area_closing(f, min_area=8, connectivity=1)
 All small minima are removed, and the remaining minima have at least
 a size of 8.
 """
-area_closing(image::GenericGrayImage; kwargs...) =
-    area_closing!(similar(image), image; kwargs...)
+area_closing
 
 """
-    diameter_closing!(output, image; min_diameter=8, connectivity=1,
-                      maxtree=nothing) -> output
+    diameter_closing!(output, image, [maxtree];
+                      min_diameter=8, connectivity=1) -> output
 
 Performs in-place *diameter closing* of the `image` and stores the result in `output`.
 See [`diameter_closing`](@ref) for the detailed description of the method.
 """
-function diameter_closing!(output::GenericGrayImage, image::GenericGrayImage;
-                           min_diameter::Number=8, connectivity::Integer=1,
-                           maxtree::Union{MaxTree, Nothing} = nothing)
+function diameter_closing!(output::GenericGrayImage, image::GenericGrayImage,
+                           maxtree::MaxTree; min_diameter::Number=8)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
-    return filter_components!(output, image, _maxtree, diameters(_maxtree), min_diameter)
+    check_maxtree(maxtree, image, rev=true)
+    return filter_components!(output, image, maxtree, diameters(maxtree), min_diameter)
 end
 
 """
-    diameter_closing(image; min_diameter=8, connectivity=1,
-                     maxtree=nothing) -> Array
+    diameter_closing(image, [maxtree]; min_diameter=8, connectivity=1) -> Array
 
 Performs a *diameter closing* of the `image`.
 
@@ -700,8 +688,8 @@ the diameter (the widest dimension of their bounding box) smaller than
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
   a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
-  when `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An array of the same type and shape as the `image`.
@@ -733,8 +721,7 @@ julia> f_dclose = diameter_closing(f, min_diameter=3, connectivity=1)
 All small minima with a diameter of 2 or less are removed.
 For the remaining minima the widest bounding box side is at least 3.
 """
-diameter_closing(image::GenericGrayImage; kwargs...) =
-    diameter_closing!(similar(image), image; kwargs...)
+diameter_closing
 
 # Calculates the local maxima or minima of the image using the max-tree
 # representation (maxima if maxtree.rev=false, minima otherwise).
@@ -778,21 +765,20 @@ function local_extrema!(output::GenericGrayImage,
 end
 
 """
-    local_maxima!(output, image; connectivity=1, maxtree=nothing) -> output
+    local_maxima!(output, image, [maxtree]; connectivity=1) -> output
 
 Detects the local maxima of `image` and stores the result in `output`.
 See [`local_maxima`](@ref) for the detailed description of the method.
 """
-function local_maxima!(output::GenericGrayImage, image::GenericGrayImage;
-                       connectivity::Integer=1,
-                       maxtree::Union{MaxTree, Nothing} = nothing)
+function local_maxima!(output::GenericGrayImage, image::GenericGrayImage,
+                       maxtree::MaxTree)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=false)
-    return local_extrema!(output, image, _maxtree)
+    check_maxtree(maxtree, image, rev=false)
+    return local_extrema!(output, image, maxtree)
 end
 
 """
-    local_maxima(image::GenericGrayImage; connectivity=1, maxtree=nothing) -> Array
+    local_maxima(image, [maxtree]; connectivity=1) -> Array
 
 Determines and labels all *local maxima* of the `image`.
 
@@ -810,8 +796,8 @@ otherwise [`Images.findlocalmaxima`](@ref) would be more efficient.
 - `connectivity::Integer=1`: the neighborhood connectivity.
   The maximum number of orthogonal steps to reach a neighbor of the pixel.
   In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that,
-  when `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An integer array of the same shape as the `image`. Pixels that are not local
@@ -836,26 +822,23 @@ julia> f_maxima = local_maxima(f)
 ```
 The resulting image contains the 4 labeled local maxima.
 """
-local_maxima(image::GenericGrayImage; connectivity::Integer=1,
-             maxtree::Union{MaxTree, Nothing} = nothing) =
-    local_maxima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
+local_maxima
 
 """
-    local_minima!(output, image; connectivity=1, maxtree=nothing) -> output
+    local_minima!(output, image, [maxtree]; connectivity=1) -> output
 
 Detects the local minima of `image` and stores the result in `output`.
 See [`local_minima`](@ref) for the detailed description of the method.
 """
-function local_minima!(output::GenericGrayImage, image::GenericGrayImage;
-                       connectivity::Integer=1,
-                       maxtree::Union{MaxTree, Nothing} = nothing)
+function local_minima!(output::GenericGrayImage, image::GenericGrayImage,
+                       maxtree::MaxTree; connectivity::Integer=1)
     check_output_image(output, image)
-    _maxtree = check_maxtree(maxtree, image, connectivity=connectivity, rev=true)
-    return local_extrema!(output, image, _maxtree)
+    check_maxtree(maxtree, image, rev=true)
+    return local_extrema!(output, image, maxtree)
 end
 
 """
-    local_minima(image::GenericGrayImage; connectivity=1, maxtree=nothing) -> Array
+    local_minima(image, [maxtree]; connectivity=1) -> Array
 
 Determines and labels all *local minima* of the `image`.
 
@@ -873,8 +856,8 @@ otherwise [`Images.findlocalminima`](@ref) would be more efficient.
 - `connectivity::Integer=1`: the neighborhood connectivity. The maximum number
   of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for
   a 4-neighborhood and 2 for a 8-neighborhood.
-- `maxtree::MaxTree=nothing`: optional pre-built *max-tree*. Note that, when
-  `maxtree` is specified, the `connectivity` option is ignored.
+- `maxtree::MaxTree`: optional pre-built *max-tree*. Note that
+  `maxtree` and `connectivity` optional parameters are mutually exclusive.
 
 # Returns
 An integer array of the same shape as the `image`. Pixels that are not local
@@ -899,6 +882,29 @@ julia> f_minima = local_minima(f)
 ```
 The resulting image contains the labeled local minima.
 """
-local_minima(image::GenericGrayImage; connectivity::Integer=1,
-             maxtree::Union{MaxTree, Nothing} = nothing) =
-    local_minima!(similar(image, Int), image, connectivity=connectivity, maxtree=maxtree)
+local_minima
+
+# autogenerate in-place maxtree operations with "connectivity" keyarg
+for (fun, rev) in [(:area_opening!, false), (:area_closing!, true),
+                   (:diameter_opening!, false), (:diameter_closing!, true),
+                   (:local_maxima!, false), (:local_minima!, true)]
+    @eval begin
+        $fun(output::GenericGrayImage, image::GenericGrayImage;
+             connectivity::Integer=1, kwargs...) =
+            $fun(output, image,
+                 MaxTree(image, connectivity=connectivity, rev=$rev); kwargs...)
+    end
+end
+
+# autogenerate maxtree operations (simple wrappers of in-place methods)
+for fun in [:area_opening, :area_closing,
+            :diameter_opening, :diameter_closing,
+            :local_maxima, :local_minima]
+    fun! = Symbol(fun, "!")
+    @eval begin
+        $fun(image::GenericGrayImage; kwargs...) =
+             $fun!(similar(image), image; kwargs...)
+        $fun(image::GenericGrayImage, maxtree; kwargs...) =
+             $fun!(similar(image), image, maxtree; kwargs...)
+    end
+end
