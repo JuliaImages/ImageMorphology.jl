@@ -904,7 +904,7 @@ for fun in [:area_opening, :area_closing,
     @eval begin
         $fun(image::GenericGrayImage; kwargs...) =
              $fun!(similar(image), image; kwargs...)
-        $fun(image::GenericGrayImage, maxtree; kwargs...) =
+        $fun(image::GenericGrayImage, maxtree::MaxTree; kwargs...) =
              $fun!(similar(image), image, maxtree; kwargs...)
     end
 end
