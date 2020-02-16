@@ -1,5 +1,7 @@
 using ImageMorphology
+using ImageCore
 using Test
+using OffsetArrays
 
 @testset "ImageMorphology" begin
     include("convexhull.jl")
@@ -7,4 +9,5 @@ using Test
     include("dilation_and_erosion.jl")
     include("thinning.jl")
     include("imfill.jl")
+    include("maxtree.jl")
 end

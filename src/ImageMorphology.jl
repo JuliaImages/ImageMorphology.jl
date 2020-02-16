@@ -1,6 +1,9 @@
 module ImageMorphology
 
 using ImageCore
+using ImageCore: GenericGrayImage
+using LinearAlgebra
+using ColorVectorSpace
 using Base.Cartesian # TODO: delete this
 
 include("convexhull.jl")
@@ -9,6 +12,7 @@ include("connected.jl")
 include("dilation_and_erosion.jl")
 include("thinning.jl")
 include("imfill.jl")
+include("maxtree.jl")
 
 export
     dilate,
@@ -37,7 +41,13 @@ export
     # thinning.jl
     thinning,
     GuoAlgo,
-    imfill
+    imfill,
 
+    # maxtree.jl
+    MaxTree,
+    areas, boundingboxes, diameters,
+    area_opening, area_opening!, area_closing, area_closing!,
+    diameter_opening, diameter_opening!, diameter_closing, diameter_closing!,
+    local_maxima!, local_maxima, local_minima!, local_minima
 
 end # module
