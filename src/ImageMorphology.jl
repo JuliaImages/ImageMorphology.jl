@@ -14,6 +14,9 @@ include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
 
+include("bwdist.jl")
+using .FeatureTransform
+
 export
     dilate,
     dilate!,
@@ -48,6 +51,10 @@ export
     areas, boundingboxes, diameters,
     area_opening, area_opening!, area_closing, area_closing!,
     diameter_opening, diameter_opening!, diameter_closing, diameter_closing!,
-    local_maxima!, local_maxima, local_minima!, local_minima
+    local_maxima!, local_maxima, local_minima!, local_minima,
+
+    #bwdist.jl
+    feature_transform,
+    distance_transform
 
 end # module

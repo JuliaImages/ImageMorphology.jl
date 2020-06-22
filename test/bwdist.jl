@@ -1,5 +1,3 @@
-using Test, Images
-
 @testset "bwdist" begin
     function ind2cart(F)
         s = CartesianIndices(axes(F))
