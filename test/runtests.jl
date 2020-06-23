@@ -10,4 +10,5 @@ using OffsetArrays
     include("thinning.jl")
     include("imfill.jl")
     include("maxtree.jl")
+    include("bwdist.jl")
 end
