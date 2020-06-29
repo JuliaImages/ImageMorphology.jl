@@ -11,6 +11,7 @@ TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
 [compat]
 ColorVectorSpace = "0.7, 0.8"
 ImageCore = "0.8.1"
+TiledIteration = "0.2"
 julia = "1"
 
 [extras]
