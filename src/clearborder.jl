@@ -10,7 +10,7 @@ Parameters:
  -  width        = Width of the border examined (Default value is 1)
  -  background   = Value to be given to pixels/elements that are cleared (Default value is 0)
 """
-function clearborder(img::AbstractArray, width::Int=1, background::Int=0)
+function clearborder(img::AbstractArray, width::Integer=1, background::Integer=0)
 
     for i in size(img)
         if(width > i)
