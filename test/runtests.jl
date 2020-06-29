@@ -11,4 +11,5 @@ using OffsetArrays
     include("imfill.jl")
     include("maxtree.jl")
     include("bwdist.jl")
+    include("clearborder.jl")
 end

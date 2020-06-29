@@ -5,10 +5,11 @@ using ImageCore: GenericGrayImage
 using LinearAlgebra
 using ColorVectorSpace
 using Base.Cartesian # TODO: delete this
+using TiledIteration: EdgeIterator
 
 include("convexhull.jl")
 include("connected.jl")
-
+include("clearborder.jl")
 include("dilation_and_erosion.jl")
 include("thinning.jl")
 include("imfill.jl")
@@ -55,6 +56,8 @@ export
 
     #bwdist.jl
     feature_transform,
-    distance_transform
+    distance_transform,
+
+    clearborder
 
 end # module

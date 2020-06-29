@@ -6,6 +6,7 @@ version = "0.2.6"
 ColorVectorSpace = "c3611d14-8923-5661-9e6a-0046d554d3a4"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
 
 [compat]
 ColorVectorSpace = "0.7, 0.8"
