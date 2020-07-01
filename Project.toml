@@ -10,13 +10,15 @@ TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
 
 [compat]
 ColorVectorSpace = "0.7, 0.8"
+Documenter = "0.24, 0.25"
 ImageCore = "0.8.1"
 TiledIteration = "0.2"
 julia = "1"
 
 [extras]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["OffsetArrays", "Test"]
+test = ["Documenter", "OffsetArrays", "Test"]

@@ -3,6 +3,9 @@ using ImageCore
 using Test
 using OffsetArrays
 
+using Documenter
+doctest(ImageMorphology, manual = false)
+
 @testset "ImageMorphology" begin
     include("convexhull.jl")
     include("connected.jl")
