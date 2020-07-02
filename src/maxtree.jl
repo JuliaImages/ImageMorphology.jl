@@ -251,7 +251,7 @@ Constructs the *max-tree* of the `image`.
 # Examples
 We create a small sample image (Figure 1 from [4]) and build the max-tree.
 
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> image = [15 13 16; 12 12 10; 16 12 14]
 3×3 Array{Int64,2}:
  15  13  16
@@ -490,15 +490,16 @@ An array of the same type and shape as the `image`.
 # Examples
 Creating a test image `f` (quadratic function with a maximum in the center and
 4 additional local maxima):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 12;
+
 julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
 julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
-```
-Area opening of `f`:
-```jldoctest
-julia> f_aopen = area_opening(f, min_area=8, connectivity=1)
+
+julia> f_aopen = area_opening(f, min_area=8, connectivity=1);
 ```
 The peaks with a surface smaller than 8 are removed.
 """
@@ -560,15 +561,16 @@ An array of the same type and shape as the `image`.
 # Examples
 Creating a test image `f` (quadratic function with a maximum in the center and
 4 additional local maxima):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 12;
+
 julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
 julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
-```
-Diameter opening of `f`:
-```jldoctest
-julia> f_dopen = diameter_opening(f, min_diameter=3, connectivity=1)
+
+julia> f_dopen = diameter_opening(f, min_diameter=3, connectivity=1);
 ```
 The peaks with a maximal diameter of 2 or less are removed.
 For the remaining peaks the widest side of the bounding box is at least 3.
@@ -641,15 +643,16 @@ An array of the same type and shape as the `image`.
 # Examples
 Creating a test image `f` (quadratic function with a minimum in the center and
 4 additional local minima):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 12;
+
 julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
 julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
-```
-Area closing of `f`:
-```jldoctest
-julia> f_aclose = area_closing(f, min_area=8, connectivity=1)
+
+julia> f_aclose = area_closing(f, min_area=8, connectivity=1);
 ```
 All small minima are removed, and the remaining minima have at least
 a size of 8.
@@ -708,15 +711,16 @@ An array of the same type and shape as the `image`.
 # Examples
 Creating a test image `f` (quadratic function with a minimum in the center and
 4 additional local minima):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 12;
+
 julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
 julia> f[10:11, 10:12] .= 100; f[11, 11] = 100;
-```
-Area closing of `f`:
-```jldoctest
-julia> f_dclose = diameter_closing(f, min_diameter=3, connectivity=1)
+
+julia> f_dclose = diameter_closing(f, min_diameter=3, connectivity=1);
 ```
 All small minima with a diameter of 2 or less are removed.
 For the remaining minima the widest bounding box side is at least 3.
@@ -811,14 +815,14 @@ value (the local maximum id).
 # Examples
 Create `f` (quadratic function with a maximum in the center and
 4 additional constant maxima):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 10;
+
 julia> f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
-```
-Get all local maxima of ``f``:
-```jldoctest
-julia> f_maxima = local_maxima(f)
+
+julia> f_maxima = local_maxima(f); # Get all local maxima of `f`
 ```
 The resulting image contains the 4 labeled local maxima.
 """
@@ -871,14 +875,14 @@ value (the local minimum id).
 # Examples
 Create `f` (quadratic function with a minimum in the center and
 4 additional constant minimum):
-```jldoctest
+```jldoctest; setup = :(using ImageMorphology)
 julia> w = 10;
+
 julia> f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
 julia> f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
-```
-Calculate all local minima of `f`:
-```jldoctest
-julia> f_minima = local_minima(f)
+
+julia> f_minima = local_minima(f); # Calculate all local minima of `f`
 ```
 The resulting image contains the labeled local minima.
 """
