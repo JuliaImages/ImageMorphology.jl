@@ -12,7 +12,7 @@ list of dimensions that you want to include in the connectivity, e.g., `region =
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(5, 5); img[3, 3] = 1.; img
 5×5 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0
@@ -52,7 +52,7 @@ list of dimensions that you want to include in the connectivity, e.g., `region =
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(5, 5); img[2:4, 2:4] .= 1.; img
 5×5 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0
@@ -120,7 +120,7 @@ end
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(5, 5); img[1, 1] = 1.; img[3:5, 3:5] .= 1.; img
 5×5 Array{Float64,2}:
  1.0  0.0  0.0  0.0  0.0
@@ -147,7 +147,7 @@ opening!(img::AbstractArray, region=coords_spatial(img)) = dilate!(erode!(img, r
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img[4, 4] = 0.; img
 7×7 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
@@ -179,7 +179,7 @@ which is defined as the image minus its morphological opening.
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(5, 5); img[1, 1] = 1.; img[3:5, 3:5] .= 1.; img
 5×5 Array{Float64,2}:
  1.0  0.0  0.0  0.0  0.0
@@ -206,7 +206,7 @@ which is defined as its morphological closing minus the original image.
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img[4, 4] = 0.; img
 7×7 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
@@ -237,7 +237,7 @@ which is the difference between the dilation and the erosion of a given image.
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img
 7×7 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
@@ -268,7 +268,7 @@ which is defined as the arithmetic difference between the internal and the exter
 
 # Examples
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
 julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img[4, 4] = 0.; img
 7×7 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
