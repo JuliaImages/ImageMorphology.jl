@@ -251,7 +251,7 @@ Constructs the *max-tree* of the `image`.
 # Examples
 We create a small sample image (Figure 1 from [4]) and build the max-tree.
 
-```jldoctest; setup = :(using ImageMorphology)
+```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Int64,2}|Matrix{Int64}"
 julia> image = [15 13 16; 12 12 10; 16 12 14]
 3×3 Array{Int64,2}:
  15  13  16
