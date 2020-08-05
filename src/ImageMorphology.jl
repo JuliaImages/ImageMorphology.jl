@@ -14,7 +14,7 @@ include("dilation_and_erosion.jl")
 include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
-
+include("findboundaries.jl")
 include("bwdist.jl")
 using .FeatureTransform
 
@@ -58,6 +58,7 @@ export
     feature_transform,
     distance_transform,
 
-    clearborder
+    clearborder,
+    findboundaries
 
 end # module
