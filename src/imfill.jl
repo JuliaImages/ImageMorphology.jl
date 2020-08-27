@@ -28,11 +28,11 @@ function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivi
 
     labels = label_components(img,connectivity)
 
-    count_labels = Dict([(i,count(x->x==i,labels)) for i in unique(labels)])
+    count_labels = component_lengths(lables)
 
     new_img = similar(img)
     for ind in eachindex(img)
-        if img[ind] == true && interval[1] <= count_labels[labels[ind]] <= interval[2]
+        if img[ind] == true && interval[1] <= count_labels[labels[ind]+1] <= interval[2]
             new_img[ind] = false
         else
             new_img[ind] = img[ind]
