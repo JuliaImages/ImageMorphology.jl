@@ -28,7 +28,7 @@ function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivi
 
     labels = label_components(img,connectivity)
 
-    count_labels = component_lengths(lables)
+    count_labels = component_lengths(labels)
 
     new_img = similar(img)
     for ind in eachindex(img)
