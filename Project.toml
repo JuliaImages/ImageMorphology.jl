@@ -12,7 +12,7 @@ TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
 ColorVectorSpace = "0.7, 0.8, 0.9"
 Documenter = "0.24, 0.25"
 ImageCore = "0.8.1"
-TiledIteration = "0.2"
+TiledIteration = "0.2, 0.3"
 julia = "1"
 
 [extras]
