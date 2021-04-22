@@ -3,7 +3,6 @@ module ImageMorphology
 using ImageCore
 using ImageCore: GenericGrayImage
 using LinearAlgebra
-using ColorVectorSpace
 using Base.Cartesian # TODO: delete this
 using TiledIteration: EdgeIterator
 
