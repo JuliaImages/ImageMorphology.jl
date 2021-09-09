@@ -4,6 +4,7 @@ using Test
 using OffsetArrays
 using ImageMetadata
 
+@test isempty(detect_ambiguities(ImageMorphology))
 
 using Documenter
 doctest(ImageMorphology, manual = false)
