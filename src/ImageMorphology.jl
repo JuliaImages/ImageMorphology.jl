@@ -18,6 +18,8 @@ include("maxtree.jl")
 include("bwdist.jl")
 using .FeatureTransform
 
+include("deprecations.jl")
+
 export
     dilate,
     dilate!,

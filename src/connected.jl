@@ -1,180 +1,139 @@
 import Base.push!  # for DisjointMinSets
 
 """
-```
-label = label_components(tf, [connectivity])
-label = label_components(tf, [region])
-```
+    label = label_components(A; bkg = zero(eltype(A)), dims=coords_spatial(A))
+    label = label_components(A, connectivity; bkg = zero(eltype(A)))
 
-Find the connected components in a binary array `tf`. There are two forms that
-`connectivity` can take:
+Find the connected components in an array `A`. Components are defined as
+connected voxels that all have the same value distinct from `bkg`, which
+corresponds to the "background" component.
 
-- It can be a boolean array of the same dimensionality as `tf`, of size 1 or 3
+Specify connectivity in one of three ways:
+
+- A list indicating which dimensions are used to determine
+  connectivity. For example, `dims = (1,3)` would not test neighbors along
+  dimension 2 for connectivity. This corresponds to just the nearest neighbors,
+  i.e., default 4-connectivity in 2d and 6-connectivity in 3d.
+
+- An iterable `connectivity` object with `CartesianIndex` elements encoding the
+  displacement of each checked neighbor.
+
+- A symmetric boolean array of the same dimensionality as `A`, of size 1 or 3
   along each dimension. Each entry in the array determines whether a given
-  neighbor is used for connectivity analyses. For example, `connectivity = trues(3,3)`
-  would use 8-connectivity and test all pixels that touch the
+  neighbor is used for connectivity analyses. For example, in two dimensions
+  `connectivity = trues(3,3)` would include all pixels that touch the
   current one, even the corners.
 
-- You can provide a list indicating which dimensions are used to determine
-  connectivity. For example, `region = [1,3]` would not test neighbors along
-  dimension 2 for connectivity. This corresponds to just the nearest neighbors,
-  i.e., 4-connectivity in 2d and 6-connectivity in 3d.
+The output `label` is an integer array, where `bkg` elements get a value of 0.
 
-The default is `region = 1:ndims(A)`.
+# Examples
 
-The output `label` is an integer array, where 0 is used for background
-pixels, and each connected region gets a different integer index.
+```jldoctest; setup=:(using ImageMorphology)
+julia> A = [true false false true  false;
+            true false true  true  true]
+2×5 Matrix{Bool}:
+ 1  0  0  1  0
+ 1  0  1  1  1
+
+julia> label_components(A)
+2×5 Matrix{$Int}:
+ 1  0  0  2  0
+ 1  0  2  2  2
+
+julia> label_components(A; dims=2)
+2×5 Matrix{$Int}:
+ 1  0  0  4  0
+ 2  0  3  3  3
+```
+With `dims=2`, entries in `A` are connected if they are in the same row, but
+not if they are in the same column.
 """
-label_components(A, connectivity = 1:ndims(A), bkg = 0) = label_components!(zeros(Int, size(A)), A, connectivity, bkg)
+label_components(A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A)) =
+    label_components(A, half_diamond(A, dims); bkg=bkg)
+label_components(A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A))) =
+    label_components(A, half_pattern(A, connectivity); bkg=bkg)
+label_components(A::AbstractArray, iter; bkg=zero(eltype(A))) =
+    label_components!(similar(A, Int), A, iter; bkg=bkg) # Int is a safe choice
 
-#### 4-connectivity in 2d, 6-connectivity in 3d, etc.
-# But in fact you can choose which dimensions are connected
-let _label_components_cache = Dict{Tuple{Int, Vector{Int}}, Function}()
-global label_components!
-function label_components!(Albl::AbstractArray{Int}, A::Array, region::Union{Dims, AbstractVector{Int}}, bkg = 0)
-    uregion = unique(region)
-    if isempty(uregion)
-        # Each pixel is its own component
-        k = 0
-        for i = 1:length(A)
-            if A[i] != bkg
-                k += 1
-                Albl[i] = k
+label_components!(out::AbstractArray{<:Integer}, A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A)) =
+    label_components!(out, A, half_diamond(A, dims); bkg=bkg)
+label_components!(out::AbstractArray{<:Integer}, A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A))) =
+    label_components!(out, A, half_pattern(A, connectivity); bkg=bkg)
+function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=zero(eltype(A))) where T<:Integer
+    axes(out) == axes(A) || throw(DimensionMismatch("axes of input and output must match, got $(axes(A)) and $(axes(out))"))
+    fill!(out, zero(T))
+    sets = DisjointMinSets{T}()
+    @inbounds for i in CartesianIndices(A)
+        val = A[i]
+        val == bkg && continue
+        label = typemax(T)    # sentinel value
+        for Δi in iter
+            ii = i + Δi
+            checkbounds(Bool, A, ii) || continue
+            if A[ii] == val
+                newlabel = out[ii]
+                if label != typemax(T) && label != newlabel
+                    label = union!(sets, label, newlabel)
+                else
+                    label = newlabel
+                end
             end
         end
-        return Albl
+        if label == typemax(T)
+            label = push!(sets)
+        end
+        out[i] = label
     end
-    # We're going to compile a version specifically for the chosen region. This should make it very fast.
-    key = (ndims(A), uregion)
-    if !haskey(_label_components_cache, key)
-        # Need to generate the function
-        N = length(uregion)
-        ND = ndims(A)
-        iregion = [Symbol("i_", d) for d in uregion]
-        f! = eval(quote
-            local lc!
-            function lc!(Albl::AbstractArray{Int}, sets, A::Array, bkg)
-                offsets = strides(A)[$uregion]
-                @nexprs $N d->(offsets_d = offsets[d])
-                k = 0
-                @nloops $ND i A begin
-                    k += 1
-                    val = A[k]
-                    label = typemax(Int)
-                    if val != bkg
-                        @nexprs $N d->begin
-                            if $iregion[d] > 1  # is this neighbor in-bounds?
-                                if A[k-offsets_d] == val  # if the two have the same value...
-                                    newlabel = Albl[k-offsets_d]
-                                    if label != typemax(Int) && label != newlabel
-                                        label = union!(sets, label, newlabel)  # ...merge labels...
-                                    else
-                                        label = newlabel  # ...and assign the smaller to current pixel
-                                    end
-                                end
-                            end
-                        end
-                        if label == typemax(Int)
-                            label = push!(sets)   # there were no neighbors, create a new label
-                        end
-                        Albl[k] = label
-                    end
-                end
-                Albl
-            end
-        end)
-        _label_components_cache[key] = f!
-    else
-        f! = _label_components_cache[key]
-    end
-    sets = DisjointMinSets()
-    eval(:($f!($Albl, $sets, $A, $bkg)))
     # Now parse sets to find the labels
     newlabel = minlabel(sets)
-    for i = 1:length(A)
+    @inbounds for i in eachindex(A, out)
         if A[i] != bkg
-            Albl[i] = newlabel[find_root!(sets, Albl[i])]
+            out[i] = newlabel[find_root!(sets, out[i])]
         end
     end
-    Albl
+    return out
 end
-end # let
-label_components!(Albl::AbstractArray{Int}, A::BitArray, region::Union{Dims, AbstractVector{Int}}, bkg = 0) = label_components!(Albl, convert(Array{Bool}, A), region, bkg)
 
-#### Arbitrary connectivity
-for N = 1:4
-    @eval begin
-        function label_components!(Albl::AbstractArray{Int,$N}, A::AbstractArray, connectivity::Array{Bool,$N}, bkg = 0)
-            if isempty(connectivity) || !any(connectivity)
-                # Each pixel is its own component
-                k = 0
-                for i = 1:length(A)
-                    if A[i] != bkg
-                        k += 1
-                        Albl[i] = k
-                    end
-                end
-                return Albl
-            end
-            for d = 1:ndims(connectivity)
-                (isodd(size(connectivity, d)) && connectivity == reverse(connectivity, dims=d)) || error("connectivity must be symmetric")
-            end
-            size(Albl) == size(A) || throw(DimensionMismatch("size(Albl) must be equal to size(A)"))
-            @nexprs $N d->(halfwidth_d = size(connectivity,d)>>1)
-            @nexprs $N d->(offset_d = 1+halfwidth_d)
-            cstride_1 = 1
-            @nexprs $N d->(cstride_{d+1} = cstride_d * size(connectivity,d))
-            @nexprs $N d->(k_d = 0)
-            sets = DisjointMinSets()
-            @nloops $N i A begin
-                val = @nref($N, A, i)
-                label = typemax(Int)
-                if val != bkg
-                    @nloops($N, j,
-                            d->(max(-halfwidth_d, 1-i_d):min(halfwidth_d, size(A,d)-i_d)),  # loop range
-                            d->(k_{d-1} = k_d + j_d*cstride_d; # break if linear index is >= 0
-                                d > 1 ? (if k_{d-1} > 0 break end) : (if k_0 >= 0 break end);
-                                jj_d = j_d+offset_d; ii_d = i_d+j_d),    # pre-expression
-                            begin
-                        if @nref($N, connectivity, jj)
-                            if @nref($N, A, ii) == val
-                                newlabel = @nref($N, Albl, ii)
-                                if label != typemax(Int) && label != newlabel
-                                    label = union!(sets, label, newlabel)
-                                else
-                                    label = newlabel
-                                end
-                            end
-                        end
-                    end)
-                    if label == typemax(Int)
-                        label = push!(sets)
-                    end
-                    @nref($N, Albl, i) = label
-                end
-            end
-            # Now parse sets to find the labels
-            newlabel = minlabel(sets)
-            for i = 1:length(A)
-                if A[i]!=bkg
-                    Albl[i] = newlabel[find_root!(sets, Albl[i])]
-                end
-            end
-            Albl
+function half_diamond(A::AbstractArray{T,N}, dims) where {T,N}
+    offsets = CartesianIndex{N}[]
+    for d = 1:N
+        if d ∈ dims
+            push!(offsets, CartesianIndex(ntuple(i -> i == d ? -1 : 0, N)))
         end
-        label_components!(Albl::AbstractArray{Int,$N}, A::AbstractArray, connectivity::BitArray{$N}, bkg = 0) =
-            label_components!(Albl, A, convert(Array{Bool}, connectivity), bkg)
     end
+    # return (offsets...,)   # returning as a tuple allows specialization
+    return offsets
+end
+half_diamond(A::AbstractArray{T,N}, ::Colon) where {T,N} = half_diamond(A, 1:N)
+
+function half_pattern(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
+    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+    for d = 1:ndims(connectivity)
+        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
+    end
+    center = CartesianIndex(map(axes(connectivity)) do ax
+        (first(ax) + last(ax)) ÷ 2
+    end)
+    offsets = CartesianIndex{N}[]
+    for i in CartesianIndices(connectivity)
+        i == center && break   # we only need the ones that come prior
+        if connectivity[i]
+            push!(offsets, i - center)
+        end
+    end
+    return offsets
+    # return (offsets...,)   # returning as a tuple allows specialization
 end
 
 # Copied directly from DataStructures.jl, but specialized
 # to always make the parent be the smallest label
-struct DisjointMinSets
-    parents::Vector{Int}
+struct DisjointMinSets{T<:Integer}
+    parents::Vector{T}
 
-    DisjointMinSets(n::Integer) = new([1:n;])
+    DisjointMinSets{T}(n::Integer) where T = new([T(1):T(n);])
 end
-DisjointMinSets() = DisjointMinSets(0)
+DisjointMinSets{T}() where T<:Integer = DisjointMinSets{T}(T(0))
+DisjointMinSets() = DisjointMinSets{INt}()
 
 function find_root!(sets::DisjointMinSets, m::Integer)
     p = sets.parents[m]   # don't use @inbounds here, it might not be safe
@@ -208,6 +167,7 @@ end
 
 function push!(sets::DisjointMinSets)
     m = length(sets.parents) + 1
+    m >= typemax(eltype(sets.parents)) && error("labels exhausted, use a larger integer type")
     push!(sets.parents, m)
     m
 end
