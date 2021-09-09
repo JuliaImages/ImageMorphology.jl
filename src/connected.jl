@@ -101,8 +101,8 @@ function half_diamond(A::AbstractArray{T,N}, dims) where {T,N}
             push!(offsets, CartesianIndex(ntuple(i -> i == d ? -1 : 0, N)))
         end
     end
-    # return (offsets...,)   # returning as a tuple allows specialization
-    return offsets
+    return (offsets...,)   # returning as a tuple allows specialization
+    # return offsets
 end
 half_diamond(A::AbstractArray{T,N}, ::Colon) where {T,N} = half_diamond(A, 1:N)
 
@@ -121,8 +121,8 @@ function half_pattern(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) 
             push!(offsets, i - center)
         end
     end
-    return offsets
-    # return (offsets...,)   # returning as a tuple allows specialization
+    # return offsets
+    return (offsets...,)   # returning as a tuple allows specialization
 end
 
 # Copied directly from DataStructures.jl, but specialized
