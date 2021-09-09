@@ -26,6 +26,11 @@
         @test Ae == cat(Ar, Ag, zeros(4,4), dims=3)
         # issue Images.jl #311
         @test dilate(trues(3)) == trues(3)
+        # ImageMeta
+        @test arraydata(dilate(ImageMeta(A))) == dilate(A)
+        @test arraydata(dilate(ImageMeta(A), 1:2)) == dilate(A, 1:2)
+        @test arraydata(erode(ImageMeta(A))) == erode(A)
+        @test arraydata(erode(ImageMeta(A), 1:2)) == erode(A, 1:2)
     end
 
     @testset "Opening / closing" begin

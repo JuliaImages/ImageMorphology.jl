@@ -5,6 +5,7 @@ using ImageCore: GenericGrayImage
 using LinearAlgebra
 using Base.Cartesian # TODO: delete this
 using TiledIteration: EdgeIterator
+using Requires
 
 include("convexhull.jl")
 include("connected.jl")
@@ -58,5 +59,13 @@ export
     distance_transform,
 
     clearborder
+
+function __init__()
+    @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
+        # morphological operations for ImageMeta
+        dilate(img::ImageMetadata.ImageMeta, region=coords_spatial(img)) = ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)), region))
+        erode(img::ImageMetadata.ImageMeta, region=coords_spatial(img)) = ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)), region))
+    end
+end
 
 end # module
