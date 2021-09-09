@@ -14,14 +14,32 @@ Parameters:
 # Examples
 
 ```jldoctest; setup=:(using ImageMorphology)
+julia> img = Bool[0 0 1 1 0 0;
+                  0 1 0 1 1 0;
+                  0 0 1 1 0 0]
+3×6 Matrix{Bool}:
+ 0  0  1  1  0  0
+ 0  1  0  1  1  0
+ 0  0  1  1  0  0
 
+julia> imfill(.!(img), 0:3)
+3×6 BitMatrix:
+ 1  1  0  0  1  1
+ 1  0  0  0  0  1
+ 1  1  0  0  1  1
+
+julia> .!(ans)
+3×6 BitMatrix:
+ 0  0  1  1  0  0
+ 0  1  1  1  1  0
+ 0  0  1  1  0  0
 ```
 """
 imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::AbstractArray{Bool}) =
     _imfill(img, interval, label_components(img,connectivity))
 imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}; dims=coords_spatial(img)) =
     _imfill(img, interval, label_components(img; dims=dims))
-imfill(img::AbstractArray{Bool}, interval, args; kwargs...) =
+imfill(img::AbstractArray{Bool}, interval, args...; kwargs...) =
     imfill(img, (minimum(interval)::Real, maximum(interval)::Real), args...; kwargs...)
 
 function _imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, labels)
