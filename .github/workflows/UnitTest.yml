@@ -7,8 +7,6 @@ on:
     branches:
       - master
   pull_request:
-  schedule:
-    - cron: '20 00 1 * *'
 
 jobs:
   test:
