@@ -2,6 +2,8 @@ using ImageMorphology
 using ImageCore
 using Test
 using OffsetArrays
+using ImageMetadata
+
 
 using Documenter
 doctest(ImageMorphology, manual = false)
