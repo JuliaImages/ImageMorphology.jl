@@ -7,7 +7,7 @@ using ImageMetadata
 @test isempty(detect_ambiguities(ImageMorphology))
 
 using Documenter
-doctest(ImageMorphology, manual = false)
+Base.VERSION >= v"1.6" && doctest(ImageMorphology, manual = false)
 
 @testset "ImageMorphology" begin
     include("convexhull.jl")

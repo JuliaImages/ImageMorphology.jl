@@ -1,33 +1,51 @@
 """
- Image filling Algorithm
+    filled_img = imfill(img::AbstractArray{Bool}, interval; dims=coords_spatial(img))
+    filled_img = imfill(img::AbstractArray{Bool}, interval, connectivity)
 
- ```
- filled_img = imfill(img, interval)
- filled_img = imfill(img, interval, value)
- filled_img = imfill(img, interval, value, connectivity)
- ```
+Connected components of an image is found using flood-fill algorithm and returns a copy of
+the original image after filling objects that falls in the range of interval.
+For filling objects, represent the holes (part to be filled) with `true` in your array.
 
- Connected components of an image is found using flood-fill algorithm and returns a copy of
- the original image after filling objects that falls in the range of interval.
- For filling objects, represent the holes(part to be filled) with `true` in your array.
+Parameters:
+-  img            = Input image (Boolean array type)
+-  interval       = objects of size (# of voxels) in this range will be filled with `false`
+-  connectivity   = a Boolean-valued connectivity pattern, see [`label_components`](@ref).
 
+# Examples
 
- Parameters:
+```jldoctest; setup=:(using ImageMorphology)
+julia> img = Bool[0 0 1 1 0 0;
+                  0 1 0 1 1 0;
+                  0 0 1 1 0 0]
+3×6 Matrix{Bool}:
+ 0  0  1  1  0  0
+ 0  1  0  1  1  0
+ 0  0  1  1  0  0
 
-  -  img            = Input image (Boolean array type)
-  -  interval       = objects of size in this range will be filled with `false`
-  -  connectivity   = connectivity takes the same values as in label_components (Default value is 1:ndims(img))
+julia> imfill(.!(img), 0:3)
+3×6 BitMatrix:
+ 1  1  0  0  1  1
+ 1  0  0  0  0  1
+ 1  1  0  0  1  1
 
- """
+julia> .!(ans)
+3×6 BitMatrix:
+ 0  0  1  1  0  0
+ 0  1  1  1  1  0
+ 0  0  1  1  0  0
+```
+"""
+imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::AbstractArray{Bool}) =
+    _imfill(img, interval, label_components(img,connectivity))
+imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}; dims=coords_spatial(img)) =
+    _imfill(img, interval, label_components(img; dims=dims))
+imfill(img::AbstractArray{Bool}, interval, args...; kwargs...) =
+    imfill(img, (minimum(interval)::Real, maximum(interval)::Real), args...; kwargs...)
 
-function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::Union{Dims, AbstractVector{Int}, BitArray}=1:ndims(img))
-
+function _imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, labels)
     if interval[1] > interval[2] || interval[1] < 0 || interval[2] < 0
         throw(DomainError(interval,"Interval must be non-negative and in format (min_range,max_range)"))
     end
-
-    labels = label_components(img,connectivity)
-
     count_labels = component_lengths(labels)
 
     new_img = similar(img)
