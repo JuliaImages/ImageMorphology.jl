@@ -60,9 +60,10 @@ label_components!(out::AbstractArray{<:Integer}, A::AbstractArray; bkg=zero(elty
 label_components!(out::AbstractArray{<:Integer}, A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A))) =
     label_components!(out, A, half_pattern(A, connectivity); bkg=bkg)
 function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=zero(eltype(A))) where T<:Integer
-    axes(out) == axes(A) || throw(DimensionMismatch("axes of input and output must match, got $(axes(A)) and $(axes(out))"))
+    axes(out) == axes(A) || throw_dmm(axes(out), axes(A))
     fill!(out, zero(T))
     sets = DisjointMinSets{T}()
+    sizehint!(sets.parents, floor(Int, sqrt(length(A))))
     @inbounds for i in CartesianIndices(A)
         val = A[i]
         val == bkg && continue
@@ -72,11 +73,7 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=ze
             checkbounds(Bool, A, ii) || continue
             if A[ii] == val
                 newlabel = out[ii]
-                if label != typemax(T) && label != newlabel
-                    label = union!(sets, label, newlabel)
-                else
-                    label = newlabel
-                end
+                label = ((label == typemax(T)) | (label == newlabel)) ? newlabel : union!(sets, label, newlabel)
             end
         end
         if label == typemax(T)
@@ -93,6 +90,8 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=ze
     end
     return out
 end
+
+throw_dmm(ax1, ax2) = throw(DimensionMismatch("axes of input and output must match, got $ax1 and $ax2"))
 
 function half_diamond(A::AbstractArray{T,N}, dims) where {T,N}
     offsets = CartesianIndex{N}[]
@@ -135,7 +134,7 @@ end
 DisjointMinSets{T}() where T<:Integer = DisjointMinSets{T}(T(0))
 DisjointMinSets() = DisjointMinSets{INt}()
 
-function find_root!(sets::DisjointMinSets, m::Integer)
+Base.@propagate_inbounds function find_root!(sets::DisjointMinSets, m::Integer)
     p = sets.parents[m]   # don't use @inbounds here, it might not be safe
     @inbounds if sets.parents[p] != p
         sets.parents[m] = p = find_root_unsafe!(sets, p)
@@ -152,7 +151,7 @@ function find_root_unsafe!(sets::DisjointMinSets, m::Int)
     p
 end
 
-function union!(sets::DisjointMinSets, m::Integer, n::Integer)
+Base.@propagate_inbounds function union!(sets::DisjointMinSets, m::Integer, n::Integer)
     mp = find_root!(sets, m)
     np = find_root!(sets, n)
     if mp < np
@@ -175,7 +174,7 @@ end
 function minlabel(sets::DisjointMinSets)
     out = Vector{Int}(undef, length(sets.parents))
     k = 0
-    for i = 1:length(sets.parents)
+    @inbounds for i = 1:length(sets.parents)
         if sets.parents[i] == i
             k += 1
         end
