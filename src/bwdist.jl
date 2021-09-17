@@ -1,9 +1,13 @@
 module FeatureTransform
 
+using ..ImageMorphology: SplitAxis, SplitAxes
+using ..ImageCore
+
 export feature_transform, distance_transform
 
 """
-    feature_transform(I::AbstractArray{Bool, N}, [w=nothing]) -> F
+    feature_transform(img::AbstractArray{Bool, N};
+                      weights=nothing, nthreads=Threads.nthreads()) -> F
 
 Compute the feature transform of a binary image `I`, finding the
 closest "feature" (positions where `I` is `true`) for each location in
@@ -26,20 +30,36 @@ See also: [`distance_transform`](@ref).
 Transforms of Binary Images in Arbitrary Dimensions' [Maurer et al.,
 2003] (DOI: 10.1109/TPAMI.2003.1177156)
 """
-function feature_transform(I::AbstractArray{Bool,N}, w::Union{Nothing,NTuple{N}}=nothing) where N
+function feature_transform(img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N};
+                           weights::Union{Nothing,NTuple{N}}=nothing,
+                           nthreads::Int = length(img) < 1000 ? 1 : Threads.nthreads()) where N
+    nthreads > 0 || error("the number of threads must be positive, got $nthreads")
+    N == 0 && return reshape([CartesianIndex()])
+    # Allocate the output
+    F = similar(img, CartesianIndex{N})
+    axsimg = axes(img)
     # To allocate temporary storage for voronoift!, compute one
     # element (so we have the proper type)
-    fi = first(CartesianIndices(axes(I)))
-    drft = DistRFT(fi, w, (), Base.tail(fi.I))
-    tmp = Vector{typeof(drft)}()
-
-    # Allocate the output
-    F = similar(I, CartesianIndex{N})
-
-    # Compute the feature transform (recursive algorithm)
-    computeft!(F, I, CartesianIndex(()), w, tmp)
-
-    F
+    fi = first(CartesianIndices(axsimg))
+    drft = DistRFT(fi, weights, (), Base.tail(fi.I))
+    if nthreads == 1 || N == 1
+        tmp = typeof(drft)[]
+        computeft!(F, img, axsimg, CartesianIndex(), weights, tmp)
+        # Finish the last dimension (for multithreading, we avoid doing it in computeft!)
+        finishft!(F, img, axsimg, CartesianIndex(), weights, tmp)
+    else
+        tmps = [typeof(drft)[] for _ = 1:nthreads] # temporary storage (one per thread)
+        saxs = SplitAxes(axsimg, nthreads - 0.2)   # give main thread less work since it also schedules the others
+        tasks = [Threads.@spawn computeft!(F, img, saxs[i], CartesianIndex(), weights, tmps[i]) for i = 2:nthreads]
+        computeft!(F, img, saxs[1], CartesianIndex(), weights, tmps[1])
+        foreach(wait, tasks)
+        # Finish the last dimension
+        saxs1 = SplitAxes(axsimg[1:N-1], nthreads - 0.2)
+        tasks = [Threads.@spawn finishft!(F, img, (saxs1[i]..., axsimg[end]), CartesianIndex(), weights, tmps[i]) for i = 2:nthreads]
+        finishft!(F, img, (saxs1[1]..., axsimg[end]), CartesianIndex(), weights, tmps[1])
+        foreach(wait, tasks)
+    end
+    return F
 end
 
 """
@@ -68,33 +88,42 @@ function distance_transform(F::AbstractArray{CartesianIndex{N},N}, w::Union{Noth
     D
 end
 
-function computeft!(F, I, jpost::CartesianIndex{K}, pixelspacing, tmp) where K
+# This recursive implementation computes the feature transform, other than for finishing the
+# work along the final axis (axis `N` for an `N` dimensional array).
+# Omission of the final axis makes it easy to implement multithreading.
+# You can finish the final axis with a call to `finishft!` with `jpost = CartesianIndex()`.
+function computeft!(F, img, axsimg, jpost::CartesianIndex{K}, pixelspacing, tmp) where K
     # tmp is workspace for voronoift!
     ∅ = nullindex(F)                             # sentinel position
-    if K == ndims(I)-1                           # innermost loop (d=1 case, line 1)
+    if K == ndims(img)-1                           # innermost loop (d=1 case, line 1)
         # Fig. 2, lines 2-8
-        @inbounds @simd for i1 in axes(I, 1)
-            F[i1, jpost] = I[i1, jpost] ? CartesianIndex(i1, jpost) : ∅
+        @inbounds @simd for i1 in axes(img, 1)
+            F[i1, jpost] = gray(img[i1, jpost]) ? CartesianIndex(i1, jpost) : ∅
         end
     else                                         # recursively handle trailing dimensions
         # Fig. 2, lines 10-12
-        for i1 in axes(I, ndims(I) - K)
-            computeft!(F, I, CartesianIndex(i1, jpost), pixelspacing, tmp)
+        for i1 in axsimg[ndims(img) - K]
+            computeft!(F, img, axsimg, CartesianIndex(i1, jpost), pixelspacing, tmp)
         end
     end
-    # Fig. 2, lines 14-20
-    axespre = truncatet(axes(F), jpost)          # discard the trailing axes of F
-    for jpre in CartesianIndices(axespre)
-        voronoift!(F, I, jpre, jpost, pixelspacing, tmp)
-    end
-    F
+    K == 0 && return F                           # defer the final axis, where threads will be split across next-to-last axis
+    return finishft!(F, img, axsimg, jpost, pixelspacing, tmp)
 end
 
-function voronoift!(F, I, jpre, jpost, pixelspacing, tmp)
-    d = length(jpre)+1
+function finishft!(F, img, axsimg, jpost, pixelspacing, tmp)
+    # Fig. 2, lines 14-20
+    axespre = truncatet(axsimg, jpost)          # first N-K-1 axes (these are "finished" within each K+1-dimensional slice)
+    for jpre in CartesianIndices(axespre)
+        voronoift!(F, img, jpre, jpost, pixelspacing, tmp)     # finish axis N-K in K-dimensional slice `jpost`
+    end
+    return F
+end
+
+function voronoift!(F, img, jpre, jpost, pixelspacing, tmp)
+    d = length(jpre)+1   # axis to work along
     ∅ = nullindex(F)
     empty!(tmp)
-    for i in axes(I, d)
+    for i in axes(img, d)
         # Fig 3, lines 3-13
         xi = CartesianIndex(jpre, i, jpost)
         @inbounds fi = F[xi]
@@ -115,7 +144,7 @@ function voronoift!(F, I, jpre, jpost, pixelspacing, tmp)
     # Fig 3, lines 18-24
     l = 1
     @inbounds fthis = tmp[l].fi
-    for i in axes(I, d)
+    for i in axes(img, d)
         xi = CartesianIndex(jpre, i, jpost)
         d2this = wnorm2(xi-fthis, pixelspacing)
         while l < nS

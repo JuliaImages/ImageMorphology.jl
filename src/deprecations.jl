@@ -4,3 +4,6 @@
 @deprecate label_components!(out::AbstractArray{Int,N}, A::AbstractArray{T,N}, connectivity::Array{Bool,N}, bkg) where {T,N}  label_components!(out, A, connectivity; bkg=bkg)
 
 @deprecate imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, dims::Union{Dims, AbstractVector{Int}}) imfill(img, interval; dims=dims)
+
+import .FeatureTransform: feature_transform
+@deprecate feature_transform(img, weights; kwargs...) feature_transform(img; weights=weights, kwargs...)
