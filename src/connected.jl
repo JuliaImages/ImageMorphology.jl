@@ -186,7 +186,7 @@ end
 "`component_boxes(labeled_array)` -> an array of bounding boxes for each label, including the background label 0"
 function component_boxes(img::AbstractArray{Int})
     nd = ndims(img)
-    n = [Vector{Int64}[ fill(typemax(Int64),nd), fill(typemin(Int64),nd) ]
+    n = [Vector{Int}[ fill(typemax(Int),nd), fill(typemin(Int),nd) ]
             for i=0:maximum(img)]
     s = CartesianIndices(size(img))
     for i=1:length(img)
@@ -203,7 +203,7 @@ end
 
 "`component_lengths(labeled_array)` -> an array of areas (2D), volumes (3D), etc. for each label, including the background label 0"
 function component_lengths(img::AbstractArray{Int})
-    n = zeros(Int64,maximum(img)+1)
+    n = zeros(Int,maximum(img)+1)
     for i=1:length(img)
         n[img[i]+1]+=1
     end
@@ -212,7 +212,7 @@ end
 
 "`component_indices(labeled_array)` -> an array of pixels for each label, including the background label 0"
 function component_indices(img::AbstractArray{Int})
-    n = [Int64[] for i=0:maximum(img)]
+    n = [Int[] for i=0:maximum(img)]
     for i=1:length(img)
       push!(n[img[i]+1],i)
     end

@@ -26,7 +26,7 @@ function clearborder(img::AbstractArray, width::Integer=1, background::Integer=0
     outerrange = CartesianIndices(map(i -> 1:i, dimensions))
     innerrange = CartesianIndices(map(i -> 1+width:i-width, dimensions))
 
-    border_labels = Set{Int64}()
+    border_labels = Set{Int}()
     for i in EdgeIterator(outerrange,innerrange)
         push!(border_labels, labels[i])
     end
