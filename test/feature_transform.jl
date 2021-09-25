@@ -1,4 +1,4 @@
-@testset "bwdist" begin
+@testset "feature_transform" begin
     function ind2cart(F)
         s = CartesianIndices(axes(F))
         map(i->CartesianIndex(s[i]), F)
