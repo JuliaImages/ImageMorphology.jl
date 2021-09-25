@@ -14,7 +14,7 @@ include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
 
-include("bwdist.jl")
+include("feature_transform.jl")
 using .FeatureTransform
 
 include("deprecations.jl")
@@ -55,7 +55,7 @@ export
     diameter_opening, diameter_opening!, diameter_closing, diameter_closing!,
     local_maxima!, local_maxima, local_minima!, local_minima,
 
-    #bwdist.jl
+    #feature_transform.jl
     feature_transform,
     distance_transform,
 

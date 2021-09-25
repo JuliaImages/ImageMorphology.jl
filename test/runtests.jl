@@ -16,7 +16,7 @@ Base.VERSION >= v"1.6" && doctest(ImageMorphology, manual = false)
     include("thinning.jl")
     include("imfill.jl")
     include("maxtree.jl")
-    include("bwdist.jl")
+    include("feature_transform.jl")
     include("clearborder.jl")
 end
 
