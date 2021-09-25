@@ -68,6 +68,8 @@
         @test F == ind2cart([1 1 1; 2 2 13; 2 8 13; 4 9 14; 4 10 10])
         D = distance_transform(F)
         @test D == [0.0 1.0 2.0; 0.0 1.0 1.0; 1.0 0.0 0.0; 0.0 0.0 0.0; 1.0 0.0 1.0]
+
+        @test feature_transform(Gray.(A)) == F
     end
 
     @testset "Corner Case Images" begin
@@ -128,6 +130,11 @@
         @test F == ind2cart(reshape(1:length(A), size(A)))
         D = distance_transform(F)
         @test all(x->x==0, D)
+
+        # (9)
+        A = falses(4,2,3)
+        A[3,1,2] = true
+        @test all(==(CartesianIndex(3,1,2)), feature_transform(A))
     end
 
     @testset "Anisotropic images" begin

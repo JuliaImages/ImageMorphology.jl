@@ -19,3 +19,5 @@ Base.VERSION >= v"1.6" && doctest(ImageMorphology, manual = false)
     include("bwdist.jl")
     include("clearborder.jl")
 end
+
+# multithreaded.jl runs on CI

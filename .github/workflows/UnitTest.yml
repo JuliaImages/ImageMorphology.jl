@@ -8,12 +8,12 @@ on:
   pull_request:
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.julia-version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        julia-version: ['1.0', '1', 'nightly']
+        julia-version: ['1.3', '1', 'nightly']
         os: [ubuntu-latest]
         arch: [x64]
         include:
@@ -44,6 +44,9 @@ jobs:
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+      - name: multithreading
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.julia-version == '1' }}
+        run: julia --project --code-coverage -t4 test/multithreaded.jl
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v1
         with:
