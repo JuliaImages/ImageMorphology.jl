@@ -10,6 +10,7 @@ include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
 include("dilation_and_erosion.jl")
+include("find_boundaries.jl")
 include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
@@ -42,6 +43,11 @@ export
 
     # convexhull.jl
     convexhull,
+
+    # find_boundaries.jl
+    find_boundaries,
+    find_boundaries!,
+    find_boundaries_thick,
 
     # thinning.jl
     thinning,
