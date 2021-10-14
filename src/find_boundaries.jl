@@ -54,7 +54,7 @@ function find_boundaries(img::AbstractArray{T},
                          region = coords_spatial(img);
                          background = zero(T)
                         ) where T
-    find_boundaries!(copy(img), region; background)
+    find_boundaries!(copy(img), region; background = background)
 end
 
 ## Alternate implementations using dilate and erode
