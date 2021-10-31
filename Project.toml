@@ -1,6 +1,6 @@
 name = "ImageMorphology"
 uuid = "787d08f9-d448-5407-9aad-5290dd7ab264"
-version = "0.2.12"
+version = "0.2.13"
 
 [deps]
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
