@@ -8,7 +8,6 @@
     @test label_components(A) == lbltarget
     @test label_components(A; dims=:) == lbltarget
     @test label_components(A; dims=1) == lbltarget1
-    @test label_components(A, [1]) == lbltarget1     # deprecated
     connectivity = [false true  false;
                     true  false true;
                     false true  false]
