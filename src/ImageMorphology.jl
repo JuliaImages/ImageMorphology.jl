@@ -64,8 +64,8 @@ export
 function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
         # morphological operations for ImageMeta
-        dilate(img::ImageMetadata.ImageMeta, region=coords_spatial(img)) = ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)), region))
-        erode(img::ImageMetadata.ImageMeta, region=coords_spatial(img)) = ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)), region))
+        dilate(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)); kwargs...))
+        erode(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)); kwargs...))
     end
 end
 
