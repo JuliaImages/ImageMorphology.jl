@@ -47,7 +47,6 @@ export
     # find_boundaries.jl
     find_boundaries,
     find_boundaries!,
-    find_boundaries_thick,
 
     # thinning.jl
     thinning,
