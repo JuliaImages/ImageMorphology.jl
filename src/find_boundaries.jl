@@ -1,9 +1,9 @@
 """
     find_boundaries!(img::AbstractArray, [region,]; background = 0)
 
-    Finds the boundaries that are just within each object, replacing the original image.
-    `background` is the scalar value of the background pixels which will not be marked as boundaries.
-    `region` indicates which dimensions to detect boundaries along.
+Finds the boundaries that are just within each object, replacing the original image.
+`background` is the scalar value of the background pixels which will not be marked as boundaries.
+`region` indicates which dimensions to detect boundaries along.
 """
 function find_boundaries!(img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N},
                          region = coords_spatial(img);
@@ -44,11 +44,11 @@ end
 """
     find_boundaries(img::AbstractArray, [region,]; background = 0)
 
-    Finds the boundaries that are just within each object.
-    `background` is the scalar value of the background pixels which will not be marked as boundaries.
-    `region` indicates which dimensions to detect boundaries along.
+Finds the boundaries that are just within each object.
+`background` is the scalar value of the background pixels which will not be marked as boundaries.
+`region` indicates which dimensions to detect boundaries along.
 
-    See also `find_boundaries_thick`
+See also `find_boundaries_thick`
 """
 function find_boundaries(img::AbstractArray{T},
                          region = coords_spatial(img);
@@ -108,7 +108,7 @@ end
 """
     find_boundaries_thick(img::AbstractArray, [region,])
 
-    Find thick boundaries that are just outside and just inside the objects.
-    `region` indicates which dimensions to detect boundaries along.
+Find thick boundaries that are just outside and just inside the objects.
+`region` indicates which dimensions to detect boundaries along.
 """
 const find_boundaries_thick = find_boundaries_thick_dilate_erode
