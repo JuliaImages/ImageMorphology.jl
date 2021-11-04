@@ -14,13 +14,13 @@ import ImageMorphology: find_boundaries_thick
     @test sum(find_boundaries(OA)) == 48
     @test sum(find_boundaries(Gray{Float32}.(normA))) == 48
     @test sum(find_boundaries(RGB{N0f8}.(normA))) .== RGB{Float64}(48, 48, 48)
-    @test sum(find_boundaries(A, 1)) == 32
-    @test sum(find_boundaries(A, 2)) == 32
+    @test sum(find_boundaries(A; dims = 1)) == 32
+    @test sum(find_boundaries(A; dims = 2)) == 32
     @test sum(find_boundaries(GB)) == 42
     @test sum(find_boundaries(B)) == 42
     @test sum(find_boundaries(OB)) == 42
-    @test sum(find_boundaries(B, 1)) == 32
-    @test sum(find_boundaries(B, 2)) == 22
+    @test sum(find_boundaries(B; dims = 1)) == 32
+    @test sum(find_boundaries(B; dims = 2)) == 22
     @test sum(find_boundaries(C)) == 107
     @test sum(find_boundaries(C, background = 1)) == 48
     @test sum(find_boundaries(Gray{Float32}.(normC), background = 0)) == 107
@@ -42,13 +42,13 @@ end
     @test sum(find_boundaries_thick(Gray{Float32}.(normA))) == 107
     # MethodError: no method matching isless(::RGB{N0f8}, ::RGB{N0f8})
     @test_broken sum(find_boundaries_broken(RGB{N0f8}.(normA))) .== RGB{Float64}(107, 107, 107)
-    @test sum(find_boundaries_thick(A, 1)) == 61
-    @test sum(find_boundaries_thick(A, 2)) == 54
+    @test sum(find_boundaries_thick(A; dims = 1)) == 61
+    @test sum(find_boundaries_thick(A; dims = 2)) == 54
     @test sum(find_boundaries_thick(GB)) == 101
     @test sum(find_boundaries_thick(B)) == 101
     @test sum(find_boundaries_thick(OB)) == 101
-    @test sum(find_boundaries_thick(B, 1)) == 61
-    @test sum(find_boundaries_thick(B, 2)) == 44
+    @test sum(find_boundaries_thick(B; dims = 1)) == 61
+    @test sum(find_boundaries_thick(B; dims = 2)) == 44
 end
 
 @testset "find_boundaries == find_boundaries_thick .& image" begin

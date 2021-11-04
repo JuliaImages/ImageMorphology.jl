@@ -5,36 +5,36 @@ Finds the boundaries that are just within each object, replacing the original im
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 `region` indicates which dimensions to detect boundaries along.
 """
-function find_boundaries!(img::AbstractArray{Bool,N},
-                         region = coords_spatial(img);
-                         background=false
+function find_boundaries!(img::AbstractArray{Bool,N};
+                         background=false,
+                         kwargs...
                         ) where N
     # Find regions where there is at least one background pixel
     # centered on a foreground pixel
     if(background != 0)
         # background_img = img
         # foreground_img = .!img
-        img .= .!img .& extremefilt!(copy(img), |, region)
+        img .= .!img .& extremefilt!(copy(img), |; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .= .!img .& mapwindow(any, img, (3,3))
     else
         # background_img = .!img
         # foreground_img = img
-        img .&= extremefilt!(.!img, |, region)
+        img .&= extremefilt!(.!img, |; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .&= mapwindow(any, .!img, (3,3))
     end
     return img
 end
-function find_boundaries!(img::AbstractArray{T},
-                          region = coords_spatial(img);
-                          background = zero(T)) where T
+function find_boundaries!(img::AbstractArray{T};
+                          background = zero(T),
+                          kwargs...) where T
     # Find regions where that are not homogeneous (all equal)
     # centered on a foreground pixel
     # background_img = img .== background
     # foreground_img = img .!= background
     allequal(x,y) = ifelse(x == y, x, background)
-    img .= (extremefilt!(copy(img), allequal, region) .== background) .& (img .!= background)
+    img .= (extremefilt!(copy(img), allequal; kwargs...) .== background) .& (img .!= background)
     # Alternatively, with ImageFiltering.jl
     # allequal(x) = all(==(first(x)), @view(x[2:end]))
     # .!mapwindow(allequal, A, (3,3)) .& (A .!= background)
@@ -50,11 +50,11 @@ Finds the boundaries that are just within each object.
 
 See also `find_boundaries_thick`
 """
-function find_boundaries(img::AbstractArray{T},
-                         region = coords_spatial(img);
-                         background = zero(T)
+function find_boundaries(img::AbstractArray{T};
+                         background = zero(T),
+                         kwargs...
                         ) where T
-    find_boundaries!(copy(img), region; background = background)
+    find_boundaries!(copy(img); background = background, kwargs...)
 end
 
 ## Alternate implementations using dilate and erode
@@ -92,16 +92,16 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 =#
 
-function find_boundaries_thick_dilate_erode(img::AbstractArray, region = coords_spatial(img))
+function find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
-    return dilate(img, region) .!= erode(img, region)
+    return dilate(img; kwargs...) .!= erode(img; kwargs...)
 end
-function find_boundaries_dilate_erode(img::AbstractArray{T},
-                                      region = coords_spatial(img);
-                                      background = zero(T)
+function find_boundaries_dilate_erode(img::AbstractArray{T};
+                                      background = zero(T),
+                                      kwargs...
                                      ) where T
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L170
-    thick_boundaries = find_boundaries_thick_dilate_erode(img, region)
+    thick_boundaries = find_boundaries_thick_dilate_erode(img; kwargs...)
     foreground_img = img .!= background
     return thick_boundaries .& foreground_img
 end
