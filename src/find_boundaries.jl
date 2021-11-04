@@ -5,13 +5,13 @@ Finds the boundaries that are just within each object, replacing the original im
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 `region` indicates which dimensions to detect boundaries along.
 """
-function find_boundaries!(img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N},
+function find_boundaries!(img::AbstractArray{Bool,N},
                          region = coords_spatial(img);
                          background=false
                         ) where N
     # Find regions where there is at least one background pixel
     # centered on a foreground pixel
-    if(background)
+    if(background != 0)
         # background_img = img
         # foreground_img = .!img
         img .= .!img .& extremefilt!(copy(img), |, region)
