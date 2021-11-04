@@ -1,14 +1,12 @@
 # Erode and dilate support 3x3 regions only (and higher-dimensional generalizations).
 
 """
-```
-imgd = dilate(img, [region])
-```
+    imgd = dilate(img; dims=coords_spatial(img))
 
-perform a max-filter over nearest-neighbors. The
+Perform a max-filter over nearest-neighbors. The
 default is 8-connectivity in 2d, 27-connectivity in 3d, etc. You can specify the
-list of dimensions that you want to include in the connectivity, e.g., `region =
-[1,2]` would exclude the third dimension from filtering.
+list of dimensions that you want to include in the connectivity, e.g., `dims =
+(1,2)` would exclude the third dimension from filtering.
 
 # Examples
 
@@ -29,7 +27,7 @@ julia> dilate(img)
  0.0  1.0  1.0  1.0  0.0
  0.0  0.0  0.0  0.0  0.0
 
-julia> dilate(img, 1)
+julia> dilate(img; dims=1)
 5×5 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0
  0.0  0.0  1.0  0.0  0.0
@@ -38,17 +36,17 @@ julia> dilate(img, 1)
  0.0  0.0  0.0  0.0  0.0
 ```
 """
-dilate(img::AbstractArray, region=coords_spatial(img)) = dilate!(copy(img), region)
+dilate(img::AbstractArray; kwargs...) = dilate!(copy(img); kwargs...)
 
 """
 ```
-imge = erode(img, [region])
+imge = erode(img; dims=coords_spatial(img))
 ```
 
 perform a min-filter over nearest-neighbors. The
 default is 8-connectivity in 2d, 27-connectivity in 3d, etc. You can specify the
-list of dimensions that you want to include in the connectivity, e.g., `region =
-[1,2]` would exclude the third dimension from filtering.
+list of dimensions that you want to include in the connectivity, e.g., `dims =
+(1,2)` would exclude the third dimension from filtering.
 
 # Examples
 
@@ -69,7 +67,7 @@ julia> erode(img)
  0.0  0.0  0.0  0.0  0.0
  0.0  0.0  0.0  0.0  0.0
 
-julia> erode(img, 1)
+julia> erode(img; dims=1)
 5×5 Array{Float64,2}:
  0.0  0.0  0.0  0.0  0.0
  0.0  0.0  0.0  0.0  0.0
@@ -78,10 +76,10 @@ julia> erode(img, 1)
  0.0  0.0  0.0  0.0  0.0
 ```
 """
-erode(img::AbstractArray, region=coords_spatial(img)) = erode!(copy(img), region)
+erode(img::AbstractArray; kwargs...) = erode!(copy(img); kwargs...)
 
-dilate!(maxfilt, region=coords_spatial(maxfilt)) = extremefilt!(maxfilt, max, region)
-erode!(minfilt, region=coords_spatial(minfilt)) = extremefilt!(minfilt, min, region)
+dilate!(maxfilt; kwargs...) = extremefilt!(maxfilt, max; kwargs...)
+erode!(minfilt; kwargs...) = extremefilt!(minfilt, min; kwargs...)
 
 """
     extremefilt!(A::AbstractArray, select::Function, region=coords_spatial(A))
@@ -152,7 +150,7 @@ julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
  6  2  2  1  7
  1  6  5  2  6
 
-julia> extremefilt!(copy(M), min, 1)
+julia> extremefilt!(copy(M), min; dims = 1)
 5×5 Matrix{Int64}:
  4  6  5  3  4
  4  6  4  3  4
@@ -160,7 +158,7 @@ julia> extremefilt!(copy(M), min, 1)
  1  2  2  1  6
  1  2  2  1  6
 
-julia> extremefilt!(copy(M), min, 2)
+julia> extremefilt!(copy(M), min; dims = 2)
 5×5 Matrix{Int64}:
  4  4  3  3  3
  6  6  4  4  4
@@ -168,7 +166,7 @@ julia> extremefilt!(copy(M), min, 2)
  2  2  1  1  1
  1  1  2  2  2
 
-julia> extremefilt!(extremefilt!(copy(M), min, 1), min, 2)
+julia> extremefilt!(extremefilt!(copy(M), min; dims = 1), min; dims = 2)
 5×5 Matrix{Int64}:
  4  4  3  3  3
  4  4  3  3  3
@@ -176,7 +174,7 @@ julia> extremefilt!(extremefilt!(copy(M), min, 1), min, 2)
  1  1  1  1  1
  1  1  1  1  1
 
-julia> extremefilt!(copy(M), min) # regions = (1,2) by default
+julia> extremefilt!(copy(M), min) # dims = (1,2) by default
 5×5 Matrix{Int64}:
  4  4  3  3  3
  4  4  3  3  3
@@ -221,10 +219,10 @@ julia> extremefilt!(.!box, |) .& box
  0  0  0  1  0
 ```
 """
-function extremefilt!(A::AbstractArray, select::Function, region=coords_spatial(A))
+function extremefilt!(A::AbstractArray, select::Function; dims=coords_spatial(A))
     inds = axes(A)
     for d = 1:ndims(A)
-        if size(A, d) == 1 || !in(d, region)
+        if size(A, d) == 1 || d ∉ dims
             continue
         end
         Rpre = CartesianIndices(inds[1:d-1])
@@ -254,8 +252,8 @@ end
 end
 
 """
-`imgo = opening(img, [region])` performs the `opening` morphology operation, equivalent to `dilate(erode(img))`.
-`region` allows you to control the dimensions over which this operation is performed.
+`imgo = opening(img; dims=coords_spatial(img))` performs the `opening` morphology operation, equivalent to `dilate(erode(img))`.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -277,12 +275,12 @@ julia> opening(img)
  0.0  0.0  1.0  1.0  1.0
 ```
 """
-opening(img::AbstractArray, region=coords_spatial(img)) = opening!(copy(img), region)
-opening!(img::AbstractArray, region=coords_spatial(img)) = dilate!(erode!(img, region),region)
+opening(img::AbstractArray; kwargs...) = opening!(copy(img); kwargs...)
+opening!(img::AbstractArray; kwargs...) = dilate!(erode!(img; kwargs...); kwargs...)
 
 """
-`imgc = closing(img, [region])` performs the `closing` morphology operation, equivalent to `erode(dilate(img))`.
-`region` allows you to control the dimensions over which this operation is performed.
+`imgc = closing(img; dims=coords_spatial(img))` performs the `closing` morphology operation, equivalent to `erode(dilate(img))`.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -308,13 +306,13 @@ julia> closing(img)
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
 ```
 """
-closing(img::AbstractArray, region=coords_spatial(img)) = closing!(copy(img), region)
-closing!(img::AbstractArray, region=coords_spatial(img)) = erode!(dilate!(img, region),region)
+closing(img::AbstractArray; kwargs...) = closing!(copy(img); kwargs...)
+closing!(img::AbstractArray; kwargs...) = erode!(dilate!(img; kwargs...); kwargs...)
 
 """
-`imgth = tophat(img, [region])` performs `top hat` of an image,
+`imgth = tophat(img; dims=coords_spatial(img))` performs `top hat` of an image,
 which is defined as the image minus its morphological opening.
-`region` allows you to control the dimensions over which this operation is performed.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -336,12 +334,12 @@ julia> tophat(img)
  0.0  0.0  0.0  0.0  0.0
 ```
 """
-tophat(img::AbstractArray, region=coords_spatial(img)) = img - opening(img, region)
+tophat(img::AbstractArray; kwargs...) = img - opening(img; kwargs...)
 
 """
-`imgbh = bothat(img, [region])` performs `bottom hat` of an image,
+`imgbh = bothat(img; dims=coords_spatial(img))` performs `bottom hat` of an image,
 which is defined as its morphological closing minus the original image.
-`region` allows you to control the dimensions over which this operation is performed.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -367,12 +365,12 @@ julia> bothat(img)
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
 ```
 """
-bothat(img::AbstractArray, region=coords_spatial(img)) = closing(img, region) - img
+bothat(img::AbstractArray; kwargs...) = closing(img; kwargs...) - img
 
 """
-`imgmg = morphogradient(img, [region])` returns morphological gradient of the image,
+`imgmg = morphogradient(img; dims=coords_spatial(img))` returns morphological gradient of the image,
 which is the difference between the dilation and the erosion of a given image.
-`region` allows you to control the dimensions over which this operation is performed.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -398,12 +396,12 @@ julia> morphogradient(img)
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
 ```
 """
-morphogradient(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) - erode(img, region)
+morphogradient(img::AbstractArray; kwargs...) = dilate(img; kwargs...) - erode(img; kwargs...)
 
 """
-`imgml = morpholaplace(img, [region])` performs `Morphological Laplacian` of an image,
+`imgml = morpholaplace(img; dims=coords_spatial(img))` performs `Morphological Laplacian` of an image,
 which is defined as the arithmetic difference between the internal and the external gradient.
-`region` allows you to control the dimensions over which this operation is performed.
+`dims` allows you to control the dimensions over which this operation is performed.
 
 # Examples
 
@@ -429,4 +427,4 @@ julia> morpholaplace(img)
  0.0  0.0   0.0   0.0   0.0  0.0  0.0
 ```
 """
-morpholaplace(img::AbstractArray, region=coords_spatial(img)) = dilate(img, region) + erode(img, region) - 2img
+morpholaplace(img::AbstractArray; kwargs...) = dilate(img; kwargs...) + erode(img; kwargs...) - 2img
