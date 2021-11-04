@@ -135,10 +135,24 @@ See Extended help for additional examples.
 
 # Extended help
 
+```@meta
+DocTestSetup = quote
+    import ImageMorphology: extremefilt!
+end
+```
+
 ## Examples with multiple dimensions
 
  ```jldoctest
- julia> extremefilt!(copy(M), min, 1)
+julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
+5×5 Matrix{Int64}:
+ 4  6  5  3  4
+ 8  6  9  4  8
+ 7  8  4  9  6
+ 6  2  2  1  7
+ 1  6  5  2  6
+
+julia> extremefilt!(copy(M), min, 1)
 5×5 Matrix{Int64}:
  4  6  5  3  4
  4  6  4  3  4
