@@ -111,7 +111,7 @@ For more than one dimension this would be applied to each dimension iteratively.
 ```jldoctest
 julia> import ImageMorphology: extremefilt!
 
-julia> A = [5, 9, 7, 6, 8];
+julia> A = Int64[5, 9, 7, 6, 8];
 
 julia> extremefilt!(copy(A), max) # dilation
 5-element Vector{Int64}:
@@ -142,7 +142,7 @@ end
 ## Examples with multiple dimensions
 
  ```jldoctest
-julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
+julia> M = Int64[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
 5×5 Matrix{Int64}:
  4  6  5  3  4
  8  6  9  4  8
