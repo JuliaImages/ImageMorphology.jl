@@ -4,6 +4,8 @@
 Finds the boundaries that are just within each object, replacing the original image.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 `region` indicates which dimensions to detect boundaries along.
+
+See `find_boundaries` for examples.
 """
 function find_boundaries!(img::AbstractArray{Bool,N};
                          background=false,
@@ -48,7 +50,112 @@ Finds the boundaries that are just within each object.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 `region` indicates which dimensions to detect boundaries along.
 
-See also `find_boundaries_thick`
+See also `find_boundaries_thick`.
+
+# Examples
+
+```@meta
+DocTestSetup = quote
+    import ImageMorphology: find_boundaries
+end
+```
+
+```jldoctest
+julia> A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13:15] .= 3; A[10:12,3:6] .= 9; A
+16×16 Matrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia> find_boundaries(A)
+16×16 Matrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia> find_boundaries(A .!= 0)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia> find_boundaries(A .!= 0; dims = 1)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia> find_boundaries(A .!= 0; dims = 2)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+```
 """
 function find_boundaries(img::AbstractArray{T};
                          background = zero(T),
@@ -92,6 +199,11 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 =#
 
+"""
+    find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
+
+Specific implementation of `find_boundaries_thick`
+"""
 function find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
     return dilate(img; kwargs...) .!= erode(img; kwargs...)
@@ -109,6 +221,83 @@ end
     find_boundaries_thick(img::AbstractArray, [region,])
 
 Find thick boundaries that are just outside and just inside the objects.
+This is a union of the inner and outer boundaries.
 `region` indicates which dimensions to detect boundaries along.
+
+# Examples
+
+```@meta
+DocTestSetup = quote
+    import ImageMorphology: find_boundaries_thick
+end
+```
+
+```jldoctest
+julia> A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13:15] .= 3; A[10:12,3:6] .= 9; A
+16×16 Matrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia> find_boundaries_thick(A)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0
+ 0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0
+ 0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0
+ 0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0
+ 0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0
+ 0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0
+ 0  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1
+ 0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1
+ 0  1  1  0  0  1  1  0  0  0  0  1  1  0  1  1
+ 0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1
+ 0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+ julia> find_boundaries_thick(A) .& (A .!= 0)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+ julia> find_boundaries_thick(A) == find_boundaries(A; background = -1)
+true
+
+julia> find_boundaries_thick(A) .& (A .!= 0) == find_boundaries(A) # inner boundaries
+true
+
+julia> find_boundaries_thick(A .!= 0) .& (A .== 0)  == find_boundaries(A .== 0) # outer boundaries
+true
+ ```
 """
 const find_boundaries_thick = find_boundaries_thick_dilate_erode
