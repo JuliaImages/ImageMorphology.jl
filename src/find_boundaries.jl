@@ -227,7 +227,7 @@ end
 
 Find thick boundaries that are just outside and just inside the objects.
 This is a union of the inner and outer boundaries.
-Dims indicates over which dimensions to look for boundaries.
+Keyword `dims` indicates over which dimensions to look for boundaries. This `dims` and additional keywords `kwargs` are passed to `extremefilt!`.
 
 # Examples
 
