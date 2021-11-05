@@ -1,9 +1,10 @@
 """
-    find_boundaries!(img::AbstractArray, [region,]; background = 0)
+    find_boundaries!(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
 
 Finds the boundaries that are just within each object, replacing the original image.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
-`region` indicates which dimensions to detect boundaries along.
+Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
+over which to discover boundaries.
 
 See `find_boundaries` for examples.
 """
@@ -13,18 +14,25 @@ function find_boundaries!(img::AbstractArray{Bool,N};
                         ) where N
     # Find regions where there is at least one background pixel
     # centered on a foreground pixel
-    if(background != 0)
+    if background == true
         # background_img = img
         # foreground_img = .!img
         img .= .!img .& extremefilt!(copy(img), |; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .= .!img .& mapwindow(any, img, (3,3))
-    else
+    elseif background == false
         # background_img = .!img
         # foreground_img = img
         img .&= extremefilt!(.!img, |; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .&= mapwindow(any, .!img, (3,3))
+    else
+        # This should be the same as find_boundaries_thick
+        # background is neither true or false, use more generic algorithm
+        background = Int8(-1) # Any value other than true or false will do
+        allequal(x,y) = ifelse(x == y, x, background)
+        # the entire image is the foreground
+        img .= (extremefilt!(Int8.(img), allequal; kwargs...) .== background)
     end
     return img
 end
@@ -44,11 +52,12 @@ function find_boundaries!(img::AbstractArray{T};
 end
 
 """
-    find_boundaries(img::AbstractArray, [region,]; background = 0)
+    find_boundaries(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
 
 Finds the boundaries that are just within each object.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
-`region` indicates which dimensions to detect boundaries along.
+Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
+over which to discover boundaries.
 
 See also `find_boundaries_thick`.
 
@@ -199,11 +208,7 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 =#
 
-"""
-    find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
-
-Specific implementation of `find_boundaries_thick`
-"""
+# Specific implementation of `find_boundaries_thick` using dilate and erode similar to scikit-image, uses extremefilt! twice
 function find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
     return dilate(img; kwargs...) .!= erode(img; kwargs...)
@@ -218,11 +223,11 @@ function find_boundaries_dilate_erode(img::AbstractArray{T};
     return thick_boundaries .& foreground_img
 end
 """
-    find_boundaries_thick(img::AbstractArray, [region,])
+    find_boundaries_thick(img::AbstractArray; dims = coords_spatial(img), kwargs...)
 
 Find thick boundaries that are just outside and just inside the objects.
 This is a union of the inner and outer boundaries.
-`region` indicates which dimensions to detect boundaries along.
+Dims indicates over which dimensions to look for boundaries.
 
 # Examples
 
