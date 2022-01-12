@@ -122,6 +122,7 @@ end
     @test isboundary(B) == isboundary_thick(B) .& B
     @test isboundary(B, background=false) == isboundary_thick(B) .& B
     @test isboundary(B, background=true) == isboundary_thick(B) .& .!B
+    @test isboundary(B, background=-1) == isboundary_thick(B)
     @test isboundary(C) == isboundary_thick(C)
     @test isboundary(C, background = 1) == isboundary_thick(C) .& (C .!= 1)
     @test isboundary(A) == isboundary_dilate_erode(A)
