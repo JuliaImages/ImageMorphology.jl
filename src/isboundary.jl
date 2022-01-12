@@ -6,7 +6,7 @@ Finds the boundaries that are just within each object, replacing the original im
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See [`isboundary`](@ref) for examples.
+See out-of-place version, [`isboundary`](@ref), for examples.
 """
 function isboundary!(img::AbstractArray{Bool,N};
                          background=false,
@@ -61,7 +61,7 @@ Finds the boundaries that are just within each object.
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See also [`isboundary_thick`](@ref).
+See also its in-place version [`find_boundaries!`](@ref) and the alternative version that finds thick boundaries, [`isboundary_thick`](@ref).
 
 # Examples
 
@@ -230,6 +230,8 @@ end
 Find thick boundaries that are just outside and just inside the objects.
 This is a union of the inner and outer boundaries.
 Keyword `dims` indicates over which dimensions to look for boundaries. This `dims` and additional keywords `kwargs` are passed to [`extremefilt!`](@ref).
+
+See also [`isboundary`](@ref) which just yields the inner boundaries.
 
 # Examples
 
