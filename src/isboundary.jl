@@ -1,14 +1,14 @@
 """
-    find_boundaries!(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
+    isboundary!(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
 
 Finds the boundaries that are just within each object, replacing the original image.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See `find_boundaries` for examples.
+See `isboundary` for examples.
 """
-function find_boundaries!(img::AbstractArray{Bool,N};
+function isboundary!(img::AbstractArray{Bool,N};
                          background=false,
                          kwargs...
                         ) where N
@@ -27,23 +27,25 @@ function find_boundaries!(img::AbstractArray{Bool,N};
         # Alternatively, with ImageFiltering.jl
         # img .&= mapwindow(any, .!img, (3,3))
     else
-        # This should be the same as find_boundaries_thick
+        # This should be the same as isboundary_thick
         # background is neither true or false, use more generic algorithm
         background = Int8(-1) # Any value other than true or false will do
-        allequal(x,y) = ifelse(x == y, x, background)
+        #allequal(x,y) = ifelse(x == y, x, background)
+        allequal(x,y) = x == y ? x : background
         # the entire image is the foreground
         img .= (extremefilt!(Int8.(img), allequal; kwargs...) .== background)
     end
     return img
 end
-function find_boundaries!(img::AbstractArray{T};
+function isboundary!(img::AbstractArray{T};
                           background = zero(T),
                           kwargs...) where T
     # Find regions where that are not homogeneous (all equal)
     # centered on a foreground pixel
     # background_img = img .== background
     # foreground_img = img .!= background
-    allequal(x,y) = ifelse(x == y, x, background)
+    #allequal(x,y) = ifelse(x == y, x, background)
+    allequal(x,y) = x == y ? x : background
     img .= (extremefilt!(copy(img), allequal; kwargs...) .== background) .& (img .!= background)
     # Alternatively, with ImageFiltering.jl
     # allequal(x) = all(==(first(x)), @view(x[2:end]))
@@ -52,20 +54,20 @@ function find_boundaries!(img::AbstractArray{T};
 end
 
 """
-    find_boundaries(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
+    isboundary(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)
 
 Finds the boundaries that are just within each object.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See also `find_boundaries_thick`.
+See also `isboundary_thick`.
 
 # Examples
 
 ```@meta
 DocTestSetup = quote
-    import ImageMorphology: find_boundaries
+    import ImageMorphology: isboundary
 end
 ```
 
@@ -89,7 +91,7 @@ julia> A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
-julia> find_boundaries(A)
+julia> isboundary(A)
 16×16 Matrix{Int64}:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -108,7 +110,7 @@ julia> find_boundaries(A)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
-julia> find_boundaries(A .!= 0)
+julia> isboundary(A .!= 0)
 16×16 BitMatrix:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -127,7 +129,7 @@ julia> find_boundaries(A .!= 0)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
-julia> find_boundaries(A .!= 0; dims = 1)
+julia> isboundary(A .!= 0; dims = 1)
 16×16 BitMatrix:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -146,7 +148,7 @@ julia> find_boundaries(A .!= 0; dims = 1)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
-julia> find_boundaries(A .!= 0; dims = 2)
+julia> isboundary(A .!= 0; dims = 2)
 16×16 BitMatrix:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -166,11 +168,11 @@ julia> find_boundaries(A .!= 0; dims = 2)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 ```
 """
-function find_boundaries(img::AbstractArray{T};
+function isboundary(img::AbstractArray{T};
                          background = zero(T),
                          kwargs...
                         ) where T
-    find_boundaries!(copy(img); background = background, kwargs...)
+    isboundary!(copy(img); background = background, kwargs...)
 end
 
 ## Alternate implementations using dilate and erode
@@ -208,22 +210,22 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 =#
 
-# Specific implementation of `find_boundaries_thick` using dilate and erode similar to scikit-image, uses extremefilt! twice
-function find_boundaries_thick_dilate_erode(img::AbstractArray; kwargs...)
+# Specific implementation of `isboundary_thick` using dilate and erode similar to scikit-image, uses extremefilt! twice
+function isboundary_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
     return dilate(img; kwargs...) .!= erode(img; kwargs...)
 end
-function find_boundaries_dilate_erode(img::AbstractArray{T};
+function isboundary_dilate_erode(img::AbstractArray{T};
                                       background = zero(T),
                                       kwargs...
                                      ) where T
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L170
-    thick_boundaries = find_boundaries_thick_dilate_erode(img; kwargs...)
+    thick_boundaries = isboundary_thick_dilate_erode(img; kwargs...)
     foreground_img = img .!= background
     return thick_boundaries .& foreground_img
 end
 """
-    find_boundaries_thick(img::AbstractArray; dims = coords_spatial(img), kwargs...)
+    isboundary_thick(img::AbstractArray; dims = coords_spatial(img), kwargs...)
 
 Find thick boundaries that are just outside and just inside the objects.
 This is a union of the inner and outer boundaries.
@@ -233,7 +235,7 @@ Dims indicates over which dimensions to look for boundaries.
 
 ```@meta
 DocTestSetup = quote
-    import ImageMorphology: find_boundaries_thick
+    import ImageMorphology: isboundary_thick
 end
 ```
 
@@ -257,7 +259,7 @@ julia> A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
-julia> find_boundaries_thick(A)
+julia> isboundary_thick(A)
 16×16 BitMatrix:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -276,7 +278,7 @@ julia> find_boundaries_thick(A)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
- julia> find_boundaries_thick(A) .& (A .!= 0)
+ julia> isboundary_thick(A) .& (A .!= 0)
 16×16 BitMatrix:
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
@@ -295,14 +297,14 @@ julia> find_boundaries_thick(A)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 
- julia> find_boundaries_thick(A) == find_boundaries(A; background = -1)
+ julia> isboundary_thick(A) == isboundary(A; background = -1)
 true
 
-julia> find_boundaries_thick(A) .& (A .!= 0) == find_boundaries(A) # inner boundaries
+julia> isboundary_thick(A) .& (A .!= 0) == isboundary(A) # inner boundaries
 true
 
-julia> find_boundaries_thick(A .!= 0) .& (A .== 0)  == find_boundaries(A .== 0) # outer boundaries
+julia> isboundary_thick(A .!= 0) .& (A .== 0)  == isboundary(A .== 0) # outer boundaries
 true
  ```
 """
-const find_boundaries_thick = find_boundaries_thick_dilate_erode
+const isboundary_thick = isboundary_thick_dilate_erode
