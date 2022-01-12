@@ -111,10 +111,10 @@ For more than one dimension this would be applied to each dimension iteratively.
 ```jldoctest
 julia> import ImageMorphology: extremefilt!
 
-julia> A = Int64[5, 9, 7, 6, 8];
+julia> A = $Int[5, 9, 7, 6, 8];
 
 julia> extremefilt!(copy(A), max) # dilation
-5-element Vector{Int64}:
+5-element Vector{$Int}:
  9
  9
  9
@@ -122,7 +122,7 @@ julia> extremefilt!(copy(A), max) # dilation
  8
 
 julia> extremefilt!(copy(A), min) # erosion
-5-element Vector{Int64}:
+5-element Vector{$Int}:
  5
  5
  6
@@ -142,8 +142,8 @@ end
 ## Examples with multiple dimensions
 
  ```jldoctest
-julia> M = Int64[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
-5×5 Matrix{Int64}:
+julia> M = $Int[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
+5×5 Matrix{$Int}:
  4  6  5  3  4
  8  6  9  4  8
  7  8  4  9  6
@@ -151,7 +151,7 @@ julia> M = Int64[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
  1  6  5  2  6
 
 julia> extremefilt!(copy(M), min; dims = 1)
-5×5 Matrix{Int64}:
+5×5 Matrix{$Int}:
  4  6  5  3  4
  4  6  4  3  4
  6  2  2  1  6
@@ -159,7 +159,7 @@ julia> extremefilt!(copy(M), min; dims = 1)
  1  2  2  1  6
 
 julia> extremefilt!(copy(M), min; dims = 2)
-5×5 Matrix{Int64}:
+5×5 Matrix{$Int}:
  4  4  3  3  3
  6  6  4  4  4
  7  4  4  4  6
@@ -167,7 +167,7 @@ julia> extremefilt!(copy(M), min; dims = 2)
  1  1  2  2  2
 
 julia> extremefilt!(extremefilt!(copy(M), min; dims = 1), min; dims = 2)
-5×5 Matrix{Int64}:
+5×5 Matrix{$Int}:
  4  4  3  3  3
  4  4  3  3  3
  2  2  1  1  1
@@ -175,7 +175,7 @@ julia> extremefilt!(extremefilt!(copy(M), min; dims = 1), min; dims = 2)
  1  1  1  1  1
 
 julia> extremefilt!(copy(M), min) # dims = (1,2) by default
-5×5 Matrix{Int64}:
+5×5 Matrix{$Int}:
  4  4  3  3  3
  4  4  3  3  3
  2  2  1  1  1
