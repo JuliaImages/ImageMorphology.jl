@@ -82,10 +82,10 @@ dilate!(maxfilt; kwargs...) = extremefilt!(maxfilt, max; kwargs...)
 erode!(minfilt; kwargs...) = extremefilt!(minfilt, min; kwargs...)
 
 """
-    extremefilt!(A::AbstractArray, select::Function, region=coords_spatial(A))
+    extremefilt!(A::AbstractArray, select::Function, dims=coords_spatial(A))
 
 Given an array `A` and a function `select` that takes two arguments, scan each
-dimension indicated by `region`, replacing the value of each pixel with the
+dimension indicated by `dims`, replacing the value of each pixel with the
 result of `select` applied pairwise to it and its immediate neighbor(s).
 
 For pixels at the boundary of the image, only `select` will be applied once.
