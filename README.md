@@ -17,16 +17,48 @@ Pkg.add("ImageMorphology")
 ## Exported functions
 
 ```julia
-dilate
-erode
-opening
-closing
-tophat
+area_closing
+area_closing!
+area_opening
+area_opening!
+areas
 bothat
+boundingboxes
+clearborder
+closing
+closing!
+component_boxes
+component_centroids
+component_indices
+component_lengths
+component_subscripts
+convexhull
+diameter_closing
+diameter_closing!
+diameter_opening
+diameter_opening!
+diameters
+dilate
+dilate!
+distance_transform
+erode
+erode!
+feature_transform
+imfill
+isboundary
+isboundary!
+label_components
+label_components!
+local_maxima
+local_maxima!
+local_minima
+local_minima!
 morphogradient
 morpholaplace
+opening
+opening!
 thinning
-imfill
+tophat
 ```
 
 ## Documentation

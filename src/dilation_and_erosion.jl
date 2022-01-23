@@ -80,6 +80,145 @@ erode(img::AbstractArray; kwargs...) = erode!(copy(img); kwargs...)
 
 dilate!(maxfilt; kwargs...) = extremefilt!(maxfilt, max; kwargs...)
 erode!(minfilt; kwargs...) = extremefilt!(minfilt, min; kwargs...)
+
+"""
+    extremefilt!(A::AbstractArray, select::Function, dims=coords_spatial(A))
+
+Given an array `A` and a function `select` that takes two arguments, scan each
+dimension indicated by `dims`, replacing the value of each pixel with the
+result of `select` applied pairwise to it and its immediate neighbor(s).
+
+For pixels at the boundary of the image, only `select` will be applied once.
+For internal pixels, the `select` will be applied twice with the previous
+pixel and then to the result and the next pixel.
+
+For example, in one dimension, for an array `A = [a, b, c, d, e]` the result
+will be as follows.
+```
+[
+    select(a,b),
+    select(select(a,b), c),
+    select(select(b,c), d),
+    select(select(c,d), e),
+    select(d,e)
+]
+```
+For more than one dimension this would be applied to each dimension iteratively.
+
+`extemefilt!(A, s, (1,2)) == extermefilt!(extemefilt!(A, s, 1), s, 2)`
+
+# Examples
+```jldoctest
+julia> import ImageMorphology: extremefilt!
+
+julia> A = $Int[5, 9, 7, 6, 8];
+
+julia> extremefilt!(copy(A), max) # dilation
+5-element Vector{$Int}:
+ 9
+ 9
+ 9
+ 8
+ 8
+
+julia> extremefilt!(copy(A), min) # erosion
+5-element Vector{$Int}:
+ 5
+ 5
+ 6
+ 6
+ 6
+```
+See Extended help for additional examples.
+
+# Extended help
+
+```@meta
+DocTestSetup = quote
+    import ImageMorphology: extremefilt!
+end
+```
+
+## Examples with multiple dimensions
+
+ ```jldoctest
+julia> M = $Int[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
+5×5 Matrix{$Int}:
+ 4  6  5  3  4
+ 8  6  9  4  8
+ 7  8  4  9  6
+ 6  2  2  1  7
+ 1  6  5  2  6
+
+julia> extremefilt!(copy(M), min; dims = 1)
+5×5 Matrix{$Int}:
+ 4  6  5  3  4
+ 4  6  4  3  4
+ 6  2  2  1  6
+ 1  2  2  1  6
+ 1  2  2  1  6
+
+julia> extremefilt!(copy(M), min; dims = 2)
+5×5 Matrix{$Int}:
+ 4  4  3  3  3
+ 6  6  4  4  4
+ 7  4  4  4  6
+ 2  2  1  1  1
+ 1  1  2  2  2
+
+julia> extremefilt!(extremefilt!(copy(M), min; dims = 1), min; dims = 2)
+5×5 Matrix{$Int}:
+ 4  4  3  3  3
+ 4  4  3  3  3
+ 2  2  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+
+julia> extremefilt!(copy(M), min) # dims = (1,2) by default
+5×5 Matrix{$Int}:
+ 4  4  3  3  3
+ 4  4  3  3  3
+ 2  2  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+```
+
+## Examples for finding boundaries
+
+```jldoctest
+julia> box = falses(5, 5); box[3:5,1:4] .= 1; box
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 1  1  1  1  0
+ 1  1  1  1  0
+ 1  1  1  1  0
+
+julia> .!box
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 0  0  0  0  1
+ 0  0  0  0  1
+ 0  0  0  0  1
+
+julia> extremefilt!(.!box, |)
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 0  0  0  1  1
+ 0  0  0  1  1
+
+julia> extremefilt!(.!box, |) .& box
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 1  1  1  1  0
+ 0  0  0  1  0
+ 0  0  0  1  0
+```
+"""
 function extremefilt!(A::AbstractArray, select::Function; dims=coords_spatial(A))
     inds = axes(A)
     for d = 1:ndims(A)
