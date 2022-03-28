@@ -4,7 +4,6 @@
 [![][pkgeval-img]][pkgeval-url]
 [![][codecov-img]][codecov-url]
 
-
 This package provides morphology-related functionality to the [Images.jl][images-url] project.
 
 ## Installation
