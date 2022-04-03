@@ -14,6 +14,7 @@ include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
+include("geodesy.jl")
 
 include("feature_transform.jl")
 using .FeatureTransform
@@ -64,6 +65,12 @@ export
     feature_transform,
     distance_transform,
 
+    #geodesy.jl
+    underbuild,
+    overbuild,
+    hmaxima,
+    hminima,
+    
     clearborder
 
 function __init__()
