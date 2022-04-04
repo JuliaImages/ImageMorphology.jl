@@ -65,6 +65,8 @@ let grp = SUITE["geodesy"]
         B = similar(tst_img)
         grp["hmaxima"]["$sz×$sz"] = @benchmarkable hmaxima($B, trues(3,3), Gray{N0f8}.(0.2))
     end
+    erode_blobs=erode(blobs)
+    grp["underbuild_binary"] = @benchmarkable underbuild($erode_blobs,$blobs,trues(3,3))
 end
 
 

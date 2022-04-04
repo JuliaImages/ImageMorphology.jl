@@ -123,7 +123,53 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
     return output
 end
 
+#specialization for binary case
+function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool})  where {N}
+    check_image_consistency(mask, marker)
+    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+    for d = 1:ndims(connectivity)
+        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
+    end
 
+    output = copy(marker)
+
+    #Use queue to store propagation front
+    propagationfront = Queue{CartesianIndex{N}}(); 
+    deltaoffsets = neighborhood(output, connectivity)
+
+    # Initialisation of the queue with contour pixels of marker image
+    R = CartesianIndices(axes(output))
+    for i in R
+        @inbounds if output[i] == 0 continue
+        end
+        for Δi in deltaoffsets # examine neighborhoods
+            ii = i + Δi
+            if checkbounds(Bool, R, ii) #check that we are in the image #note here we could add border or simulate then by splitting iteration
+                #Ok we walk on the perimeter
+                @inbounds if output[ii] == 0 && mask[ii] == 1
+                    #push pixel in the queue
+                    enqueue!(propagationfront, i)
+                    break
+                end
+            end
+        end
+    end
+    # Loop until all pixel have been examined 
+    while !isempty(propagationfront)
+        curr_idx = dequeue!(propagationfront)
+        for Δi in deltaoffsets # examine neighborhoods
+            ii = curr_idx + Δi
+            if checkbounds(Bool, R, ii) #check that we are in the image
+                #propagate
+                @inbounds if output[ii] == 0 && mask[ii] == 1
+                    @inbounds output[ii] = 1
+                    enqueue!(propagationfront, ii)
+                end
+            end
+        end
+    end
+    return output
+end
 """
     overbuild(marker, mask, connectivity=[]) -> Array
 
@@ -195,6 +241,14 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
         end
     end
     return output
+end
+
+#specialization for binary case
+function overbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool})  where {N}
+    marker_inv =  map(!, marker)
+    mask_inv = map(!, mask)
+    output_inv= underbuild(marker_inv,mask_inv,connectivity)
+    return map(!, output_inv)
 end
 
 """

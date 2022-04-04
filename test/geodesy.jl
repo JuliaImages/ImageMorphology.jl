@@ -34,6 +34,51 @@
                     false true  false]
     output_2D4 = underbuild(marker,mask,connectivity_2D4)
     @test output_2D4 == expected_connectivity_2D4
+
+    #specilization binary cases
+    marker = ([
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 1])
+    marker = convert(Array{Bool}, marker)
+    mask = ([
+        0 0 0 0 0 0;
+        0 1 1 0 0 0;
+        0 1 1 0 0 0;
+        0 1 1 0 0 0;
+        0 0 0 1 1 1;
+        0 0 0 1 1 1])
+    mask = convert(Array{Bool}, mask)
+
+    expected_connectivity_2D8 = ([
+        0 0 0 0 0 0;
+        0 1 1 0 0 0;
+        0 1 1 0 0 0;
+        0 1 1 0 0 0;
+        0 0 0 1 1 1;
+        0 0 0 1 1 1])
+    expected_connectivity_2D8 = convert(Array{Bool}, expected_connectivity_2D8)  
+    connectivity_2D8 = trues(3,3)
+    output_2D8 = underbuild(marker,mask,connectivity_2D8)
+    @test output_2D8 == expected_connectivity_2D8
+
+    expected_connectivity_2D4 = ([
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 0 0 0;
+        0 0 0 1 1 1;
+        0 0 0 1 1 1]) 
+    expected_connectivity_2D4 = convert(Array{Bool}, expected_connectivity_2D4)  
+
+    connectivity_2D4 = [false true  false;
+                    true  false true;
+                    false true  false]
+    output_2D4 = underbuild(marker,mask,connectivity_2D4)
+    @test output_2D4 == expected_connectivity_2D4
 end
 
 @testset "overbuild" begin
@@ -67,6 +112,51 @@ end
     9 9 9 6 9;
     9 9 6 6 6;
     9 9 6 6 6])
+    connectivity_2D4 = [false true  false;
+                    true  false true;
+                    false true  false]
+    output_2D4 = overbuild(marker,mask,connectivity_2D4)
+    @test output_2D4 == expected_connectivity_2D4
+
+    #specilization binary cases
+    marker = ([
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 0])
+    marker = convert(Array{Bool}, marker)
+    mask = ([
+        1 1 1 1 1 1;
+        1 0 0 1 1 1;
+        1 0 0 1 1 1;
+        1 0 0 1 1 1;
+        1 1 1 0 0 0;
+        1 1 1 0 0 0])
+    mask = convert(Array{Bool}, mask)
+
+    expected_connectivity_2D8 = ([
+        1 1 1 1 1 1;
+        1 0 0 1 1 1;
+        1 0 0 1 1 1;
+        1 0 0 1 1 1;
+        1 1 1 0 0 0;
+        1 1 1 0 0 0])
+    expected_connectivity_2D8 = convert(Array{Bool}, expected_connectivity_2D8)  
+    connectivity_2D8 = trues(3,3)
+    output_2D8 = overbuild(marker,mask,connectivity_2D8)
+    @test output_2D8 == expected_connectivity_2D8
+
+    expected_connectivity_2D4 = ([
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 1 1 1;
+        1 1 1 0 0 0;
+        1 1 1 0 0 0]) 
+    expected_connectivity_2D4 = convert(Array{Bool}, expected_connectivity_2D4)  
+
     connectivity_2D4 = [false true  false;
                     true  false true;
                     false true  false]
