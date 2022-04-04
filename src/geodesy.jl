@@ -101,8 +101,7 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
     while !isempty(pq)
         curr_idx, current_priority = dequeue_pair!(pq)
         # don't examine twice the same point. 
-        @inbounds if visited[curr_idx] 
-            continue 
+        @inbounds if visited[curr_idx] && continue 
         end
         # mark as visited
         @inbounds visited[curr_idx] = true
@@ -114,8 +113,7 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
         for Δi in deltaoffsets # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if visited[ii] # already done ?
-                    continue
+                @inbounds if visited[ii] && continue # already done ?
                 end
                 @inbounds newpriority = min(mask[ii], current_priority)
                 pq[ii] =  newpriority
@@ -177,8 +175,7 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
     while !isempty(pq)
         curr_idx, current_priority = dequeue_pair!(pq)
         # don't examine twice the same point. 
-        @inbounds if visited[curr_idx] 
-            continue 
+        @inbounds if visited[curr_idx] && continue 
         end
         # mark as visited
         @inbounds visited[curr_idx] = true
@@ -190,8 +187,7 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
         for Δi in deltaoffsets # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if visited[ii] # already done ?
-                    continue
+                @inbounds if visited[ii] && continue# already done ?
                 end
                 @inbounds newpriority = max(mask[ii], current_priority)
                 pq[ii] =  newpriority
@@ -246,8 +242,7 @@ function neighborhood(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) 
     end)
     offsets = CartesianIndex{N}[]
     for i in CartesianIndices(connectivity)
-        if i == center 
-            continue# we don't need to check center
+        if i == center && continue # we don't need to check center
         end
         if connectivity[i]
             push!(offsets, i - center)

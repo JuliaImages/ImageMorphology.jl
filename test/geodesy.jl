@@ -92,3 +92,22 @@ end
     output_2D8 = hmaxima(image,connectivity_2D8,(3))
     @test output_2D8 == expected_connectivity_2D8
 end
+
+@testset "hinima" begin
+    image = ([
+    8 8 8 8 8 8 8 8 8 8;
+    8 7 7 7 8 8 7 7 7 8;
+    8 7 6 7 8 8 7 3 7 8;
+    8 7 7 7 8 8 7 7 7 8;
+    8 8 8 8 8 8 8 8 8 8])
+
+    expected_connectivity_2D8 =([
+    8 8 8 8 8 8 8 8 8 8;
+    8 8 8 8 8 8 7 7 7 8;
+    8 8 8 8 8 8 7 6 7 8;
+    8 8 8 8 8 8 7 7 7 8;
+    8 8 8 8 8 8 8 8 8 8])
+    connectivity_2D8 = trues(3,3)
+    output_2D8 = hminima(image,connectivity_2D8,(3))
+    @test output_2D8 == expected_connectivity_2D8
+end
