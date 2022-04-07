@@ -91,6 +91,8 @@ end
 SUITE["connected"] = BenchmarkGroup()
 let grp = SUITE["connected"]
     grp["label_components"] = @benchmarkable label_components($blobs)
+    grp["label_flatzones"] = @benchmarkable label_flatzones($cameraman, trues(3,3))
+    grp["label_lambdaflatzones"] = @benchmarkable label_lambdaflatzones($cameraman, trues(3,3),Gray{N0f8}(1.0/255.0))
 end
 
 SUITE["Maxtree"] = BenchmarkGroup()
