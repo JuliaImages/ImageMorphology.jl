@@ -70,24 +70,25 @@ An array of the same type and shape as the `marker`.
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
 function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N}
-    check_image_consistency(mask, marker)
-    # WARNING
-    #  The original algorithm assume that the marker < mask, this assertion is not always true
-    #  so instead we extract the start from min(marker,mask)
+    check_image_consistency(mask, marker)   
    
     all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
-   
+
+    # WARNING
+    #  The original algorithm assume that the marker < mask, this assertion is not always true
+    #  so instead we extract the start from min(marker,mask)
     # first operation take the infimum between marker and mask
     output = map(min, marker, mask)
 
     queue = Queue{CartesianIndex{N}}(); 
-    deltaoffsets = neighborhood(marker, connectivity)
-    uper_deltaoffest = upper_half_neighborhood(marker, connectivity)
-    lower_deltaoffest= lower_half_neighborhood(marker, connectivity)
+    deltaoffsets = neighborhood(connectivity)
+    uper_deltaoffest = upper_neighborhood(connectivity)
+    lower_deltaoffest= lower_neighborhood(connectivity)
 
+    #NOTE we could pad the array with -Inf to speedup forward/backward scan 
     # forward scan
     R = CartesianIndices(axes(marker))
     for i in R
@@ -147,7 +148,7 @@ function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, m
 
     #Use queue to store propagation front
     propagationfront = Queue{CartesianIndex{N}}(); 
-    deltaoffsets = neighborhood(output, connectivity)
+    deltaoffsets = neighborhood(connectivity)
 
     # Initialisation of the queue with contour pixels of marker image
     R = CartesianIndices(axes(output))
@@ -203,23 +204,24 @@ An array of the same type and shape as the `marker`.
 """
 function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N}
     check_image_consistency(mask, marker)
-    # WARNING
-    #  The original algorithm assume that the marker > mask, this assertion is not always true
-    #  so instead we extract the start from min(marker,mask)
-   
+    
     all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
    
+    # WARNING
+    #  The original algorithm assume that the marker > mask, this assertion is not always true
+    #  so instead we extract the start from max(marker,mask)
     # first operation take the supremum between marker and mask
     output = map(max, marker, mask)
 
     queue = Queue{CartesianIndex{N}}(); 
-    deltaoffsets = neighborhood(marker, connectivity)
-    uper_deltaoffest = upper_half_neighborhood(marker, connectivity)
-    lower_deltaoffest= lower_half_neighborhood(marker, connectivity)
+    deltaoffsets = neighborhood(connectivity)
+    uper_deltaoffest = upper_neighborhood(connectivity)
+    lower_deltaoffest= lower_neighborhood(connectivity)
 
+    #NOTE we could pad the array with +Inf to speedup forward/backward scan 
     # forward scan
     R = CartesianIndices(axes(marker))
     for i in R
@@ -289,7 +291,7 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_maxima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isgreater, isequal ) 
+regional_maxima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isgreater ) 
 
 """
     regional_minima(image, connectivity=[]) -> Array
@@ -307,68 +309,31 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_minima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isless, isequal ) 
+regional_minima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isless ) 
 
 
-function neighborhood(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
-    for d = 1:ndims(connectivity)
-        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
-    end
-    center = CartesianIndex(map(axes(connectivity)) do ax
+neighborhood(connectivity) = append!(upper_neighborhood(connectivity), lower_neighborhood(connectivity))
+
+upper_neighborhood(x) = _neighborhood(i->x[i], CartesianIndices(x))
+lower_neighborhood(x) = _neighborhood(i->x[i], reverse(CartesianIndices(x)))
+
+function _neighborhood(f, R)
+    center = CartesianIndex(map(axes(R)) do ax
         (first(ax) + last(ax)) ÷ 2
     end)
-    offsets = CartesianIndex{N}[]
-    for i in CartesianIndices(connectivity)
-        if i == center && continue # we don't need to check center
-        end
-        if connectivity[i]
-            push!(offsets, i - center)
+    out = CartesianIndex[]
+    for i in R
+        i == center && break
+        if f(i)
+            push!(out,i - center)
         end
     end
-    return (offsets...,)   # returning as a tuple allows specialization
+    return out
 end
 
-function upper_half_neighborhood(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
-    for d = 1:ndims(connectivity)
-        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
-    end
-    center = CartesianIndex(map(axes(connectivity)) do ax
-        (first(ax) + last(ax)) ÷ 2
-    end)
-    offsets = CartesianIndex{N}[]
-    for i in CartesianIndices(connectivity)
-        if i == center && break # skip over
-        end
-        if connectivity[i]
-            push!(offsets, i - center)
-        end
-    end
-    return (offsets...,)   # returning as a tuple allows specialization
-end 
-
-function lower_half_neighborhood(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
-    for d = 1:ndims(connectivity)
-        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
-    end
-    center = CartesianIndex(map(axes(connectivity)) do ax
-        (first(ax) + last(ax)) ÷ 2
-    end)
-    offsets = CartesianIndex{N}[]
-    for i in reverse(CartesianIndices(connectivity))
-        if i == center && break # skip over
-        end
-        if connectivity[i]
-            push!(offsets, i - center)
-        end
-    end
-    return (offsets...,)   # returning as a tuple allows specialization
-end 
 
 #faster than local_minima/maxima from maxtree
-function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}, CompareOperator = Base.isgreater, EquivalenceOperator = Base.isequal ) where {T<:ImageCore.NumberLike , N}
+function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}, comp) where {T<:ImageCore.NumberLike , N}
     #restrict connectivity in order to operator make sens
     all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
@@ -384,7 +349,7 @@ function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::Abst
     current_region = Deque{CartesianIndex{N}}() # use deque to store point belonging to current region
     propagationfront = Queue{CartesianIndex{N}}(); #Use queue to store propagation front
     is_region_regional_extremum = 0
-    deltaoffsets = neighborhood(image, connectivity)
+    deltaoffsets = neighborhood(connectivity)
     R = CartesianIndices(axes(image))
     for i in R
         # compute the flat zones of the image
@@ -405,7 +370,7 @@ function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::Abst
                     ii = idx_front + Δi
                     if checkbounds(Bool, R, ii) #check that we are in the image
                         @inbounds nl_value = image[ii]
-                        if (is_region_regional_extremum && CompareOperator(nl_value,centervalue))
+                        if (is_region_regional_extremum && comp(nl_value,centervalue))
                             # no, we are not an extremum anymore, mark is as such and
                             # don't propagate the flat zone on this pixel
                             is_region_regional_extremum = false

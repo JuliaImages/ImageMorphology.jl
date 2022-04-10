@@ -65,6 +65,12 @@ let grp = SUITE["geodesy"]
         B = similar(tst_img)
         grp["hmaxima"]["$sz×$sz"] = @benchmarkable hmaxima($B, trues(3,3), Gray{N0f8}.(0.2))
     end
+    grp["regional_maxima"] = BenchmarkGroup()
+    for sz in tst_sizes
+        tst_img = (imresize((cameraman), (sz, sz)))
+        B = similar(tst_img)
+        grp["regional_maxima"]["$sz×$sz"] = @benchmarkable regional_maxima($B, trues(3,3))
+    end
     erode_blobs=erode(blobs)
     grp["underbuild_binary"] = @benchmarkable underbuild($erode_blobs,$blobs,trues(3,3))
 end

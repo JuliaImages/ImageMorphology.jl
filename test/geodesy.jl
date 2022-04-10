@@ -1,4 +1,13 @@
 @testset "underbuild" begin
+    #1D
+    marker = [0 0 0 3 0]
+    mask = [0 0 6 5 6]
+    expected_connectivity_1D = [0 0 3 3 3]  
+    connectivity_1D = trues(1,3)
+    output_1D = underbuild(marker,mask,connectivity_1D)
+    @test output_1D == expected_connectivity_1D
+
+    #2D
     marker = ([0 0 0 0 0;
               0 9 0 0 0;
               0 0 0 0 0;
@@ -34,6 +43,28 @@
                     false true  false]
     output_2D4 = underbuild(marker,mask,connectivity_2D4)
     @test output_2D4 == expected_connectivity_2D4
+    
+    #3D
+    marker = zeros(5,6,3)
+    marker[3,4,2] = 3
+
+    mask = zeros(5,6,3)
+    mask[3,4,1] = 4
+    mask[2,3:5,2] = [5,5,5]
+    mask[3,3:5,2] = [4,4,4]
+    mask[4,3:5,2] = [4,4,4]
+    mask[3,4,2] = 6
+    mask[3,4,3] = 4
+    
+    expected_connectivity_3D26 = zeros(5,6,3)
+    expected_connectivity_3D26[3,4,1] =3
+    expected_connectivity_3D26[2,3:5,2] = [3,3,3]
+    expected_connectivity_3D26[3,3:5,2] = [3,3,3]
+    expected_connectivity_3D26[4,3:5,2] = [3,3,3]
+    expected_connectivity_3D26[3,4,3] = 3
+    connectivity_3D26 = trues(3,3,3)
+    output_3D26 = underbuild(marker,mask,connectivity_3D26)
+    @test output_3D26 == expected_connectivity_3D26
 
     #specilization binary cases
     marker = ([
@@ -183,7 +214,7 @@ end
     @test output_2D8 == expected_connectivity_2D8
 end
 
-@testset "hinima" begin
+@testset "hminima" begin
     image = ([
     8 8 8 8 8 8 8 8 8 8;
     8 7 7 7 8 8 7 7 7 8;
@@ -199,5 +230,52 @@ end
     8 8 8 8 8 8 8 8 8 8])
     connectivity_2D8 = trues(3,3)
     output_2D8 = hminima(image,connectivity_2D8,(3))
+    @test output_2D8 == expected_connectivity_2D8
+end
+
+@testset "regional_maxima" begin
+    image = ([
+        0 0 0 0 0 0 0;
+        0 1 1 1 1 1 0;
+        0 1 2 2 2 1 0;
+        0 1 2 3 2 1 0;
+        0 1 2 2 2 1 0;
+        0 1 1 1 1 1 0;
+        0 0 0 0 0 0 0])
+
+    expected_connectivity_2D8 =([
+        0 0 0 0 0 0 0;
+        0 0 0 0 0 0 0;
+        0 0 0 0 0 0 0;
+        0 0 0 1 0 0 0;
+        0 0 0 0 0 0 0;
+        0 0 0 0 0 0 0;
+        0 0 0 0 0 0 0])
+    connectivity_2D8 = trues(3,3)
+    output_2D8 = regional_maxima(image,connectivity_2D8)
+    @test output_2D8 == expected_connectivity_2D8
+end
+
+@testset "regional_minima" begin
+    image = ([
+        0 0 0 0 0 0 0;
+        0 3 3 3 3 3 0;
+        0 3 2 2 2 3 0;
+        0 3 2 1 2 3 0;
+        0 3 2 2 2 3 0;
+        0 3 3 3 3 3 0;
+        0 0 0 0 0 0 0])
+    
+
+    expected_connectivity_2D8 =([
+        1 1 1 1 1 1 1;
+        1 0 0 0 0 0 1;
+        1 0 0 0 0 0 1;
+        1 0 0 1 0 0 1;
+        1 0 0 0 0 0 1;
+        1 0 0 0 0 0 1;
+        1 1 1 1 1 1 1])
+    connectivity_2D8 = trues(3,3)
+    output_2D8 = regional_minima(image,connectivity_2D8)
     @test output_2D8 == expected_connectivity_2D8
 end

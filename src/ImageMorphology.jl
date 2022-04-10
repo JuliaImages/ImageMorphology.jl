@@ -70,6 +70,8 @@ export
     overbuild,
     hmaxima,
     hminima,
+    regional_maxima,
+    regional_minima,
     
     clearborder
 
