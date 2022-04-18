@@ -195,42 +195,100 @@ end
     @test output_2D4 == expected_connectivity_2D4
 end
 
-@testset "hmaxima" begin
-    image = ([
+@testset "hmaximum" begin
+    img = [
         3 3 3 3 3 3 3 3 3 3
         3 4 4 4 3 3 4 4 4 3
         3 4 5 4 3 3 4 9 4 3
         3 4 4 4 3 3 4 4 4 3
-        3 3 3 3 3 3 3 3 3 3])
-
-    expected_connectivity_2D8 = ([
+        3 3 3 3 3 3 3 3 3 3
+    ]
+    ref_img = [
         3 3 3 3 3 3 3 3 3 3
         3 3 3 3 3 3 4 4 4 3
         3 3 3 3 3 3 4 6 4 3
         3 3 3 3 3 3 4 4 4 3
-        3 3 3 3 3 3 3 3 3 3])
-    connectivity_2D8 = trues(3, 3)
-    output_2D8 = hmaxima(image, connectivity_2D8, (3))
-    @test output_2D8 == expected_connectivity_2D8
+        3 3 3 3 3 3 3 3 3 3
+    ]
+    out = hmaximum(img, 3)
+    @test eltype(out) == eltype(img)
+    @test out == ref_img
+    @test out == hmaximum(img, 3; r=3) == hmaximum(img, 3; r=(3, 3))
+    # image eltype can be different from typeof(h)
+    out = hmaximum(img, 3.0)
+    @test eltype(out) == Float64
+    @test out == ref_img
+
+    ref_img = [
+        0  0  0  0  0  0  0  0  0  0
+        1  1  1  1  1  1  1  1  1  1
+        3  3  3  3  3  3  4  6  4  3
+        1  1  1  1  1  1  1  1  1  1
+        0  0  0  0  0  0  0  0  0  0
+    ]
+    @test ref_img == hmaximum(img, 3; r=(1, 3))
+
+    ref_img = [
+        0  1  2  1  0  0  1  3  1  0
+        0  1  2  1  0  0  1  4  1  0
+        0  1  2  1  0  0  1  6  1  0
+        0  1  2  1  0  0  1  4  1  0
+        0  1  2  1  0  0  1  3  1  0
+    ]
+    @test ref_img == hmaximum(img, 3; r=(3, 1))
+
+    # ensure there is no wraparound behavior for N0f8
+    img = rand((N0f8(0), N0f8(1)), 7, 7)
+    @test hmaximum(float.(img), 0.5) == hmaximum(img, 0.5)
 end
 
-@testset "hminima" begin
-    image = ([
+@testset "hminimum" begin
+    img = [
         8 8 8 8 8 8 8 8 8 8
         8 7 7 7 8 8 7 7 7 8
         8 7 6 7 8 8 7 3 7 8
         8 7 7 7 8 8 7 7 7 8
-        8 8 8 8 8 8 8 8 8 8])
+        8 8 8 8 8 8 8 8 8 8
+    ]
 
-    expected_connectivity_2D8 = ([
+    ref_img = [
         8 8 8 8 8 8 8 8 8 8
         8 8 8 8 8 8 7 7 7 8
         8 8 8 8 8 8 7 6 7 8
         8 8 8 8 8 8 7 7 7 8
-        8 8 8 8 8 8 8 8 8 8])
-    connectivity_2D8 = trues(3, 3)
-    output_2D8 = hminima(image, connectivity_2D8, (3))
-    @test output_2D8 == expected_connectivity_2D8
+        8 8 8 8 8 8 8 8 8 8
+    ]
+
+    out = hminimum(img, 3)
+    @test eltype(out) == eltype(img)
+    @test out == ref_img
+    @test out == hminimum(img, 3; r=3) == hminimum(img, 3; r=(3, 3))
+    # image eltype can be different from typeof(h)
+    out = hminimum(img, 3.0)
+    @test eltype(out) == Float64
+    @test out == ref_img
+
+    ref_img = [
+        11  11  11  11  11  11  11  11  11  11
+        10  10  10  10  10  10  10  10  10  10
+         8   8   8   8   8   8   7   6   7   8
+        10  10  10  10  10  10  10  10  10  10
+        11  11  11  11  11  11  11  11  11  11
+    ]
+    @test ref_img == hminimum(img, 3; r=(1, 3))
+
+    ref_img = [
+        11  10  9  10  11  11  10  8  10  11
+        11  10  9  10  11  11  10  7  10  11
+        11  10  9  10  11  11  10  6  10  11
+        11  10  9  10  11  11  10  7  10  11
+        11  10  9  10  11  11  10  8  10  11
+    ]
+    @test ref_img == hminimum(img, 3; r=(3, 1))
+
+    # ensure there is no wraparound behavior for N0f8
+    img = rand((N0f8(0), N0f8(1)), 7, 7)
+    @test hminimum(float.(img), 0.5) == hminimum(img, 0.5)
 end
 
 @testset "regional_maxima" begin

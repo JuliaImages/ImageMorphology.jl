@@ -2,6 +2,7 @@ module ImageMorphology
 
 using ImageCore
 using ImageCore: GenericGrayImage, NumberLike
+using ImageCore.MappedArrays: mappedarray, of_eltype
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
@@ -68,8 +69,8 @@ export
     #geodesy.jl
     underbuild,
     overbuild,
-    hmaxima,
-    hminima,
+    hmaximum,
+    hminimum,
     regional_maxima,
     regional_minima,
 

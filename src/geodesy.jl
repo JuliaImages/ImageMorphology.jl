@@ -11,43 +11,62 @@ import Base.isless
 import Base.isgreater
 import DataStructures.Queue, DataStructures.Deque, DataStructures.enqueue!, DataStructures.dequeue!, DataStructures.dequeue_pair!
 
-
-"""
-    hmaxima(image, connectivity=[], constant) -> Array
-The h-maxima transformation suppresses all maxima whose "relative" depth is below a given threshold (constant)
-# Arguments
-- `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
-- `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
-- `constant::T`: the soustracted constant.
-# Returns
-An array of the same type and shape as the `image`.
-# See also
-[`hminima`](@ref)
-# References
-    Morphological image analysis by Soille pg 170-172
-"""
-function hmaxima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike,N}
-    tmp = image .- constant
-    return underbuild(tmp, image, connectivity)
+_build_connectivity(r::Int, n) = trues(ntuple(_->r, n))
+function _build_connectivity(r::NTuple{N,Int}, n) where N
+    N <= n || throw(ArgumentError("radius length $(length(r)) must be less or equal to $n"))
+    sz = (r..., ntuple(_->1, n-N)...)
+    return trues(sz)
 end
 
 """
-    hminima(image, connectivity=[], constant) -> Array
-The h-minima transformation suppresses all minima whose "relative" depth is below a given threshold (constant)
-# Arguments
-- `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
-- `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
-- `constant::T`: the added constant.
-# Returns
-An array of the same type and shape as the `image`.
-# See also
-[`hmaxima`](@ref)
-# References
-    Morphological image analysis by Soille pg 170-172
+    hmaximum(img, h; r=3)
+
+For grayscale image `img`, the h-maximum transformation suppresses all regional maxima whose
+depth is below a given threshold level `h`. The regional size `r` can be either integer or
+tuple of integer.
+
+```julia
+using ImageMorphology, TestImages
+
+img = Gray.(testimage("blob"))
+img_h = hmaximum(img, 0.4)
+
+# suppress the regional maxima along the second dimension
+img_h = hmaximum(img, 0.4; r=(1, 3))
+```
+
+See also [`hminimum`](@ref).
 """
-function hminima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike,N}
-    tmp = image .+ constant
-    return overbuild(tmp, image, connectivity)
+function hmaximum(img::AbstractArray, h; r=3)
+    # TODO(johnnychen94): support in-place version
+    connectivity = _build_connectivity(r, ndims(img))
+    tmp = mappedarray(x -> x - h, img)
+    return underbuild(tmp, img, connectivity)
+end
+
+"""
+    hminimum(img, h)
+
+For grayscale image `img`, the h-minimum transformation suppresses all regional maxima whose
+depth is above a given threshold level `h`.
+
+```julia
+using ImageMorphology, TestImages
+
+img = Gray.(testimage("blob"))
+img_h = hminimum(img, 0.4)
+
+# suppress the regional minimum along the second dimension
+img_h = hminimum(img, 0.4; r=(1, 3))
+```
+
+See also [`hminimum`](@ref).
+"""
+function hminimum(img::AbstractArray, h; r=3)
+    # TODO(johnnychen94): support in-place version
+    connectivity = _build_connectivity(r, ndims(img))
+    tmp = mappedarray(x -> x + h, img)
+    return overbuild(tmp, img, connectivity)
 end
 
 """
@@ -69,8 +88,9 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function underbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N}
-    check_image_consistency(mask, marker)
+function underbuild(marker::AbstractArray, mask::AbstractArray, connectivity::AbstractArray{Bool})
+    N = ndims(marker)
+    # check_image_consistency(mask, marker)
 
     all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
@@ -203,8 +223,9 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function overbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N}
-    check_image_consistency(mask, marker)
+function overbuild(marker, mask, connectivity)
+    # check_image_consistency(mask, marker)
+    N = ndims(marker)
 
     all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
