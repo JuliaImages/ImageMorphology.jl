@@ -69,7 +69,7 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function underbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N}
+function underbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N}
     check_image_consistency(mask, marker)
 
     all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
@@ -203,7 +203,7 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function overbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N}
+function overbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N}
     check_image_consistency(mask, marker)
 
     all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
@@ -292,7 +292,7 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_maxima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N} = extract_regional_extrema(image, connectivity, isgreater)
+regional_maxima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N} = extract_regional_extrema(image, connectivity, isgreater)
 
 """
     regional_minima(image, connectivity=[]) -> Array
@@ -310,7 +310,7 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_minima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N} = extract_regional_extrema(image, connectivity, isless)
+regional_minima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:NumberLike,N} = extract_regional_extrema(image, connectivity, isless)
 
 
 neighborhood(connectivity) = append!(upper_neighborhood(connectivity), lower_neighborhood(connectivity))
@@ -334,7 +334,7 @@ end
 
 
 #faster than local_minima/maxima from maxtree
-function extract_regional_extrema(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, comp) where {T<:ImageCore.NumberLike,N}
+function extract_regional_extrema(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, comp) where {T<:NumberLike,N}
     #restrict connectivity in order to operator make sens
     all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)

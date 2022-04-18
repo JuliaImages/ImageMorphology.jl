@@ -1,7 +1,7 @@
 module ImageMorphology
 
 using ImageCore
-using ImageCore: GenericGrayImage
+using ImageCore: GenericGrayImage, NumberLike
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
@@ -72,7 +72,7 @@ export
     hminima,
     regional_maxima,
     regional_minima,
-    
+
     clearborder
 
 function __init__()
