@@ -26,9 +26,9 @@ An array of the same type and shape as the `image`.
 # References
     Morphological image analysis by Soille pg 170-172
 """
-function hmaxima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike , N}
-    tmp = image.-constant
-    return underbuild(tmp,image,connectivity) 
+function hmaxima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike,N}
+    tmp = image .- constant
+    return underbuild(tmp, image, connectivity)
 end
 
 """
@@ -45,9 +45,9 @@ An array of the same type and shape as the `image`.
 # References
     Morphological image analysis by Soille pg 170-172
 """
-function hminima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike , N}
-    tmp = image.+constant
-    return overbuild(tmp,image,connectivity)    
+function hminima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, constant::T) where {T<:ImageCore.NumberLike,N}
+    tmp = image .+ constant
+    return overbuild(tmp, image, connectivity)
 end
 
 """
@@ -69,10 +69,10 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N}
-    check_image_consistency(mask, marker)   
-   
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+function underbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N}
+    check_image_consistency(mask, marker)
+
+    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
@@ -83,12 +83,12 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
     # first operation take the infimum between marker and mask
     output = map(min, marker, mask)
 
-    queue = Queue{CartesianIndex{N}}(); 
+    queue = Queue{CartesianIndex{N}}()
     deltaoffsets = neighborhood(connectivity)
     uper_deltaoffest = upper_neighborhood(connectivity)
-    lower_deltaoffest= lower_neighborhood(connectivity)
+    lower_deltaoffest = lower_neighborhood(connectivity)
 
-    #NOTE we could pad the array with -Inf to speedup forward/backward scan 
+    #NOTE we could pad the array with -Inf to speedup forward/backward scan
     # forward scan
     R = CartesianIndices(axes(marker))
     for i in R
@@ -96,10 +96,10 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
         for Δi in uper_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds current_max = max(current_max,output[ii])
+                @inbounds current_max = max(current_max, output[ii])
             end
         end
-        @inbounds output[i] = min(current_max,mask[i])
+        @inbounds output[i] = min(current_max, mask[i])
     end
     # backward scan
     for i in reverse(R)
@@ -107,27 +107,27 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
         for Δi in lower_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds current_max = max(current_max,output[ii])
+                @inbounds current_max = max(current_max, output[ii])
             end
         end
-        @inbounds output[i] = min(current_max,mask[i])
+        @inbounds output[i] = min(current_max, mask[i])
         for Δi in lower_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if output[ii]<output[i] && output[ii]<mask[ii]
+                @inbounds if output[ii] < output[i] && output[ii] < mask[ii]
                     enqueue!(queue, i)
                 end
             end
         end
     end
-    # Loop until all pixel have been examined 
+    # Loop until all pixel have been examined
     while !isempty(queue)
         curr_idx = dequeue!(queue)
         for Δi in deltaoffsets # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if output[ii] < output[curr_idx] && mask[ii] != output[ii] 
-                    output[ii] = min(output[curr_idx],mask[ii])
+                @inbounds if output[ii] < output[curr_idx] && mask[ii] != output[ii]
+                    output[ii] = min(output[curr_idx], mask[ii])
                     enqueue!(queue, ii)
                 end
             end
@@ -137,9 +137,9 @@ function underbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conn
 end
 
 #specialization for binary case
-function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool})  where {N}
+function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool}) where {N}
     check_image_consistency(mask, marker)
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
@@ -147,13 +147,14 @@ function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, m
     output = copy(marker)
 
     #Use queue to store propagation front
-    propagationfront = Queue{CartesianIndex{N}}(); 
+    propagationfront = Queue{CartesianIndex{N}}()
     deltaoffsets = neighborhood(connectivity)
 
     # Initialisation of the queue with contour pixels of marker image
     R = CartesianIndices(axes(output))
     for i in R
-        @inbounds if output[i] == 0 continue
+        @inbounds if output[i] == 0
+            continue
         end
         for Δi in deltaoffsets # examine neighborhoods
             ii = i + Δi
@@ -167,7 +168,7 @@ function underbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, m
             end
         end
     end
-    # Loop until all pixel have been examined 
+    # Loop until all pixel have been examined
     while !isempty(propagationfront)
         curr_idx = dequeue!(propagationfront)
         for Δi in deltaoffsets # examine neighborhoods
@@ -202,26 +203,26 @@ An array of the same type and shape as the `marker`.
 # References
   Morphological Grayscale Reconstruction in Image Analysis: Applications and Efficient Algorithms IEEE Trans Image Process. 1993;2(2)
 """
-function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N}
+function overbuild(marker::AbstractArray{T,N}, mask::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N}
     check_image_consistency(mask, marker)
-    
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+
+    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
-   
+
     # WARNING
     #  The original algorithm assume that the marker > mask, this assertion is not always true
     #  so instead we extract the start from max(marker,mask)
     # first operation take the supremum between marker and mask
     output = map(max, marker, mask)
 
-    queue = Queue{CartesianIndex{N}}(); 
+    queue = Queue{CartesianIndex{N}}()
     deltaoffsets = neighborhood(connectivity)
     uper_deltaoffest = upper_neighborhood(connectivity)
-    lower_deltaoffest= lower_neighborhood(connectivity)
+    lower_deltaoffest = lower_neighborhood(connectivity)
 
-    #NOTE we could pad the array with +Inf to speedup forward/backward scan 
+    #NOTE we could pad the array with +Inf to speedup forward/backward scan
     # forward scan
     R = CartesianIndices(axes(marker))
     for i in R
@@ -229,10 +230,10 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
         for Δi in uper_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds current_min = min(current_min,output[ii])
+                @inbounds current_min = min(current_min, output[ii])
             end
         end
-        @inbounds output[i] = max(current_min,mask[i])
+        @inbounds output[i] = max(current_min, mask[i])
     end
     # backward scan
     for i in reverse(R)
@@ -240,27 +241,27 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
         for Δi in lower_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds current_min = min(current_min,output[ii])
+                @inbounds current_min = min(current_min, output[ii])
             end
         end
-        @inbounds output[i] = max(current_min,mask[i])
+        @inbounds output[i] = max(current_min, mask[i])
         for Δi in lower_deltaoffest # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if output[ii]>output[i] && output[ii]>mask[ii]
+                @inbounds if output[ii] > output[i] && output[ii] > mask[ii]
                     enqueue!(queue, i)
                 end
             end
         end
     end
-    # Loop until all pixel have been examined 
+    # Loop until all pixel have been examined
     while !isempty(queue)
         curr_idx = dequeue!(queue)
         for Δi in deltaoffsets # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if output[ii] > output[curr_idx] && mask[ii] != output[ii] 
-                    output[ii] = max(output[curr_idx],mask[ii])
+                @inbounds if output[ii] > output[curr_idx] && mask[ii] != output[ii]
+                    output[ii] = max(output[curr_idx], mask[ii])
                     enqueue!(queue, ii)
                 end
             end
@@ -270,10 +271,10 @@ function overbuild(marker::AbstractArray{T, N}, mask::AbstractArray{T, N}, conne
 end
 
 #specialization for binary case
-function overbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool})  where {N}
-    marker_inv =  map(!, marker)
+function overbuild(marker::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, mask::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N}, connectivity::AbstractArray{Bool}) where {N}
+    marker_inv = map(!, marker)
     mask_inv = map(!, mask)
-    output_inv= underbuild(marker_inv,mask_inv,connectivity)
+    output_inv = underbuild(marker_inv, mask_inv, connectivity)
     return map(!, output_inv)
 end
 
@@ -291,7 +292,7 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_maxima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isgreater ) 
+regional_maxima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N} = extract_regional_extrema(image, connectivity, isgreater)
 
 """
     regional_minima(image, connectivity=[]) -> Array
@@ -309,13 +310,13 @@ This implementation is faster than maxtree approach if maxtree not precomputed
 - `image::AbstractArray{T, N}`: where {T<:ImageCore.NumberLike , N} the ``N``-dimensional input image
 - `connectivity::AbstractArray{Bool}`: the neighborhood connectivity.
 """
-regional_minima(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike , N} = extract_regional_extrema(image, connectivity, isless ) 
+regional_minima(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T<:ImageCore.NumberLike,N} = extract_regional_extrema(image, connectivity, isless)
 
 
 neighborhood(connectivity) = append!(upper_neighborhood(connectivity), lower_neighborhood(connectivity))
 
-upper_neighborhood(x) = _neighborhood(i->x[i], CartesianIndices(x))
-lower_neighborhood(x) = _neighborhood(i->x[i], reverse(CartesianIndices(x)))
+upper_neighborhood(x) = _neighborhood(i -> x[i], CartesianIndices(x))
+lower_neighborhood(x) = _neighborhood(i -> x[i], reverse(CartesianIndices(x)))
 
 function _neighborhood(f, R)
     center = CartesianIndex(map(axes(R)) do ax
@@ -325,7 +326,7 @@ function _neighborhood(f, R)
     for i in R
         i == center && break
         if f(i)
-            push!(out,i - center)
+            push!(out, i - center)
         end
     end
     return out
@@ -333,9 +334,9 @@ end
 
 
 #faster than local_minima/maxima from maxtree
-function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::AbstractArray{Bool}, comp) where {T<:ImageCore.NumberLike , N}
+function extract_regional_extrema(image::AbstractArray{T,N}, connectivity::AbstractArray{Bool}, comp) where {T<:ImageCore.NumberLike,N}
     #restrict connectivity in order to operator make sens
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
     for d = 1:ndims(connectivity)
         size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
     end
@@ -347,7 +348,7 @@ function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::Abst
     visited = similar(Array{Bool}, axes(image))
     fill!(visited, false)
     current_region = Deque{CartesianIndex{N}}() # use deque to store point belonging to current region
-    propagationfront = Queue{CartesianIndex{N}}(); #Use queue to store propagation front
+    propagationfront = Queue{CartesianIndex{N}}() #Use queue to store propagation front
     is_region_regional_extremum = 0
     deltaoffsets = neighborhood(connectivity)
     R = CartesianIndices(axes(image))
@@ -370,7 +371,7 @@ function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::Abst
                     ii = idx_front + Δi
                     if checkbounds(Bool, R, ii) #check that we are in the image
                         @inbounds nl_value = image[ii]
-                        if (is_region_regional_extremum && comp(nl_value,centervalue))
+                        if (is_region_regional_extremum && comp(nl_value, centervalue))
                             # no, we are not an extremum anymore, mark is as such and
                             # don't propagate the flat zone on this pixel
                             is_region_regional_extremum = false
@@ -396,17 +397,16 @@ function extract_regional_extrema(image::AbstractArray{T, N}, connectivity::Abst
             end # propagation front empty
             #ok a region is alive, its a regional extremum ?
             if is_region_regional_extremum
-                #process the region 
+                #process the region
                 # note that we could label instead of simply mark regions
                 for p in current_region
                     @inbounds output[p] = true
                 end
-                empty!(current_region)  
+                empty!(current_region)
             else
-                empty!(current_region)  
+                empty!(current_region)
             end
         end # test we can visit current point
     end # loop along idx image
     return output
 end
-
