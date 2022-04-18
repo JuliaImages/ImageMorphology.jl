@@ -14,6 +14,7 @@ include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
+include("leveling.jl")
 
 include("feature_transform.jl")
 using .FeatureTransform
@@ -63,6 +64,11 @@ export
     #feature_transform.jl
     feature_transform,
     distance_transform,
+    
+    #leveling
+    low_leveling,
+    high_leveling,
+    leveling,
 
     clearborder
 
