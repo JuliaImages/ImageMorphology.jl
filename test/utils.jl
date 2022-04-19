@@ -27,6 +27,8 @@
     ref = Bool[0 0 0 1 0 0 0; 1 1 1 1 1 1 1; 0 0 0 1 0 0 0]
     @test typeof(out) == BitMatrix
     @test out == ref
+    # ensure keywords are passed through
+    @test ref == _build((1, 3); square=false) == _build((1, 3), 2; square=false)
 
     # N=3
     out = @inferred _build(2, Val(3))

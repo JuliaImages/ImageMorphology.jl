@@ -3,11 +3,12 @@
     connectivity_ball(radius, Val(N); square=true)
 
 Build the N-dimensional connectivity array by filling the ellipse/ball region with `true`s,
-where `true` indicates a connected position. The default dimension `N` is \$2\$. The
-`square` keyword is used to specify if the output array should be square.
+where `true` indicates a connected position to its center. The default dimension `N` is
+\$2\$.
 
 The output shape is specified by `radius`. If `radius` is an `Int` number, then the `true`s
 region forms a ball, and if `radius` is a tuple of `Int`, then it is typically an ellipse.
+The `square` keyword is used to specify if the output array should be square.
 
 !!! info "special case: radius == 1"
     If `radius == 1` then output array will be filled with `true`. For 2-dimensional case,
@@ -22,27 +23,31 @@ julia> connectivity_ball(1, Val(2))
  1  1  1
  1  1  1
 
-julia> connectivity_ball((3, 5), Val(2)) # ellipse
-11×11 BitMatrix:
- 0  0  0  0  0  0  0  0  0  0  0
- 0  0  0  0  0  0  0  0  0  0  0
- 0  0  0  0  0  1  0  0  0  0  0
- 0  0  1  1  1  1  1  1  1  0  0
- 0  1  1  1  1  1  1  1  1  1  0
- 1  1  1  1  1  1  1  1  1  1  1
- 0  1  1  1  1  1  1  1  1  1  0
- 0  0  1  1  1  1  1  1  1  0  0
- 0  0  0  0  0  1  0  0  0  0  0
- 0  0  0  0  0  0  0  0  0  0  0
- 0  0  0  0  0  0  0  0  0  0  0
+julia> connectivity_ball((1, 3)) # ellipse
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  1  0  0  0
+ 1  1  1  1  1  1  1
+ 0  0  0  1  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia> connectivity_ball((1, 3); square=false) # ellipse
+3×7 BitMatrix:
+ 0  0  0  1  0  0  0
+ 1  1  1  1  1  1  1
+ 0  0  0  1  0  0  0
 ```
 
 See also [`connectivity_region`](@ref ImageMorphology.connectivity_region).
 """
-connectivity_ball(radius) = connectivity_ball(radius, Val(2))
-connectivity_ball(r::Int, ::Val{N}) where {N} = connectivity_ball(ntuple(_ -> r, N), Val(N))
+connectivity_ball(radius; kwargs...) = connectivity_ball(radius, Val(2); kwargs...)
+function connectivity_ball(r::Int, ::Val{N}; kwargs...) where {N}
+    return connectivity_ball(ntuple(_ -> r, N), Val(N); kwargs...)
+end
 function connectivity_ball(r::NTuple{N,Int}, ::Val{N}; square=true) where {N}
-    sz = square ? ntuple(_ -> 2maximum(r) + 1, N) : @. 2r+1
+    sz = square ? ntuple(_ -> 2maximum(r) + 1, N) : @. 2r + 1
 
     # for special case when r==1, it's common to just use `trues(3,3)`
     all(r .== 1) && return trues(sz)
@@ -61,7 +66,7 @@ function connectivity_ball(r::NTuple{N,Int}, ::Val{N}; square=true) where {N}
     return Ω
 end
 # this is not type-inferable, yet we still provide it for convenience
-connectivity_ball(radius, n::Int) = connectivity_ball(radius, Val(n))
+connectivity_ball(radius, n::Int; kwargs...) = connectivity_ball(radius, Val(n); kwargs...)
 
 """
     connectivity_region(alias::Symbol)
