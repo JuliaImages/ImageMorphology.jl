@@ -2,6 +2,7 @@ module ImageMorphology
 
 using ImageCore
 using ImageCore: GenericGrayImage
+using ImageCore.OffsetArrays
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
@@ -17,6 +18,8 @@ include("maxtree.jl")
 
 include("feature_transform.jl")
 using .FeatureTransform
+
+include("utils.jl")
 
 include("deprecations.jl")
 
