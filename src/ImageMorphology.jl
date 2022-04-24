@@ -2,10 +2,12 @@ module ImageMorphology
 
 using ImageCore
 using ImageCore: GenericGrayImage
+using ImageCore.OffsetArrays
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
 
+include("structuring_element.jl")
 include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
@@ -21,6 +23,11 @@ using .FeatureTransform
 include("deprecations.jl")
 
 export
+    strel,
+    strel_type,
+    strel_diamond,
+    strel_window,
+
     dilate,
     dilate!,
     erode,

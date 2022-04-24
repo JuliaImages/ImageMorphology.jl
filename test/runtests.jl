@@ -3,6 +3,7 @@ using ImageCore
 using Test
 using OffsetArrays
 using ImageMetadata
+using Suppressor
 
 @test isempty(detect_ambiguities(ImageMorphology))
 
@@ -10,6 +11,7 @@ using Documenter
 Base.VERSION >= v"1.6" && doctest(ImageMorphology, manual = false)
 
 @testset "ImageMorphology" begin
+    include("structuring_element.jl")
     include("convexhull.jl")
     include("connected.jl")
     include("dilation_and_erosion.jl")
