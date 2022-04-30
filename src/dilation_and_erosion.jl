@@ -234,7 +234,7 @@ end
 
 @noinline function _extremefilt!(A, select, Rpre, inds, Rpost)
     # TODO: improve the cache efficiency
-    for Ipost in Rpost, Ipre in Rpre
+    @inbounds for Ipost in Rpost, Ipre in Rpre
         # first element along dim
         i1 = first(inds)
         a2, a3 = A[Ipre, i1, Ipost], A[Ipre, i1+1, Ipost]
