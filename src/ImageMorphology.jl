@@ -25,6 +25,7 @@ include("deprecations.jl")
 export
     strel,
     strel_type,
+    strel_size,
     strel_diamond,
     strel_window,
 

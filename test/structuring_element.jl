@@ -247,3 +247,14 @@ end
     msg = "invalid structuring element data type: $(Vector{CartesianIndex})"
     @test_throws ErrorException(msg) strel_type(CartesianIndex[])
 end
+
+@testset "strel_size" begin
+    se = strel_diamond((5, 5), (1, ))
+    @test strel_size(se) == strel_size(collect(se)) == (3, 1)
+
+    se = strel_window((5, 5), (2, ))
+    @test strel_size(se) == strel_size(collect(se)) == (1, 3)
+
+    se = [CartesianIndex(-2, -2), CartesianIndex(1, 1)]
+    @test strel_size(se) == (5, 5)
+end

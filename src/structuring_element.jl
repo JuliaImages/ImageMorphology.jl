@@ -130,6 +130,59 @@ strel_type(A::SEWindowArray{N}) where {N} = SEWindow{N}(size(A), A.dims)
 strel_type(::T) where T = error("invalid structuring element data type: $T")
 
 """
+    strel_size(x)
+
+Calculate the minimal block size that contains the structuring element. The result
+will be a tuple of odd integers.
+
+```jldoctest; setup=:(using ImageMorphology)
+julia> se = strel_diamond((5, 5))
+5×5 ImageMorphology.SEDiamondArray{2, 2, 0}:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia> strel_size(se) # is not (5, 5)
+(3, 3)
+
+julia> strel(Bool, strel(CartesianIndex, se)) # because it only checks the minimal enclosing block
+3×3 BitMatrix:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia> se = [CartesianIndex(1, 1), CartesianIndex(-2, -2)];
+
+julia> strel_size(se) # is not (4, 4)
+(5, 5)
+
+julia> strel(Bool, se) # because the connectivity mask has to be odd size
+5×5 BitMatrix:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  0  1  0
+ 0  0  0  0  0
+
+julia> se = strel_diamond((5, 5), (1, ))
+5×5 ImageMorphology.SEDiamondArray{2, 1, 1}:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia> strel_size(se)
+(3, 1)
+```
+"""
+strel_size(se) = size(strel(Bool, strel(CartesianIndex, se)))
+strel_size(se::SEDiamondArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
+strel_size(se::SEWindowArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
+
+"""
     strel_ndims(x)::Int
 
 Infer the dimension of the structuring element `x`
