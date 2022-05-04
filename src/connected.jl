@@ -48,18 +48,23 @@ julia> label_components(A; dims=2)
 With `dims=2`, entries in `A` are connected if they are in the same row, but
 not if they are in the same column.
 """
-label_components(A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A)) =
-    label_components(A, half_diamond(A, dims); bkg=bkg)
-label_components(A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A))) =
-    label_components(A, half_pattern(A, connectivity); bkg=bkg)
-label_components(A::AbstractArray, iter; bkg=zero(eltype(A))) =
-    label_components!(similar(A, Int), A, iter; bkg=bkg) # Int is a safe choice
+function label_components(A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A))
+    return label_components(A, half_diamond(A, dims); bkg=bkg)
+end
+function label_components(A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A)))
+    return label_components(A, half_pattern(A, connectivity); bkg=bkg)
+end
+function label_components(A::AbstractArray, iter; bkg=zero(eltype(A)))
+    return label_components!(similar(A, Int), A, iter; bkg=bkg)
+end # Int is a safe choice
 
-label_components!(out::AbstractArray{<:Integer}, A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A)) =
-    label_components!(out, A, half_diamond(A, dims); bkg=bkg)
-label_components!(out::AbstractArray{<:Integer}, A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A))) =
-    label_components!(out, A, half_pattern(A, connectivity); bkg=bkg)
-function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=zero(eltype(A))) where T<:Integer
+function label_components!(out::AbstractArray{<:Integer}, A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A))
+    return label_components!(out, A, half_diamond(A, dims); bkg=bkg)
+end
+function label_components!(out::AbstractArray{<:Integer}, A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A)))
+    return label_components!(out, A, half_pattern(A, connectivity); bkg=bkg)
+end
+function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=zero(eltype(A))) where {T<:Integer}
     axes(out) == axes(A) || throw_dmm(axes(out), axes(A))
     fill!(out, zero(T))
     sets = DisjointMinSets{T}()
@@ -73,7 +78,11 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=ze
             checkbounds(Bool, A, ii) || continue
             if A[ii] == val
                 newlabel = out[ii]
-                label = ((label == typemax(T)) | (label == newlabel)) ? newlabel : union!(sets, label, newlabel)
+                label = if ((label == typemax(T)) | (label == newlabel))
+                    newlabel
+                else
+                    union!(sets, label, newlabel)
+                end
             end
         end
         if label == typemax(T)
@@ -91,11 +100,13 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=ze
     return out
 end
 
-throw_dmm(ax1, ax2) = throw(DimensionMismatch("axes of input and output must match, got $ax1 and $ax2"))
+function throw_dmm(ax1, ax2)
+    throw(DimensionMismatch("axes of input and output must match, got $ax1 and $ax2"))
+end
 
 function half_diamond(A::AbstractArray{T,N}, dims) where {T,N}
     offsets = CartesianIndex{N}[]
-    for d = 1:N
+    for d in 1:N
         if d ∈ dims
             push!(offsets, CartesianIndex(ntuple(i -> i == d ? -1 : 0, N)))
         end
@@ -106,13 +117,17 @@ end
 half_diamond(A::AbstractArray{T,N}, ::Colon) where {T,N} = half_diamond(A, 1:N)
 
 function half_pattern(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
-    all(in((1,3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
-    for d = 1:ndims(connectivity)
-        size(connectivity, d) == 1 || reverse(connectivity; dims=d) == connectivity || throw(ArgumentError("connectivity must be symmetric"))
+    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
+    for d in 1:ndims(connectivity)
+        size(connectivity, d) == 1 ||
+            reverse(connectivity; dims=d) == connectivity ||
+            throw(ArgumentError("connectivity must be symmetric"))
     end
-    center = CartesianIndex(map(axes(connectivity)) do ax
-        (first(ax) + last(ax)) ÷ 2
-    end)
+    center = CartesianIndex(
+        map(axes(connectivity)) do ax
+            (first(ax) + last(ax)) ÷ 2
+        end,
+    )
     offsets = CartesianIndex{N}[]
     for i in CartesianIndices(connectivity)
         i == center && break   # we only need the ones that come prior
@@ -129,9 +144,9 @@ end
 struct DisjointMinSets{T<:Integer}
     parents::Vector{T}
 
-    DisjointMinSets{T}(n::Integer) where T = new([T(1):T(n);])
+    DisjointMinSets{T}(n::Integer) where {T} = new([T(1):T(n);])
 end
-DisjointMinSets{T}() where T<:Integer = DisjointMinSets{T}(T(0))
+DisjointMinSets{T}() where {T<:Integer} = DisjointMinSets{T}(T(0))
 DisjointMinSets() = DisjointMinSets{INt}()
 
 Base.@propagate_inbounds function find_root!(sets::DisjointMinSets, m::Integer)
@@ -139,7 +154,7 @@ Base.@propagate_inbounds function find_root!(sets::DisjointMinSets, m::Integer)
     @inbounds if sets.parents[p] != p
         sets.parents[m] = p = find_root_unsafe!(sets, p)
     end
-    p
+    return p
 end
 
 # an unsafe variant of the above
@@ -148,7 +163,7 @@ function find_root_unsafe!(sets::DisjointMinSets, m::Int)
     @inbounds if sets.parents[p] != p
         sets.parents[m] = p = find_root_unsafe!(sets, p)
     end
-    p
+    return p
 end
 
 Base.@propagate_inbounds function union!(sets::DisjointMinSets, m::Integer, n::Integer)
@@ -161,76 +176,75 @@ Base.@propagate_inbounds function union!(sets::DisjointMinSets, m::Integer, n::I
         sets.parents[mp] = np
         return np
     end
-    mp
+    return mp
 end
 
 function push!(sets::DisjointMinSets)
     m = length(sets.parents) + 1
     m >= typemax(eltype(sets.parents)) && error("labels exhausted, use a larger integer type")
     push!(sets.parents, m)
-    m
+    return m
 end
 
 function minlabel(sets::DisjointMinSets)
     out = Vector{Int}(undef, length(sets.parents))
     k = 0
-    @inbounds for i = 1:length(sets.parents)
+    @inbounds for i in 1:length(sets.parents)
         if sets.parents[i] == i
             k += 1
         end
         out[i] = k
     end
-    out
+    return out
 end
 
 "`component_boxes(labeled_array)` -> an array of bounding boxes for each label, including the background label 0"
 function component_boxes(img::AbstractArray{Int})
     nd = ndims(img)
-    n = [Vector{Int}[ fill(typemax(Int),nd), fill(typemin(Int),nd) ]
-            for i=0:maximum(img)]
+    n = [Vector{Int}[fill(typemax(Int), nd), fill(typemin(Int), nd)] for i in 0:maximum(img)]
     s = CartesianIndices(size(img))
-    for i=1:length(img)
+    for i in 1:length(img)
         vcur = s[i]
-        vmin = n[img[i]+1][1]
-        vmax = n[img[i]+1][2]
-        for d=1:nd
+        vmin = n[img[i] + 1][1]
+        vmax = n[img[i] + 1][2]
+        for d in 1:nd
             vmin[d] = min(vmin[d], vcur[d])
             vmax[d] = max(vmax[d], vcur[d])
         end
     end
-    map(x->map(y->tuple(y...),x),n)
+    return map(x -> map(y -> tuple(y...), x), n)
 end
 
 "`component_lengths(labeled_array)` -> an array of areas (2D), volumes (3D), etc. for each label, including the background label 0"
 function component_lengths(img::AbstractArray{Int})
-    n = zeros(Int,maximum(img)+1)
-    for i=1:length(img)
-        n[img[i]+1]+=1
+    n = zeros(Int, maximum(img) + 1)
+    for i in 1:length(img)
+        n[img[i] + 1] += 1
     end
-    n
+    return n
 end
 
 "`component_indices(labeled_array)` -> an array of pixels for each label, including the background label 0"
 function component_indices(img::AbstractArray{Int})
-    n = [Int[] for i=0:maximum(img)]
-    for i=1:length(img)
-      push!(n[img[i]+1],i)
+    n = [Int[] for i in 0:maximum(img)]
+    for i in 1:length(img)
+        push!(n[img[i] + 1], i)
     end
-    n
+    return n
 end
 
 "`component_subscripts(labeled_array)` -> an array of pixels for each label, including the background label 0"
 function component_subscripts(img::AbstractArray{Int})
-    n = [Tuple[] for i=0:maximum(img)]
+    n = [Tuple[] for i in 0:maximum(img)]
     s = CartesianIndices(size(img))
-    for i=1:length(img)
-      push!(n[img[i]+1],s[i])
+    for i in 1:length(img)
+        push!(n[img[i] + 1], s[i])
     end
-    n
+    return n
 end
 
 "`component_centroids(labeled_array)` -> an array of centroids for each label, including the background label 0"
-function component_centroids(img::AbstractArray{Int,N}) where N
+function component_centroids(img::AbstractArray{Int,N}) where {N}
     len = length(0:maximum(img))
     n = fill(zero(CartesianIndex{N}), len)
     counts = fill(0, len)
@@ -239,5 +253,5 @@ function component_centroids(img::AbstractArray{Int,N}) where N
         n[v] += I
         counts[v] += 1
     end
-    map(v -> n[v].I ./ counts[v], 1:len)
+    return map(v -> n[v].I ./ counts[v], 1:len)
 end

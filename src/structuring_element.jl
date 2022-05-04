@@ -86,14 +86,18 @@ struct SEDiamond{N,K,R<:AbstractUnitRange{Int}} <: MorphologySE{N}
     dims::Dims{K}
     r::Int # radius
     function SEDiamond{N,K,R}(axes::NTuple{N,R}, dims::Dims{K}, r) where {N,K,R<:AbstractUnitRange{Int}}
-        all(r->first(r) == -last(r), axes) || throw(ArgumentError("axes must be symmetric along each dimension"))
+        if !all(r -> first(r) == -last(r), axes)
+            throw(ArgumentError("axes must be symmetric along each dimension"))
+        end
         _is_unique_tuple(dims) || throw(ArgumentError("dims should be unique"))
         N >= K || throw(ArgumentError("`axes` length should be at least $K"))
-        all(i->i<=N, dims) || throw(ArgumentError("all `dims` values should be less than or equal to $N"))
+        if !all(i -> i <= N, dims)
+            throw(ArgumentError("all `dims` values should be less than or equal to $N"))
+        end
         return new{N,K,R}(axes, dims, r)
     end
 end
-function SEDiamond{N}(ax::NTuple{N,R}, dims=ntuple(identity, N); r=minimum(length.(ax))÷2) where {N,R<:AbstractUnitRange{Int}}
+function SEDiamond{N}(ax::NTuple{N,R}, dims=ntuple(identity, N); r=minimum(length.(ax)) ÷ 2) where {N,R}
     return SEDiamond{N,length(dims),R}(ax, dims, r)
 end
 
@@ -131,13 +135,15 @@ ImageMorphology.SEMask{2}()
 struct SEBox{N,R} <: MorphologySE{N}
     axes::NTuple{N,R}
     r::Dims{N}
-    function SEBox{N,R}(axes::NTuple{N,R}, r::Dims{N}) where {N, R<:AbstractUnitRange{Int}}
-        all(r->first(r) == -last(r), axes) || throw(ArgumentError("axes must be symmetric along each dimension"))
+    function SEBox{N,R}(axes::NTuple{N,R}, r::Dims{N}) where {N,R<:AbstractUnitRange{Int}}
+        if !all(r -> first(r) == -last(r), axes)
+            throw(ArgumentError("axes must be symmetric along each dimension"))
+        end
         return new{N,R}(axes, r)
     end
 end
-function SEBox{N}(ax::NTuple{N,R}; r=map(R->length(R)÷2, ax)) where {N,R<:AbstractUnitRange{Int}}
-    r = r isa Integer ? ntuple(_->r, N) : r
+function SEBox{N}(ax::NTuple{N,R}; r=map(R -> length(R) ÷ 2, ax)) where {N,R}
+    r = r isa Integer ? ntuple(_ -> r, N) : r
     return SEBox{N,R}(ax, r)
 end
 
@@ -192,9 +198,11 @@ SEBoxArray(se::SEBox{N,R}) where {N,R} = SEBoxArray{N,R}(se.axes, se.r)
     return true
 end
 
-_tuple_getindex(t::Tuple, inds::Dims) = ntuple(i->t[inds[i]], length(inds))
-_cal_rdims(::Val{N}, dims::NTuple{K}) where {N,K} = Dims{N-K}(filter(i->!in(i, dims), 1:N))
-_is_unique_tuple(t::Tuple) = any(i->t[i] in t[1:i-1], 2:length(t)) ? false : true
+_tuple_getindex(t::Tuple, inds::Dims) = ntuple(i -> t[inds[i]], length(inds))
+function _cal_rdims(::Val{N}, dims::NTuple{K}) where {N,K}
+    return Dims{N - K}(filter(i -> !in(i, dims), 1:N))
+end
+_is_unique_tuple(t::Tuple) = any(i -> t[i] in t[1:(i - 1)], 2:length(t)) ? false : true
 
 
 """
@@ -208,7 +216,7 @@ strel_type(::AbstractVector{CartesianIndex{N}}) where {N} = SEOffset{N}()
 strel_type(::CartesianIndices{N}) where {N} = SEOffset{N}()
 strel_type(A::SEDiamondArray{N}) where {N} = SEDiamond{N}(A.axes, A.dims; r=A.r)
 strel_type(A::SEBoxArray{N}) where {N} = SEBox{N}(A.axes; r=A.r)
-strel_type(::T) where T = error("invalid structuring element data type: $T")
+strel_type(::T) where {T} = error("invalid structuring element data type: $T")
 
 """
     strel_size(x)
@@ -260,8 +268,10 @@ julia> strel_size(se)
 ```
 """
 strel_size(se) = size(strel(Bool, strel(CartesianIndex, se)))
-strel_size(se::SEDiamondArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
-strel_size(se::SEBoxArray) = @. 1+2*se.r
+function strel_size(se::SEDiamondArray)
+    return ntuple(i -> in(i, se.dims) ? 1 + 2 * se.r : 1, strel_ndims(se))
+end
+strel_size(se::SEBoxArray) = @. 1 + 2 * se.r
 
 """
     strel_ndims(x)::Int
@@ -314,7 +324,9 @@ function strel end
 strel(se) = strel(strel_type(se), se)
 
 # convenient user interface without exporting MorphologySE
-strel(::Type{ET}, se::AbstractArray) where {ET<:CartesianIndex} = strel(SEOffset{strel_ndims(se)}(), se)
+function strel(::Type{ET}, se::AbstractArray) where {ET<:CartesianIndex}
+    return strel(SEOffset{strel_ndims(se)}(), se)
+end
 strel(::Type{ET}, se::AbstractArray) where {ET<:Bool} = strel(SEMask{strel_ndims(se)}(), se)
 
 # constructor for special SEs
@@ -370,11 +382,11 @@ julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
-    return strel_diamond(ntuple(i->in(i,dims) ? 3 : 1, N), dims; kw...)
+    return strel_diamond(ntuple(i -> in(i, dims) ? 3 : 1, N), dims; kw...)
 end
 function strel_diamond(sz::Dims{N}, dims::Dims=ntuple(identity, N); kw...) where {N}
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
-    ax = map(r->-r:r, sz.÷2)
+    ax = map(r -> (-r):r, sz .÷ 2)
     return _strel_array(SEDiamond{N}(ax, dims; kw...))
 end
 
@@ -411,17 +423,17 @@ julia> se = strel_box((5,5); r=(1,2))
 
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
-strel_box(A::AbstractArray; kw...) = strel_box(ntuple(i->3, ndims(A)); kw...)
-strel_box(A::AbstractArray, dims::Dims) = strel_box(ntuple(i->3, ndims(A)), dims)
+strel_box(A::AbstractArray; kw...) = strel_box(ntuple(i -> 3, ndims(A)); kw...)
+strel_box(A::AbstractArray, dims::Dims) = strel_box(ntuple(i -> 3, ndims(A)), dims)
 function strel_box(sz::Dims{N}; kw...) where {N}
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
-    ax = map(r->-r:r, sz.÷2)
-    _strel_array(SEBox{N}(ax; kw...))
+    ax = map(r -> (-r):r, sz .÷ 2)
+    return _strel_array(SEBox{N}(ax; kw...))
 end
 function strel_box(sz::Dims{N}, dims::Dims) where {N}
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
-    radius = ntuple(i->in(i, dims) ? sz[i]÷2 : 0, N)
-    ax = map(r->-r:r, radius)
+    radius = ntuple(i -> in(i, dims) ? sz[i] ÷ 2 : 0, N)
+    ax = map(r -> (-r):r, radius)
     return _strel_array(SEBox{N}(ax; r=radius))
 end
 
@@ -432,7 +444,7 @@ function strel(SET::MorphologySE, se::T) where {T}
 end
 
 function strel(::SEMask{N}, offsets::AbstractArray{CartesianIndex{N}}) where {N}
-    isempty(offsets) && return OffsetArrays.centered(trues(ntuple(_->1, N)))
+    isempty(offsets) && return OffsetArrays.centered(trues(ntuple(_ -> 1, N)))
     mn, mx = extrema(offsets)
     r = ntuple(N) do i
         max(abs(mn.I[i]), abs(mx.I[i]))
@@ -448,7 +460,7 @@ strel(::SEMask{N}, mask::AbstractArray{Bool,N}) where {N} = mask
 function strel(::SEOffset{N}, connectivity::AbstractArray{Bool,N}) where {N}
     all(isodd, size(connectivity)) || error("`connectivity` must be odd-sized")
     ax = axes(connectivity)
-    is_symmetric = all(r->first(r) == -last(r), ax)
+    is_symmetric = all(r -> first(r) == -last(r), ax)
     if !is_symmetric && all(first.(axes(connectivity)) .== 1)
         # To keep consistent with the "kernel" concept in ImageFiltering, we require
         # the connectivity mask to be centered as well.
