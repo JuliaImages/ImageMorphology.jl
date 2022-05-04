@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
+ImageMorphology = "787d08f9-d448-5407-9aad-5290dd7ab264"
+ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
+TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
