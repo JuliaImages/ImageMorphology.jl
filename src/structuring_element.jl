@@ -269,10 +269,10 @@ julia> se = strel_diamond((3,5); r=2) # 3×5 mask with radius 2
 ```
 
 !!! note "specialization and performance"
-    The diamond shape `SEDiamond` is a special type that many morpholoy algorithms may
-    provide much more efficient implementations for. For this reason, if one tries to
-    collect an `SEDiamondArray` into other array types (e.g., `Array{Bool}` via `collect`),
-    then a significant performance drop might be very likely to happen.
+    The diamond shape `SEDiamond` is a special type for which many morphology algorithms may
+    provide much more efficient implementations. For this reason, if one tries to
+    collect an `SEDiamondArray` into other array types (e.g. `Array{Bool}` via `collect`),
+    then a significant performance drop is very likely to occur.
 
 See also [`strel`](@ref) and [`strel_window`](@ref).
 """
@@ -314,10 +314,10 @@ julia> se = strel_window((3,5); r=2) # 3×5 mask with radius 2
 ```
 
 !!! note "specialization and performance"
-    The window shape `SEWindow` is a special type that many morpholoy algorithms may
-    provide efficient implementations for. For this reason, if one tries to collect an
-    `SEWindowArray` into other array types (e.g., `Array{Bool}` via `collect`), then a
-    significant performance drop might be very likely to happen.
+    The window shape `SEWindow` is a special type for which many morphology algorithms may
+    provide efficient implementations. For this reason, if one tries to collect an
+    `SEWindowArray` into other array types (e.g. `Array{Bool}` via `collect`), then a
+    significant performance drop is very likely to occur.
 
 See also [`strel`](@ref) and [`strel_window`](@ref).
 """
