@@ -1,5 +1,5 @@
 """
-    extreme_filter(f, A, [dims]) -> out
+    extreme_filter(f, A; [dims]) -> out
     extreme_filter(f, A, Ω) -> out
 
 Filter the array `A` using select function `f(x, y)` for each Ω-neighborhood. The name
@@ -34,7 +34,7 @@ julia> extreme_filter(max, M) # max-filter using 4 direct neighbors along both d
  7  8  5  9  7
  6  6  6  6  7
 
-julia> extreme_filter(max, M, (1, )) # max-filter along the first dimension (column)
+julia> extreme_filter(max, M; dims=(1, )) # max-filter along the first dimension (column)
 5×5 Matrix{$Int}:
  8  6  9  4  8
  8  8  9  9  8
@@ -76,8 +76,8 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-extreme_filter(f, A, dims::Dims) = extreme_filter(f, A, strel_diamond(A, dims))
-extreme_filter(f, A, Ω::AbstractArray=strel_diamond(A)) = extreme_filter!(f, similar(A), A, Ω)
+extreme_filter(f, A; dims::Dims=coords_spatial(A)) = extreme_filter(f, A, strel_diamond(A, dims))
+extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
     extreme_filter!(f, out, A, [dims])
