@@ -15,6 +15,8 @@ the dimensions of the neighborhood that can be used to construct a diamond shape
 [`strel_diamond`](@ref). The `Ω` is also known as structuring element (SE), it can be either
 displacement offsets or bool array mask, please refer to [`strel`](@ref) for more details.
 
+# Examples
+
 ```jldoctest; setup=:(using ImageMorphology)
 julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
 5×5 Matrix{$Int}:
@@ -86,38 +88,89 @@ modified.
 """
 extreme_filter!(f, out, A, dims::Dims) = extreme_filter!(f, out, A, strel_diamond(A, dims))
 function extreme_filter!(f, out, A, Ω::AbstractArray=strel_diamond(A))
+    axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
     _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end
 
+# TODO(johnnychen94): add optimization for min/max on Bool array where we can short-circuit the result
 function _extreme_filter!(::MorphologySE, f, out, A, Ω)
-    axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
-
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
     R_inner = (first(R)+δ):(last(R)-δ)
 
-    # for interior points, boundary check is unnecessary
+    # NOTE(johnnychen94): delibrately duplicate the kernel codes here for inner loop and
+    # boundary loop, because keeping the big function body allows Julia to do further
+    # optimization and thus significantly improves the overall performance.
     @inbounds for p in R_inner
-        out[p] = _select_region(f, A, p, Ω)
+        # for interior points, boundary check is unnecessary
+        s = A[p]
+        for o in Ω
+            v = A[p+o]
+            s = f(s, v)
+        end
+        out[p] = s
     end
-    # for edge points, skip if the offset exceeds the boundary
     @inbounds for p in EdgeIterator(R, R_inner)
-        Ωp = filter(o->in(p+o, R), Ω)
-        out[p] = _select_region(f, A, p, Ωp)
+        # for edge points, skip if the offset exceeds the boundary
+        s = A[p]
+        for o in Ω
+            q = p+o
+            checkbounds(Bool, A, q) || continue
+            s = f(s, A[q])
+        end
+        out[p] = s
     end
     return out
 end
 
-# TODO(johnnychen94): add specialization on max/min for Bool array
-function _select_region(f, A, p, offsets)
-    # Carefully building `offsets` in the caller `_extreme_filter!` so that boundscheck can
-    # be skipped here
-    s = @inbounds A[p]
-    @inbounds for o in offsets
-        v = A[p+o]
-        s = f(s, v)
+function _extreme_filter!(::SEDiamond, f, out, A, Ω::SEDiamondArray)
+    rΩ = strel_size(Ω) .÷ 2
+    if any(r->r>1, rΩ)
+        # call the fallback implementation for cases we don't support
+        return extreme_filter!(f, out, A, collect(Ω))
     end
-    return s
+    # To avoid the result affected by loop order, we need two arrays
+    src = out === A ? copy(A) : A
+    out .= src
+
+    inds = axes(A)
+    for d = 1:ndims(A)
+        if size(out, d) == 1 || rΩ[d] == 0
+            continue
+        end
+        Rpre = CartesianIndices(inds[1:d-1])
+        Rpost = CartesianIndices(inds[d+1:end])
+        _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
+    end
+    return out
+end
+
+# fast version for C2 connectivity along each dimension
+@noinline function _extreme_filter_C2!(f, dst, src, Rpre, inds, Rpost)
+    # Manually unroll the loop for r=1 case.
+    # For r>1 cases, maybe we can count on LoopVectorization, if possible.
+
+    # TODO: improve the cache efficiency
+    @inbounds for Ipost in Rpost, Ipre in Rpre
+        # loop inner region
+        for i in first(inds)+1:last(inds)-1
+            a1 = src[Ipre, i-1, Ipost]
+            a2 = dst[Ipre, i, Ipost]
+            a3 = src[Ipre, i+1, Ipost]
+            dst[Ipre, i, Ipost] = f(f(a1, a2), a3)
+        end
+        # process two edge points
+        i = first(inds)
+        a2 = dst[Ipre, i, Ipost]
+        a3 = src[Ipre, i+1, Ipost]
+        dst[Ipre, i, Ipost] = f(a2, a3)
+
+        i = last(inds)
+        a1 = src[Ipre, i-1, Ipost]
+        a2 = dst[Ipre, i, Ipost]
+        dst[Ipre, i, Ipost] = f(a1, a2)
+    end
+    return dst
 end
