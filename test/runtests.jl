@@ -2,6 +2,7 @@ using ImageMorphology
 using ImageCore
 using Test
 using OffsetArrays
+using OffsetArrays: centered
 using ImageMetadata
 using Suppressor
 

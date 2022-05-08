@@ -4,7 +4,7 @@ using ImageBase
 using TestImages
 ```
 
-# Structuring element
+# [Structuring element](@id concept_se)
 
 Structuring Element (SE) is the key concept in morphology to indicate the connectivity and the
 neighborhood. This page explains this structuring element concept, and how ImageMorphology supports
