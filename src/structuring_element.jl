@@ -37,15 +37,15 @@ function SEDiamond{N}(sz=ntuple(_ -> 3, N), dims=ntuple(identity, N); r=1) where
 end
 
 """
-    SEWindow{N}([size], [dims]; r=1)
+    SEBox{N}([size], [dims]; r=1)
 
 The N-dimensional structuring element with all elements connected.
 """
-struct SEWindow{N,K} <: MorphologySE{N}
+struct SEBox{N,K} <: MorphologySE{N}
     size::Dims{N}
     dims::Dims{K}
     r::Int # radius
-    function SEWindow{N,K}(size::Dims{N}, dims::Dims{K}, r) where {N,K}
+    function SEBox{N,K}(size::Dims{N}, dims::Dims{K}, r) where {N,K}
         all(isodd, size) || throw(ArgumentError("all size should be odd number"))
         _is_unique_tuple(dims) || throw(ArgumentError("dims should be unique"))
         N >= K || throw(ArgumentError("`size` length should be at least $K"))
@@ -53,8 +53,8 @@ struct SEWindow{N,K} <: MorphologySE{N}
         return new{N,K}(size, dims, r)
     end
 end
-function SEWindow{N}(sz=ntuple(_ -> 3, N), dims=ntuple(identity, N); r=1) where {N}
-    return SEWindow{N,length(dims)}(sz, dims, r)
+function SEBox{N}(sz=ntuple(_ -> 3, N), dims=ntuple(identity, N); r=1) where {N}
+    return SEBox{N,length(dims)}(sz, dims, r)
 end
 
 # Helper array type to build a consistant array interface for SEs
@@ -85,21 +85,21 @@ Base.@propagate_inbounds function Base.getindex(A::SEDiamondArray{N,K}, inds::In
     return ifelse(sum(abs, mi .- mc) > r, false, true)
 end
 
-struct SEWindowArray{N,K,S} <: AbstractArray{Bool,N}
+struct SEBoxArray{N,K,S} <: AbstractArray{Bool,N}
     dims::Dims{K}
     size::Dims{N}
     r::Int
     _center::Dims{N}
     _rdims::Dims{S}
 end
-function SEWindowArray(se::SEWindow{N,K}) where {N,K}
+function SEBoxArray(se::SEBox{N,K}) where {N,K}
     _center = @. (se.size + 1) ÷ 2
     _rdims = _cal_rdims(Val(N), se.dims)
-    return SEWindowArray{N,K,length(_rdims)}(se.dims, se.size, se.r, _center, _rdims)
+    return SEBoxArray{N,K,length(_rdims)}(se.dims, se.size, se.r, _center, _rdims)
 end
 
-@inline Base.size(A::SEWindowArray) = A.size
-@inline function Base.getindex(A::SEWindowArray, inds::Int...)
+@inline Base.size(A::SEBoxArray) = A.size
+@inline function Base.getindex(A::SEBoxArray, inds::Int...)
     # for remaining dimensions, check if it is at the center position
     ri = _tuple_getindex(inds, A._rdims)
     rc = _tuple_getindex(A._center, A._rdims)
@@ -126,7 +126,7 @@ strel_type(::AbstractArray{Bool,N}) where {N} = SEMask{N}()
 strel_type(::AbstractVector{CartesianIndex{N}}) where {N} = SEOffset{N}()
 strel_type(::CartesianIndices{N}) where {N} = SEOffset{N}()
 strel_type(A::SEDiamondArray{N}) where {N} = SEDiamond{N}(size(A), A.dims; r=A.r)
-strel_type(A::SEWindowArray{N}) where {N} = SEWindow{N}(size(A), A.dims)
+strel_type(A::SEBoxArray{N}) where {N} = SEBox{N}(size(A), A.dims)
 strel_type(::T) where T = error("invalid structuring element data type: $T")
 
 """
@@ -180,7 +180,7 @@ julia> strel_size(se)
 """
 strel_size(se) = size(strel(Bool, strel(CartesianIndex, se)))
 strel_size(se::SEDiamondArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
-strel_size(se::SEWindowArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
+strel_size(se::SEBoxArray) = ntuple(i->in(i, se.dims) ? 1+2*se.r : 1, strel_ndims(se))
 
 """
     strel_ndims(x)::Int
@@ -223,7 +223,7 @@ julia> se = strel(Bool, se_offsets)
  0  0  0
 ```
 
-See also [`strel_diamond`](@ref) and [`strel_window`](@ref) for SE constructors for two
+See also [`strel_diamond`](@ref) and [`strel_box`](@ref) for SE constructors for two
 special cases.
 """
 function strel end
@@ -236,7 +236,7 @@ strel(::Type{ET}, se::AbstractArray) where {ET<:Bool} = strel(SEMask{strel_ndims
 
 # constructor for special SEs
 _strel_array(se::SEDiamond) = SEDiamondArray(se)
-_strel_array(se::SEWindow) = SEWindowArray(se)
+_strel_array(se::SEBox) = SEBoxArray(se)
 
 """
     strel_diamond(img, [dims]; r=1)
@@ -274,7 +274,7 @@ julia> se = strel_diamond((3,5); r=2) # 3×5 mask with radius 2
     collect an `SEDiamondArray` into other array types (e.g. `Array{Bool}` via `collect`),
     then a significant performance drop is very likely to occur.
 
-See also [`strel`](@ref) and [`strel_window`](@ref).
+See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
     return strel_diamond(ntuple(i->3, N), dims; kw...)
@@ -284,8 +284,8 @@ function strel_diamond(sz::Dims{N}, dims::Dims{K}=ntuple(identity, N); kw...) wh
 end
 
 """
-    strel_window(img, [dims]; r=1)
-    strel_window(size, [dims]; r=1)
+    strel_box(img, [dims]; r=1)
+    strel_box(size, [dims]; r=1)
 
 Construct the N-dimensional structuring element (SE) with all elements in the local window
 connected. If image is provided, then `size=(3, 3, ...)` and `(1, 2, ..., N)` are the
@@ -294,38 +294,38 @@ default values for `size` and `dims`.
 ```jldoctest; setup=:(using ImageMorphology)
 julia> img = rand(64, 64);
 
-julia> se = strel_window(img)
-3×3 ImageMorphology.SEWindowArray{2, 2, 0}:
+julia> se = strel_box(img)
+3×3 ImageMorphology.SEBoxArray{2, 2, 0}:
  1  1  1
  1  1  1
  1  1  1
 
-julia> se = strel_window((3,3), (1,)) # 3×3 mask along dimension 1
-3×3 ImageMorphology.SEWindowArray{2, 1, 1}:
+julia> se = strel_box((3,3), (1,)) # 3×3 mask along dimension 1
+3×3 ImageMorphology.SEBoxArray{2, 1, 1}:
  0  1  0
  0  1  0
  0  1  0
 
-julia> se = strel_window((3,5); r=2) # 3×5 mask with radius 2
-3×5 ImageMorphology.SEWindowArray{2, 2, 0}:
+julia> se = strel_box((3,5); r=2) # 3×5 mask with radius 2
+3×5 ImageMorphology.SEBoxArray{2, 2, 0}:
  1  1  1  1  1
  1  1  1  1  1
  1  1  1  1  1
 ```
 
 !!! note "specialization and performance"
-    The window shape `SEWindow` is a special type for which many morphology algorithms may
+    The box shape `SEBox` is a special type for which many morphology algorithms may
     provide efficient implementations. For this reason, if one tries to collect an
-    `SEWindowArray` into other array types (e.g. `Array{Bool}` via `collect`), then a
+    `SEBoxArray` into other array types (e.g. `Array{Bool}` via `collect`), then a
     significant performance drop is very likely to occur.
 
-See also [`strel`](@ref) and [`strel_window`](@ref).
+See also [`strel`](@ref) and [`strel_box`](@ref).
 """
-function strel_window(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
-    return strel_window(ntuple(i->3, N), dims; kw...)
+function strel_box(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
+    return strel_box(ntuple(i->3, N), dims; kw...)
 end
-function strel_window(sz::Dims{N}, dims::Dims{K}=ntuple(identity, N); kw...) where {N,K}
-    return _strel_array(SEWindow{N}(sz, dims; kw...))
+function strel_box(sz::Dims{N}, dims::Dims{K}=ntuple(identity, N); kw...) where {N,K}
+    return _strel_array(SEBox{N}(sz, dims; kw...))
 end
 
 # conversion between different SE arrays

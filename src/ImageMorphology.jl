@@ -27,7 +27,7 @@ export
     strel_type,
     strel_size,
     strel_diamond,
-    strel_window,
+    strel_box,
 
     dilate,
     dilate!,

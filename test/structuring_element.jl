@@ -161,58 +161,58 @@ end
     @test_throws err strel_diamond((3, 3), (5,))
 end
 
-@testset "strel_window" begin
+@testset "strel_box" begin
     @testset "N=1" begin
         img = rand(5,)
-        se = @inferred strel_window(img)
-        @test se isa ImageMorphology.SEWindowArray
+        se = @inferred strel_box(img)
+        @test se isa ImageMorphology.SEBoxArray
         @test eltype(se) == Bool
         @test se == Bool[1, 1, 1]
 
-        se = @inferred strel_window((5,))
+        se = @inferred strel_box((5,))
         @test se == Bool[0, 1, 1, 1, 0]
 
-        se = @inferred strel_window((5,); r=2)
+        se = @inferred strel_box((5,); r=2)
         @test se == Bool[1, 1, 1, 1, 1]
     end
 
     @testset "N=2" begin
         img = rand(5, 5)
-        se = @inferred strel_window(img)
-        @test se isa ImageMorphology.SEWindowArray
+        se = @inferred strel_box(img)
+        @test se isa ImageMorphology.SEBoxArray
         @test eltype(se) == Bool
         @test se == Bool[1 1 1; 1 1 1; 1 1 1]
-        @test se == strel_window((3, 3), (1, 2); r=1)
-        @test se == strel_window(img, (1, 2); r=1)
+        @test se == strel_box((3, 3), (1, 2); r=1)
+        @test se == strel_box(img, (1, 2); r=1)
 
-        se = @inferred strel_window((3, 5))
+        se = @inferred strel_box((3, 5))
         @test se == Bool[0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0]
 
-        se = @inferred strel_window((3, 5), (1,))
+        se = @inferred strel_box((3, 5), (1,))
         @test se == Bool[0 0 1 0 0; 0 0 1 0 0; 0 0 1 0 0]
 
-        se = @inferred strel_window((3, 5), (2,))
+        se = @inferred strel_box((3, 5), (2,))
         @test se == Bool[0 0 0 0 0; 0 1 1 1 0; 0 0 0 0 0]
 
-        se = @inferred strel_window((3, 5); r=2)
+        se = @inferred strel_box((3, 5); r=2)
         @test se == Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1]
     end
 
     @testset "N=3" begin
         img = rand(5, 5, 5)
-        se = @inferred strel_window(img)
-        @test se isa ImageMorphology.SEWindowArray
+        se = @inferred strel_box(img)
+        @test se isa ImageMorphology.SEBoxArray
         @test eltype(se) == Bool
         @test se[:, :, 1] == se[:, :, 3] == trues((3, 3))
-        @test se[:, :, 2] == strel_window((3, 3))
+        @test se[:, :, 2] == strel_box((3, 3))
 
-        se = @inferred strel_window((3, 3, 3), (1, 2))
+        se = @inferred strel_box((3, 3, 3), (1, 2))
         @test se[:, :, 1] == se[:, :, 3] == falses((3, 3))
-        @test se[:, :, 2] == strel_window((3, 3))
+        @test se[:, :, 2] == strel_box((3, 3))
     end
 
     @testset "strel conversion" begin
-        se = strel_window((3, 3))
+        se = strel_box((3, 3))
         se_offsets = if VERSION >= v"1.6"
             @inferred strel(CartesianIndex, se)
         else
@@ -220,26 +220,26 @@ end
         end
         @test se_offsets == filter(i->!iszero(i), vec(CartesianIndices((-1:1, -1:1))))
         se_mask = @inferred strel(Bool, se)
-        # not BitMatrix as SEWindowArray provides more information of what the SE is
-        @test se_mask isa ImageMorphology.SEWindowArray
+        # not BitMatrix as SEBoxArray provides more information of what the SE is
+        @test se_mask isa ImageMorphology.SEBoxArray
         @test se_mask === se
     end
 
     # edge cases
     img = rand(5, 5)
     err = ArgumentError("`size` length should be at least 2")
-    @test_throws err strel_window((3,), (1, 2,))
+    @test_throws err strel_box((3,), (1, 2,))
     err = ArgumentError("all size should be odd number")
-    @test_throws err strel_window((2, 3))
+    @test_throws err strel_box((2, 3))
     err = ArgumentError("dims should be unique")
-    @test_throws err strel_window((3, 3), (1, 1))
+    @test_throws err strel_box((3, 3), (1, 1))
     err = ArgumentError("all `dims` values should be less than or equal to 2")
-    @test_throws err strel_window((3, 3), (5,))
+    @test_throws err strel_box((3, 3), (5,))
 end
 
 @testset "strel_type" begin
     @test strel_type(strel_diamond((3, 3))) isa ImageMorphology.SEDiamond
-    @test strel_type(strel_window((3, 3))) isa ImageMorphology.SEWindow
+    @test strel_type(strel_box((3, 3))) isa ImageMorphology.SEBox
     @test strel_type([CartesianIndex(1, 2)]) isa ImageMorphology.SEOffset
     @test strel_type(CartesianIndices((-1:1, -1:1))) isa ImageMorphology.SEOffset
     @test strel_type(trues(3, 3)) isa ImageMorphology.SEMask
@@ -252,7 +252,7 @@ end
     se = strel_diamond((5, 5), (1, ))
     @test strel_size(se) == strel_size(collect(se)) == (3, 1)
 
-    se = strel_window((5, 5), (2, ))
+    se = strel_box((5, 5), (2, ))
     @test strel_size(se) == strel_size(collect(se)) == (1, 3)
 
     se = [CartesianIndex(-2, -2), CartesianIndex(1, 1)]

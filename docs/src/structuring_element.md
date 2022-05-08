@@ -133,13 +133,13 @@ single line:
 Among all the SE possibilities, this package provides constructors for two commonly used cases:
 
 - diamond-like constructor: [`strel_diamond`](@ref)
-- window-like constructor: [`strel_window`](@ref)
+- box-like constructor: [`strel_box`](@ref)
 
 ```@repl concept_se
 strel_diamond((3, 3)) # immediate neighborhood: C4 connectivity
 strel_diamond((3, 3), (1, )) # along the first dimension
-strel_window((3, 3)) # all adjacent neighborhood: C8 connectivity
-strel_window((3, 3), (1, ))
+strel_box((3, 3)) # all adjacent neighborhood: C8 connectivity
+strel_box((3, 3), (1, ))
 ```
 
 Utilizing these constructors, we can provide an easier-to-use `my_erode(A, [dims])` interface by
@@ -150,7 +150,7 @@ my_erode(A, dims::Dims=ntuple(identity, ndims(A))) = my_erode(A, strel_diamond(A
 ```
 
 !!! tip "Performance tip: keep the array type"
-    For the structuring element `Ω` generated from `strel_diamond` and `strel_window`, it is likely
+    For the structuring element `Ω` generated from `strel_diamond` and `strel_box`, it is likely
     to hit a fast path if you keep its array type. For instance, `erode(A, strel_diamond(A))` is
     usually faster than `erode(A, Array(strel_diamond(A)))` because more information of the `Ω`
     shape is passed to Julia during coding and compilation.
@@ -195,4 +195,4 @@ simple lookup table that reflects our previous reasoning:
 | displacement offset     | `CartesianIndex` | `SEOffset`   |
 | connectivity mask       | `Bool`           | `SEMask`     |
 | [`strel_diamond`](@ref) | `Bool`           | `SEDiamond`  |
-| [`strel_window`](@ref)  | `Bool`           | `SEWindow`   |
+| [`strel_box`](@ref)     | `Bool`           | `SEBox`      |
