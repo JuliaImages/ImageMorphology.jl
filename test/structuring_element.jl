@@ -33,42 +33,22 @@
 
     @testset "mask to offset" begin
         se = centered(Bool[1, 0, 1])
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, se)
-        else
-            strel(CartesianIndex, se)
-        end
+        se_offsets = @inferred strel(CartesianIndex, se)
         @test se_offsets == [CartesianIndex(-1,), CartesianIndex(1,)]
         @test se_offsets == strel(CartesianIndex, centered(Bool[1, 1, 1]))
 
         se = centered(Bool[1 0 0; 0 1 0; 0 0 1])
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, se)
-        else
-            strel(CartesianIndex, se)
-        end
+        se_offsets = @inferred strel(CartesianIndex, se)
         @test se_offsets == [CartesianIndex(-1, -1), CartesianIndex(1, 1)]
         # internally, CartesianIndex is converted to SEOffset
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(ImageMorphology.SEOffset{2}(), se)
-        else
-            strel(ImageMorphology.SEOffset{2}(), se)
-        end
+        se_offsets = @inferred strel(ImageMorphology.SEOffset{2}(), se)
         @test se_offsets == [CartesianIndex(-1, -1), CartesianIndex(1, 1)]
 
         se = centered(trues((3, 3)))
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, se)
-        else
-            strel(CartesianIndex, se)
-        end
+        se_offsets = @inferred strel(CartesianIndex, se)
         @test se_offsets == filter(x -> !iszero(x), vec(CartesianIndices((-1:1, -1:1))))
 
-        se = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, centered(falses(3, 3)))
-        else
-            strel(CartesianIndex, centered(falses(3, 3)))
-        end
+        se = @inferred strel(CartesianIndex, centered(falses(3, 3)))
         @test isempty(se)
 
         # test deprecation
@@ -83,11 +63,7 @@
     @testset "center point" begin
         for se in centered.([Bool[1 0 0; 0 1 0; 0 0 1], Bool[1 0 0; 0 0 0; 0 0 1]])
             # center point is always excluded in offsets
-            se_offsets = if VERSION >= v"1.6"
-                @inferred strel(CartesianIndex, se)
-            else
-                strel(CartesianIndex, se)
-            end
+            se_offsets = @inferred strel(CartesianIndex, se)
             @test se_offsets == [CartesianIndex(-1, -1), CartesianIndex(1, 1)]
             # but included in mask
             se_mask = @inferred strel(Bool, se_offsets)
@@ -157,11 +133,7 @@ end
 
     @testset "strel conversion" begin
         se = strel_diamond((3, 3))
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, se)
-        else
-            strel(CartesianIndex, se)
-        end
+        se_offsets = @inferred strel(CartesianIndex, se)
         @test se_offsets == [CartesianIndex(0, -1), CartesianIndex(-1, 0), CartesianIndex(1, 0), CartesianIndex(0, 1)]
         se_mask = @inferred strel(Bool, se)
         # not BitMatrix as SEDiamondArray provides more information of what the SE is
@@ -238,11 +210,7 @@ end
 
     @testset "strel conversion" begin
         se = strel_box((3, 3))
-        se_offsets = if VERSION >= v"1.6"
-            @inferred strel(CartesianIndex, se)
-        else
-            strel(CartesianIndex, se)
-        end
+        se_offsets = @inferred strel(CartesianIndex, se)
         @test se_offsets == filter(i->!iszero(i), vec(CartesianIndices((-1:1, -1:1))))
         se_mask = @inferred strel(Bool, se)
         # not BitMatrix as SEBoxArray provides more information of what the SE is
