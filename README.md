@@ -1,5 +1,6 @@
 # ImageMorphology
 
+![Julia version](https://img.shields.io/badge/julia-%3E%3D%201.6-blue)
 [![][action-img]][action-url]
 [![][pkgeval-img]][pkgeval-url]
 [![][codecov-img]][codecov-url]
