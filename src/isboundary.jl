@@ -8,10 +8,7 @@ over which to discover boundaries.
 
 See out-of-place version, [`isboundary`](@ref), for examples.
 """
-function isboundary!(img::AbstractArray{Bool,N};
-                         background=false,
-                         kwargs...
-                        ) where N
+function isboundary!(img::AbstractArray{Bool,N}; background=false, kwargs...) where {N}
     # Find regions where there is at least one background pixel
     # centered on a foreground pixel
     if background == true
@@ -31,22 +28,21 @@ function isboundary!(img::AbstractArray{Bool,N};
         # background is neither true or false, use more generic algorithm
         background = Int8(-1) # Any value other than true or false will do
         #allequal(x,y) = ifelse(x == y, x, background)
-        allequal(x,y) = x == y ? x : background
+        allequal(x, y) = x == y ? x : background
         # the entire image is the foreground
         img .= (extremefilt!(Int8.(img), allequal; kwargs...) .== background)
     end
     return img
 end
-function isboundary!(img::AbstractArray{T};
-                          background = zero(T),
-                          kwargs...) where T
+function isboundary!(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
     # Find regions where that are not homogeneous (all equal)
     # centered on a foreground pixel
     # background_img = img .== background
     # foreground_img = img .!= background
     #allequal(x,y) = ifelse(x == y, x, background)
-    allequal(x,y) = x == y ? x : background
-    img .= (extremefilt!(copy(img), allequal; kwargs...) .== background) .& (img .!= background)
+    allequal(x, y) = x == y ? x : background
+    m = extremefilt!(copy(img), allequal; kwargs...)
+    img .= (m .== background) .& (img .!= background)
     # Alternatively, with ImageFiltering.jl
     # allequal(x) = all(==(first(x)), @view(x[2:end]))
     # .!mapwindow(allequal, A, (3,3)) .& (A .!= background)
@@ -168,11 +164,8 @@ julia> isboundary(A .!= 0; dims = 2)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 ```
 """
-function isboundary(img::AbstractArray{T};
-                         background = zero(T),
-                         kwargs...
-                        ) where T
-    isboundary!(copy(img); background = background, kwargs...)
+function isboundary(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
+    return isboundary!(copy(img); background=background, kwargs...)
 end
 
 ## Alternate implementations using dilate and erode
@@ -215,10 +208,7 @@ function isboundary_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
     return dilate(img; kwargs...) .!= erode(img; kwargs...)
 end
-function isboundary_dilate_erode(img::AbstractArray{T};
-                                      background = zero(T),
-                                      kwargs...
-                                     ) where T
+function isboundary_dilate_erode(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L170
     thick_boundaries = isboundary_thick_dilate_erode(img; kwargs...)
     foreground_img = img .!= background

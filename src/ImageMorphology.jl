@@ -23,12 +23,14 @@ using .FeatureTransform
 include("deprecations.jl")
 
 export
+    # structuring_element.jl
     strel,
     strel_type,
     strel_size,
     strel_diamond,
     strel_box,
 
+    # operations
     dilate,
     dilate!,
     erode,
@@ -63,22 +65,36 @@ export
 
     # maxtree.jl
     MaxTree,
-    areas, boundingboxes, diameters,
-    area_opening, area_opening!, area_closing, area_closing!,
-    diameter_opening, diameter_opening!, diameter_closing, diameter_closing!,
-    local_maxima!, local_maxima, local_minima!, local_minima,
+    areas,
+    boundingboxes,
+    diameters,
+    area_opening,
+    area_opening!,
+    area_closing,
+    area_closing!,
+    diameter_opening,
+    diameter_opening!,
+    diameter_closing,
+    diameter_closing!,
+    local_maxima!,
+    local_maxima,
+    local_minima!,
+    local_minima,
 
     #feature_transform.jl
     feature_transform,
     distance_transform,
-
     clearborder
 
 function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
         # morphological operations for ImageMeta
-        dilate(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)); kwargs...))
-        erode(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)); kwargs...))
+        function dilate(img::ImageMetadata.ImageMeta; kwargs...)
+            return ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)); kwargs...))
+        end
+        function erode(img::ImageMetadata.ImageMeta; kwargs...)
+            return ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)); kwargs...))
+        end
     end
 end
 

@@ -221,15 +221,15 @@ julia> extremefilt!(.!box, |) .& box
 """
 function extremefilt!(A::AbstractArray, select::Function; dims=coords_spatial(A))
     inds = axes(A)
-    for d = 1:ndims(A)
+    for d in 1:ndims(A)
         if size(A, d) == 1 || d ∉ dims
             continue
         end
-        Rpre = CartesianIndices(inds[1:d-1])
-        Rpost = CartesianIndices(inds[d+1:end])
+        Rpre = CartesianIndices(inds[1:(d - 1)])
+        Rpost = CartesianIndices(inds[(d + 1):end])
         _extremefilt!(A, select, Rpre, inds[d], Rpost)
     end
-    A
+    return A
 end
 
 @noinline function _extremefilt!(A, select, Rpre, inds, Rpost)
@@ -237,18 +237,18 @@ end
     @inbounds for Ipost in Rpost, Ipre in Rpre
         # first element along dim
         i1 = first(inds)
-        a2, a3 = A[Ipre, i1, Ipost], A[Ipre, i1+1, Ipost]
+        a2, a3 = A[Ipre, i1, Ipost], A[Ipre, i1 + 1, Ipost]
         A[Ipre, i1, Ipost] = select(a2, a3)
         # interior along dim
-        for i = i1+2:last(inds)
+        for i in (i1 + 2):last(inds)
             a1, a2 = a2, a3
             a3 = A[Ipre, i, Ipost]
-            A[Ipre, i-1, Ipost] = select(select(a1, a2), a3)
+            A[Ipre, i - 1, Ipost] = select(select(a1, a2), a3)
         end
         # last element along dim
         A[Ipre, last(inds), Ipost] = select(a2, a3)
     end
-    A
+    return A
 end
 
 """
@@ -396,7 +396,9 @@ julia> morphogradient(img)
  0.0  0.0  0.0  0.0  0.0  0.0  0.0
 ```
 """
-morphogradient(img::AbstractArray; kwargs...) = dilate(img; kwargs...) - erode(img; kwargs...)
+function morphogradient(img::AbstractArray; kwargs...)
+    return dilate(img; kwargs...) - erode(img; kwargs...)
+end
 
 """
 `imgml = morpholaplace(img; dims=coords_spatial(img))` performs `Morphological Laplacian` of an image,
@@ -427,4 +429,6 @@ julia> morpholaplace(img)
  0.0  0.0   0.0   0.0   0.0  0.0  0.0
 ```
 """
-morpholaplace(img::AbstractArray; kwargs...) = dilate(img; kwargs...) + erode(img; kwargs...) - 2img
+function morpholaplace(img::AbstractArray; kwargs...)
+    return dilate(img; kwargs...) + erode(img; kwargs...) - 2img
+end

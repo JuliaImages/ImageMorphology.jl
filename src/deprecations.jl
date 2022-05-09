@@ -1,3 +1,4 @@
+#! format: off
 @deprecate label_components(A::AbstractArray, region::Union{Dims, AbstractVector{Int}}, bkg = 0) label_components(A; bkg=bkg, dims=region)
 @deprecate label_components(A::AbstractArray{T,N}, connectivity::Array{Bool,N}, bkg) where {T,N}   label_components(A, connectivity; bkg=bkg)
 @deprecate label_components!(out::AbstractArray{Int}, A::AbstractArray, region::Union{Dims, AbstractVector{Int}}, bkg = 0)  label_components!(out, A; bkg=bkg, dims=region)
