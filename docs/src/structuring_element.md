@@ -114,8 +114,8 @@ To convert a connectivity mask representation to displacement offset representat
 
 !!! note "zero-centered mask"
     The mask array is expected to be zero-centered. That means, the axes of a 3×3 mask `axes(se)`
-    should be `(-1:1, -1:1)`. The `centered` function is used to shift the center point of the array
-    to `(0, 0, ..., 0)`.
+    should be `(-1:1, -1:1)`. The [`centered`](@ref OffsetArrays.centered) function is used to shift
+    the center point of the array to `(0, 0, ..., 0)`.
     ```julia
     julia> A = centered([1 2 3; 4 5 6; 7 8 9])
     3×3 OffsetArray(::Matrix{Int64}, -1:1, -1:1) with eltype Int64 with indices -1:1×-1:1:
