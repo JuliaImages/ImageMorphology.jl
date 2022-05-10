@@ -127,32 +127,38 @@ end
 
 function _extreme_filter!(::SEDiamond, f, out, A, Ω::SEDiamondArray)
     rΩ = strel_size(Ω) .÷ 2
-    if any(r->r>1, rΩ)
-        # call the fallback implementation for cases we don't support
-        return extreme_filter!(f, out, A, collect(Ω))
-    end
+    r = maximum(rΩ)
+
     # To avoid the result affected by loop order, we need two arrays
-    src = out === A ? copy(A) : A
+    src = (out === A) || (r>1) ? copy(A) : A
     out .= src
 
-    inds = axes(A)
-    for d = 1:ndims(A)
-        if size(out, d) == 1 || rΩ[d] == 0
-            continue
+    # applying radius=r filter is equivalent to applying radius=1 filter r times
+    for i in 1:r
+        Ω = strel_diamond(A, Ω.dims)
+        rΩ = strel_size(Ω) .÷ 2
+        inds = axes(A)
+        for d in 1:ndims(A)
+            # separately apply to each dimension
+            if size(out, d) == 1 || rΩ[d] == 0
+                continue
+            end
+            Rpre = CartesianIndices(inds[1:d-1])
+            Rpost = CartesianIndices(inds[d+1:end])
+            _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
         end
-        Rpre = CartesianIndices(inds[1:d-1])
-        Rpost = CartesianIndices(inds[d+1:end])
-        _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
+
+        if r > 1 && i < r
+            src .= out
+        end
     end
     return out
 end
 
 # fast version for C2 connectivity along each dimension
 @noinline function _extreme_filter_C2!(f, dst, src, Rpre, inds, Rpost)
-    # Manually unroll the loop for r=1 case.
-    # For r>1 cases, maybe we can count on LoopVectorization, if possible.
-
-    # TODO: improve the cache efficiency
+    # manually unroll the loop for r=1 case
+    # for r>1 case, it is equivalently to apply r times
     @inbounds for Ipost in Rpost, Ipre in Rpre
         # loop inner region
         for i in first(inds)+1:last(inds)-1
