@@ -3,6 +3,7 @@ module ImageMorphology
 using ImageCore
 using ImageCore: GenericGrayImage
 using ImageCore.OffsetArrays
+using ImageCore.OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
@@ -24,6 +25,7 @@ include("deprecations.jl")
 
 export
     # structuring_element.jl
+    centered, # from OffsetArrays
     strel,
     strel_type,
     strel_size,

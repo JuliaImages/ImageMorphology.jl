@@ -1,4 +1,7 @@
 abstract type MorphologySE{N} end
+abstract type MorphologySEArray{N} <: AbstractArray{Bool,N} end
+
+OffsetArrays.centered(A::MorphologySEArray) = A
 
 """
     SEMask{N}()
@@ -153,7 +156,7 @@ end
 
 The instantiated array object of [`SEDiamond`](@ref ImageMorphology.SEDiamond).
 """
-struct SEDiamondArray{N,K,R<:AbstractUnitRange{Int},S} <: AbstractArray{Bool,N}
+struct SEDiamondArray{N,K,R<:AbstractUnitRange{Int},S} <: MorphologySEArray{N}
     axes::NTuple{N,R}
     dims::Dims{K}
     r::Int # radius
@@ -181,7 +184,7 @@ end
 
 The instantiated array object of [`SEBox`](@ref ImageMorphology.SEBox).
 """
-struct SEBoxArray{N,R<:AbstractUnitRange{Int}} <: AbstractArray{Bool,N}
+struct SEBoxArray{N,R<:AbstractUnitRange{Int}} <: MorphologySEArray{N}
     axes::NTuple{N,R}
     r::Dims{N}
 end

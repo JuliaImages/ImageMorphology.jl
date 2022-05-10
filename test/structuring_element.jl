@@ -240,3 +240,10 @@ end
     se = [CartesianIndex(-2, -2), CartesianIndex(1, 1)]
     @test strel_size(se) == (5, 5)
 end
+
+@testset "centered" begin
+    se = strel_diamond((3, 3))
+    @test centered(se) === se
+    se = strel_box((3, 3))
+    @test centered(se) === se
+end
