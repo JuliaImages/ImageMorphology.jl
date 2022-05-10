@@ -11,4 +11,4 @@ align_matrix=true
 align_assignment=true
 align_struct_field=true
 align_conditional=true
-join_lines_based_on_source=false
+join_lines_based_on_source=true
