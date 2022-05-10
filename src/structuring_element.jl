@@ -1,4 +1,7 @@
 abstract type MorphologySE{N} end
+abstract type MorphologySEArray{N} <: AbstractArray{Bool,N} end
+
+OffsetArrays.centered(A::MorphologySEArray) = A
 
 """
     SEMask{N}()
@@ -8,8 +11,6 @@ connectivity mask SE is a bool array where `true` indicates that pixel position 
 to the center point.
 
 ```jldoctest; setup=:(using ImageMorphology)
-julia> using OffsetArrays: centered
-
 julia> se = centered(Bool[0 1 0; 1 1 1; 0 1 0]) # commonly known as C4 connectivity
 3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
  0  1  0
@@ -153,7 +154,7 @@ end
 
 The instantiated array object of [`SEDiamond`](@ref ImageMorphology.SEDiamond).
 """
-struct SEDiamondArray{N,K,R<:AbstractUnitRange{Int},S} <: AbstractArray{Bool,N}
+struct SEDiamondArray{N,K,R<:AbstractUnitRange{Int},S} <: MorphologySEArray{N}
     axes::NTuple{N,R}
     dims::Dims{K}
     r::Int # radius
@@ -181,7 +182,7 @@ end
 
 The instantiated array object of [`SEBox`](@ref ImageMorphology.SEBox).
 """
-struct SEBoxArray{N,R<:AbstractUnitRange{Int}} <: AbstractArray{Bool,N}
+struct SEBoxArray{N,R<:AbstractUnitRange{Int}} <: MorphologySEArray{N}
     axes::NTuple{N,R}
     r::Dims{N}
 end
@@ -295,8 +296,6 @@ ImageMorphology currently supports two commonly used representations:
   output type is `BitArray{N}`.
 
 ```jldoctest; setup=:(using ImageMorphology)
-julia> using OffsetArrays: centered
-
 julia> se_mask = centered(Bool[1 1 0; 1 1 0; 0 0 0]) # connectivity mask
 3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
  1  1  0
@@ -444,16 +443,16 @@ function strel(SET::MorphologySE, se::T) where {T}
 end
 
 function strel(::SEMask{N}, offsets::AbstractArray{CartesianIndex{N}}) where {N}
-    isempty(offsets) && return OffsetArrays.centered(trues(ntuple(_ -> 1, N)))
+    isempty(offsets) && return centered(trues(ntuple(_ -> 1, N)))
     mn, mx = extrema(offsets)
     r = ntuple(N) do i
         max(abs(mn.I[i]), abs(mx.I[i]))
     end
     sz = @. 2r + 1
-    se = OffsetArrays.centered(falses(sz))
+    se = centered(falses(sz))
     se[offsets] .= true
     se[zero(eltype(offsets))] = true # always set center point to true
-    return OffsetArrays.centered(BitArray(OffsetArrays.no_offset_view(se)))
+    return centered(BitArray(OffsetArrays.no_offset_view(se)))
 end
 strel(::SEMask{N}, mask::AbstractArray{Bool,N}) where {N} = mask
 
@@ -467,12 +466,12 @@ function strel(::SEOffset{N}, connectivity::AbstractArray{Bool,N}) where {N}
         # This is a perhaps permanent depwarn to throw friendly message to the user
         # if they're used to use, e.g., `trues(3, 3)` as the input.
         msg = "connectivity mask is expected to be a centered bool array"
-        hint = "Do you mean `OffsetArrays.centered(connectivity)`"
+        hint = "Do you mean `centered(connectivity)`"
         Base.depwarn("$msg. $hint?", :strel)
     elseif !is_symmetric
         throw(ArgumentError("`connectivity` must be symmetric bool array"))
     end
-    connectivity = OffsetArrays.centered(connectivity)
+    connectivity = centered(connectivity)
     # always skip center point
     return [i for i in CartesianIndices(connectivity) if connectivity[i] && !iszero(i)]
 end

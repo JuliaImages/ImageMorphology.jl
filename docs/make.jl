@@ -1,18 +1,23 @@
 using Documenter
 using ImageMorphology
+using OffsetArrays
 using ImageBase, ImageShow, TestImages
 
 prettyurls = get(ENV, "CI", nothing) == "true"
 format = Documenter.HTML(; prettyurls)
 
-#! format: off
 pages = Any[
     "index.md",
     "Concepts" => Any["structuring_element.md"],
     "reference.md"
 ]
-#! format: on
 
-makedocs(; modules=[ImageMorphology], format=format, sitename="ImageMorphology", pages)
+makedocs(;
+    modules=[ImageMorphology, OffsetArrays],
+    format=format,
+    sitename="ImageMorphology",
+    pages,
+    doctest=false
+)
 
 deploydocs(; repo="github.com/JuliaImages/ImageMorphology.jl.git")

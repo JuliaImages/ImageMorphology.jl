@@ -108,9 +108,27 @@ helper function. `strel` is the short name for "STRucturing ELement".
 To convert a connectivity mask representation to displacement offset representation:
 
 ```@example concept_se
-Ω_mask = Bool[1 1 1; 1 1 0; 0 0 0]
+Ω_mask = Bool[1 1 1; 1 1 0; 0 0 0] |> centered
 Ω_offsets = strel(CartesianIndex, Ω_mask)
 ```
+
+!!! note "zero-centered mask"
+    The mask array is expected to be zero-centered. That means, the axes of a 3×3 mask `axes(se)`
+    should be `(-1:1, -1:1)`. The [`centered`](@ref OffsetArrays.centered) function is used to shift
+    the center point of the array to `(0, 0, ..., 0)`.
+    ```julia
+    julia> A = centered([1 2 3; 4 5 6; 7 8 9])
+    3×3 OffsetArray(::Matrix{Int64}, -1:1, -1:1) with eltype Int64 with indices -1:1×-1:1:
+     1  2  3
+     4  5  6
+     7  8  9
+
+    julia> A[-1, -1], A[0, 0], A[1, 1] # top-left, center, bottom-right
+    (1, 5, 9)
+    ```
+    This `centered` function comes from [OffsetArrays.jl](https://github.com/JuliaArrays/OffsetArrays.jl)
+    and is also exported by ImageMorphology.
+
 
 And to convert back from a displacement offset representation to connectivity mask representation:
 
