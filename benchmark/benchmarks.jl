@@ -17,6 +17,24 @@ tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
 
+SUITE["extreme_filter"] = BenchmarkGroup()
+let grp = SUITE["extreme_filter"]
+    for T in [tst_types..., Gray{Bool}, Int, Bool]
+        grp[T] = BenchmarkGroup()
+        for sz in tst_sizes
+            tst_img = rand(T, sz, sz)
+
+            grp[T]["$sz×$sz"] = BenchmarkGroup()
+            se = strel_diamond((3, 3))
+            grp[T]["$sz×$sz"]["diamond_r1_fast"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            grp[T]["$sz×$sz"]["diamond_r1_generic"] = @benchmarkable extreme_filter(max, $tst_img, $(collect(se)))
+            se = strel_diamond((11, 11))
+            grp[T]["$sz×$sz"]["diamond_r5_fast"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            grp[T]["$sz×$sz"]["diamond_r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $(collect(se)))
+        end
+    end
+end
+
 SUITE["dilatation_and_erosion"] = BenchmarkGroup()
 let grp = SUITE["dilatation_and_erosion"]
     grp["erode"] = BenchmarkGroup()
