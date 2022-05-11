@@ -99,19 +99,19 @@ end
         @test se == strel_diamond(img, (1, 2); r=1)
 
         se = @inferred strel_diamond(img, (1, ))
-        @test se == centered(reshape(Bool[0, 1, 0], (3, 1)))
+        @test se == centered(reshape(Bool[1, 1, 1], (3, 1)))
 
         se = @inferred strel_diamond((5, 5))
         @test se == centered(Bool[0 0 1 0 0; 0 1 1 1 0; 1 1 1 1 1; 0 1 1 1 0; 0 0 1 0 0])
 
         se = @inferred strel_diamond((3, 5))
-        @test se == centered(Bool[0 0 1 0 0; 0 1 1 1 0; 0 0 1 0 0])
+        @test se == centered(Bool[0 1 1 1 0; 1 1 1 1 1; 0 1 1 1 0])
 
         se = @inferred strel_diamond((3, 5), (1,))
         @test se == centered(Bool[0 0 1 0 0; 0 0 1 0 0; 0 0 1 0 0])
 
         se = @inferred strel_diamond((3, 5), (2,))
-        @test se == centered(Bool[0 0 0 0 0; 0 1 1 1 0; 0 0 0 0 0])
+        @test se == centered(Bool[0 0 0 0 0; 1 1 1 1 1; 0 0 0 0 0])
 
         se = @inferred strel_diamond((3, 5); r=2)
         @test se == centered(Bool[0 1 1 1 0; 1 1 1 1 1; 0 1 1 1 0])
