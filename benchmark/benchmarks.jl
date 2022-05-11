@@ -19,18 +19,41 @@ const SUITE = BenchmarkGroup()
 
 SUITE["extreme_filter"] = BenchmarkGroup()
 let grp = SUITE["extreme_filter"]
-    for T in [tst_types..., Gray{Bool}, Int, Bool]
+    for T in [tst_types..., Int]
         grp[T] = BenchmarkGroup()
         for sz in tst_sizes
             tst_img = rand(T, sz, sz)
 
             grp[T]["$sz×$sz"] = BenchmarkGroup()
             se = strel_diamond((3, 3))
-            grp[T]["$sz×$sz"]["diamond_r1_fast"] = @benchmarkable extreme_filter(max, $tst_img, $se)
-            grp[T]["$sz×$sz"]["diamond_r1_generic"] = @benchmarkable extreme_filter(max, $tst_img, $(collect(se)))
+            grp[T]["$sz×$sz"]["r1_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r1_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = strel_diamond((11, 11))
-            grp[T]["$sz×$sz"]["diamond_r5_fast"] = @benchmarkable extreme_filter(max, $tst_img, $se)
-            grp[T]["$sz×$sz"]["diamond_r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $(collect(se)))
+            grp[T]["$sz×$sz"]["r5_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+        end
+    end
+end
+let grp = SUITE["extreme_filter"]
+    T = Bool
+    grp[T] = BenchmarkGroup()
+    for sz in tst_sizes
+        grp[T]["$sz×$sz"] = BenchmarkGroup()
+        for (cname, cr) in [("worst", 0.95), ("best", 0.05), ("random", 0.5)]
+            tst_img = fill(zero(T), sz, sz)
+            tst_img[rand(sz, sz) .>= cr] .= true
+
+            se = strel_diamond((3, 3))
+            grp[T]["$sz×$sz"]["r1_diamond_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r1_bool_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+
+            se = strel_diamond((11, 11))
+            grp[T]["$sz×$sz"]["r5_diamond_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r5_bool_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
         end
     end
 end
