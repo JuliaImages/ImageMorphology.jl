@@ -1,3 +1,5 @@
+const MAX_OR_MIN = Union{typeof(max), typeof(min)}
+
 """
     extreme_filter(f, A; [dims]) -> out
     extreme_filter(f, A, Ω) -> out
@@ -94,7 +96,30 @@ end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
-
+function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where T<:Union{Gray{Bool},Bool}
+    # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
+    true_ratio = gray(sum(A)/length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
+    true_ratio == 1 && (out .= true; return out)
+    true_ratio == 0 && (out .= false; return out)
+    use_bool = prod(strel_size(Ω)) > 9 || (f === max && true_ratio > 0.8) || (f === min && true_ratio < 0.2)
+    if use_bool
+        return _extreme_filter_bool!(f, out, A, Ω)
+    else
+        return _extreme_filter_generic!(f, out, A, Ω)
+    end
+end
+function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where T<:Union{Gray{Bool},Bool}
+    # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
+    true_ratio = gray(sum(A)/length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
+    true_ratio == 1 && (out .= true; return out)
+    true_ratio == 0 && (out .= false; return out)
+    use_bool = (f === max && true_ratio > 0.4) || (f === min && true_ratio < 0.6)
+    if use_bool
+        return _extreme_filter_bool!(f, out, A, Ω)
+    else
+        return _extreme_filter_diamond!(f, out, A, Ω)
+    end
+end
 
 
 ###
@@ -190,4 +215,56 @@ end
         dst[Ipre, i, Ipost] = f(a1, a2)
     end
     return dst
+end
+
+# optimized implementation for Bool inputs with max/min select function
+# 1) use &&, || instead of max, min
+# 2) short-circuit the result to avoid unnecessary indexing and computation
+function _extreme_filter_bool!(f, out, A::AbstractArray{Bool}, Ω)
+    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname=_extreme_filter_bool!
+    Ω = strel(CartesianIndex, Ω)
+    δ = CartesianIndex(strel_size(Ω) .÷ 2)
+
+    R = CartesianIndices(A)
+    R_inner = (first(R)+δ):(last(R)-δ)
+
+    select = _fast_select(f)
+    @inbounds for p in R_inner
+        out[p] = select(A, p, Ω)
+    end
+    for p in EdgeIterator(R, R_inner)
+        out[p] = select(A, p, Ω)
+    end
+    return out
+end
+function _extreme_filter_bool!(f, out, A::AbstractArray{Gray{Bool}}, Ω)
+    return _extreme_filter_bool!(f, out, reinterpret(Bool, A), Ω)
+end
+_fast_select(::typeof(max)) = _maximum_fast
+_fast_select(::typeof(min)) = _maximum_fast
+Base.@propagate_inbounds function _maximum_fast(A::AbstractArray{Bool}, p, Ω)
+    rst = A[p]
+    for o in Ω
+        # the complicated control flow ruins the SIMD and thus for small Ω, the performance
+        # will be worse
+        q = p+o
+        @boundscheck checkbounds(Bool, A, q) || continue
+        x = A[q]
+        x && return true
+        rst = rst || x
+    end
+    return rst
+end
+Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
+    rst = A[p]
+    for o in Ω
+        # the complicated control flow ruins the SIMD and thus for small Ω, the performance
+        # will be worse
+        q = p+o
+        @boundscheck checkbounds(Bool, A, q) || continue
+        x = A[q]
+        x || return false
+        rst = rst && x
+    end
+    return rst
 end
