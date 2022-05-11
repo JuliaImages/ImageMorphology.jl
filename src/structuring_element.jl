@@ -98,7 +98,7 @@ struct SEDiamond{N,K,R<:AbstractUnitRange{Int}} <: MorphologySE{N}
         return new{N,K,R}(axes, dims, r)
     end
 end
-function SEDiamond{N}(ax::NTuple{N,R}, dims=ntuple(identity, N); r=minimum(length.(ax)) ÷ 2) where {N,R}
+function SEDiamond{N}(ax::NTuple{N,R}, dims=ntuple(identity, N); r=maximum(length.(ax)) ÷ 2) where {N,R}
     return SEDiamond{N,length(dims),R}(ax, dims, r)
 end
 
@@ -339,7 +339,7 @@ _strel_array(se::SEBox) = SEBoxArray(se)
 Construct the N-dimensional structuring element (SE) for a diamond shape.
 
 If image `A` is provided, then `size=(3, 3, ...)` and `(1, 2, ..., N)` are the default
-values for `size` and `dims`. The diamond half-size `r::Int` will be `minimum(size)÷2` if
+values for `size` and `dims`. The diamond half-size `r::Int` will be `maximum(size)÷2` if
 not specified.
 
 ```jldoctest; setup=:(using ImageMorphology)
@@ -361,9 +361,9 @@ julia> se = strel_diamond((5,5))
 
 julia> se = strel_diamond(img, (1,)) # mask along dimension 1
 3×1 ImageMorphology.SEDiamondArray{2, 1, UnitRange{$Int}, 1} with indices -1:1×0:0:
- 0
  1
- 0
+ 1
+ 1
 
 julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 3×3 ImageMorphology.SEDiamondArray{2, 1, UnitRange{$Int}, 1} with indices -1:1×-1:1:
@@ -381,7 +381,8 @@ julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
-    return strel_diamond(ntuple(i -> in(i, dims) ? 3 : 1, N), dims; kw...)
+    sz = ntuple(i -> in(i, dims) ? 3 : 1, N)
+    return strel_diamond(sz, dims; kw...)
 end
 function strel_diamond(sz::Dims{N}, dims::Dims=ntuple(identity, N); kw...) where {N}
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
