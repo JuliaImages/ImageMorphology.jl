@@ -12,6 +12,7 @@ include("structuring_element.jl")
 include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
+include("extreme_filter.jl")
 include("dilation_and_erosion.jl")
 include("isboundary.jl")
 include("thinning.jl")
@@ -37,6 +38,8 @@ export
     dilate!,
     erode,
     erode!,
+    extreme_filter,
+    extreme_filter!,
     opening,
     closing,
     tophat,
