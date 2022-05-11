@@ -25,11 +25,11 @@
         A = rand(32, 32)
         se_mask = centered(collect(strel_diamond(A)))
         out = extreme_filter(max, A, se_mask)
-        se_offsets = strel(CartesianIndex, se)
+        se_offsets = strel(CartesianIndex, se_mask)
         @test out == extreme_filter(max, A, se_offsets)
     end
 
-    @testset "diamond" begin
+    @testset "optimization: diamond" begin
         # ensure the optimized implementation work equivalently to the generic fallback implementation
         for N in (1, 2, 3)
             sz = ntuple(_->32, N)
@@ -37,10 +37,30 @@
             for r in (1, 3)
                 dims_list = ntuple(i->ntuple(identity, i), N)
                 for dims in dims_list
-                    se = centered(collect(strel_diamond(img, dims)))
-                    ref = extreme_filter(max, img, se) # this hits the generic path
+                    se = strel_diamond(ntuple(_->2r+1, N), dims)
+                    ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
+                    out = extreme_filter(max, img, se)
+                    @test out == ref
+                end
+            end
+        end
+    end
 
-                    out = extreme_filter(max, img; dims=dims) # this hits the optimized path
+    @testset "optimization: bool" begin
+        # ensure the optimized implementation work equivalently to the generic fallback implementation
+        for N in (1, 2, 3)
+            sz = ntuple(_->32, N)
+            img = rand(Bool, sz...)
+            for r in (1, 3)
+                dims_list = ntuple(i->ntuple(identity, i), N)
+                for dims in dims_list, select in (max, min)
+                    se = strel_diamond(ntuple(_->2r+1, N), dims)
+                    ref = ImageMorphology._extreme_filter_generic!(select, similar(img), img, se)
+                    out = extreme_filter(select, img, se) # SEDiamond method
+                    @test out == ref
+
+                    se = centered(collect(se))
+                    out = extreme_filter(select, img, se) # MorphologySE method
                     @test out == ref
                 end
             end

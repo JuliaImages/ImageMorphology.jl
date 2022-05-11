@@ -241,7 +241,7 @@ function _extreme_filter_bool!(f, out, A::AbstractArray{Gray{Bool}}, Ω)
     return _extreme_filter_bool!(f, out, reinterpret(Bool, A), Ω)
 end
 _fast_select(::typeof(max)) = _maximum_fast
-_fast_select(::typeof(min)) = _maximum_fast
+_fast_select(::typeof(min)) = _minimum_fast
 Base.@propagate_inbounds function _maximum_fast(A::AbstractArray{Bool}, p, Ω)
     rst = A[p]
     for o in Ω
