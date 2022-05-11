@@ -92,8 +92,17 @@ function extreme_filter!(f, out, A, Ω::AbstractArray=strel_diamond(A))
     _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end
 
-# TODO(johnnychen94): add optimization for min/max on Bool array where we can short-circuit the result
-function _extreme_filter!(::MorphologySE, f, out, A, Ω)
+_extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
+_extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
+
+
+
+###
+# Implementation details
+###
+
+function _extreme_filter_generic!(f, out, A, Ω)
+    @debug "call the generic `extreme_filter` implementation" fname=_extreme_filter_generic!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
@@ -125,7 +134,9 @@ function _extreme_filter!(::MorphologySE, f, out, A, Ω)
     return out
 end
 
-function _extreme_filter!(::SEDiamond, f, out, A, Ω::SEDiamondArray)
+# optimized implementation for SEDiamond -- a typical case of separable filter
+function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname=_extreme_filter_diamond!
     rΩ = strel_size(Ω) .÷ 2
     r = maximum(rΩ)
 
