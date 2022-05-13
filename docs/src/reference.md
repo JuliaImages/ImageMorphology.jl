@@ -16,6 +16,22 @@ The following tables give an overview of ImageMorphology interfaces
 | [`OffsetArrays.centered`](@ref OffsetArrays.centered) | shift the array center to `(0, 0, ..., 0)`    |
 
 
+[**Morphological Operations**](@ref reference_ops)
+
+| name                                                   | summary | examples |
+| :----------------------------------------------------- | :------ | ---- |
+| [`extreme_filter`](@ref) and [`extreme_filter!`](@ref) | iteratively apply a select function `f(x, y)` to each neighborhood | [`extreme_filter` operation](@ref op_extreme_filter) |
+| [`dilate`](@ref) | | |
+| [`erode`](@ref) | | |
+| [`opening`](@ref) | | |
+| [`closing`](@ref) | | |
+| [`bothat`](@ref) | | |
+| [`tophat`](@ref) | | |
+| [`morphogradient`](@ref) | | |
+| [`morpholaplace`](@ref) | | |
+
+
+
 ## [Structuring element](@id reference_se)
 
 Structuring element is the key concept in morphology. If you're not familiar with this, please
@@ -43,4 +59,21 @@ ImageMorphology.SEDiamond
 ImageMorphology.SEBox
 ImageMorphology.SEDiamondArray
 ImageMorphology.SEBoxArray
+```
+
+## [Morphological operations](@id reference_ops)
+
+```@docs
+bothat
+closing
+dilate
+dilate!
+erode
+erode!
+extreme_filter
+extreme_filter!
+morphogradient
+morpholaplace
+opening
+tophat
 ```
