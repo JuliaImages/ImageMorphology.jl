@@ -25,4 +25,8 @@ makedocs(;
 )
 operators_cb()
 
-deploydocs(; repo="github.com/JuliaImages/ImageMorphology.jl.git")
+deploydocs(;
+    forcepush = true,
+    push_preview = true,
+    repo="github.com/JuliaImages/ImageMorphology.jl.git"
+)
