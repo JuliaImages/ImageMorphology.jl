@@ -1,7 +1,8 @@
 @testset "extreme_filter" begin
     @testset "numerical" begin
         # Bool
-        img = fill(false, 5, 5); img[3, 3] = 1
+        img = fill(false, 5, 5)
+        img[3, 3] = 1
         ref = collect(strel_diamond((5, 5); r=1))
 
         img_d = @inferred extreme_filter(max, img)
@@ -15,9 +16,9 @@
         @test Ad == ref
 
         # Gray{Float32}
-        img = Gray{Float32}.(A./9)
+        img = Gray{Float32}.(A ./ 9)
         img_d = @inferred extreme_filter(max, img)
-        @test ref == gray.(img_d).*9
+        @test ref == gray.(img_d) .* 9
     end
 
     @testset "strel" begin
@@ -32,12 +33,12 @@
     @testset "optimization: diamond" begin
         # ensure the optimized implementation work equivalently to the generic fallback implementation
         for N in (1, 2, 3)
-            sz = ntuple(_->32, N)
+            sz = ntuple(_ -> 32, N)
             img = rand(sz...)
             for r in (1, 3)
-                dims_list = ntuple(i->ntuple(identity, i), N)
+                dims_list = ntuple(i -> ntuple(identity, i), N)
                 for dims in dims_list
-                    se = strel_diamond(ntuple(_->2r+1, N), dims)
+                    se = strel_diamond(ntuple(_ -> 2r + 1, N), dims)
                     ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
                     out = extreme_filter(max, img, se)
                     @test out == ref
@@ -49,12 +50,12 @@
     @testset "optimization: bool" begin
         # ensure the optimized implementation work equivalently to the generic fallback implementation
         for N in (1, 2, 3)
-            sz = ntuple(_->32, N)
+            sz = ntuple(_ -> 32, N)
             img = rand(Bool, sz...)
             for r in (1, 3)
-                dims_list = ntuple(i->ntuple(identity, i), N)
+                dims_list = ntuple(i -> ntuple(identity, i), N)
                 for dims in dims_list, select in (max, min)
-                    se = strel_diamond(ntuple(_->2r+1, N), dims)
+                    se = strel_diamond(ntuple(_ -> 2r + 1, N), dims)
                     ref = ImageMorphology._extreme_filter_generic!(select, similar(img), img, se)
                     out = extreme_filter(select, img, se) # SEDiamond method
                     @test out == ref

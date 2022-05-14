@@ -1,4 +1,4 @@
-const MAX_OR_MIN = Union{typeof(max), typeof(min)}
+const MAX_OR_MIN = Union{typeof(max),typeof(min)}
 
 """
     extreme_filter(f, A; [dims]) -> out
@@ -91,14 +91,14 @@ modified.
 extreme_filter!(f, out, A, dims::Dims) = extreme_filter!(f, out, A, strel_diamond(A, dims))
 function extreme_filter!(f, out, A, Ω::AbstractArray=strel_diamond(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
-    _extreme_filter!(strel_type(Ω), f, out, A, Ω)
+    return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
-function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where T<:Union{Gray{Bool},Bool}
+function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
-    true_ratio = gray(sum(A)/length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
+    true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
     true_ratio == 0 && (out .= false; return out)
     use_bool = prod(strel_size(Ω)) > 9 || (f === max && true_ratio > 0.8) || (f === min && true_ratio < 0.2)
@@ -108,9 +108,9 @@ function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T
         return _extreme_filter_generic!(f, out, A, Ω)
     end
 end
-function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where T<:Union{Gray{Bool},Bool}
+function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
-    true_ratio = gray(sum(A)/length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
+    true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
     true_ratio == 0 && (out .= false; return out)
     use_bool = (f === max && true_ratio > 0.4) || (f === min && true_ratio < 0.6)
@@ -127,12 +127,12 @@ end
 ###
 
 function _extreme_filter_generic!(f, out, A, Ω)
-    @debug "call the generic `extreme_filter` implementation" fname=_extreme_filter_generic!
+    @debug "call the generic `extreme_filter` implementation" fname = _extreme_filter_generic!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R)+δ):(last(R)-δ)
+    R_inner = (first(R) + δ):(last(R) - δ)
 
     # NOTE(johnnychen94): delibrately duplicate the kernel codes here for inner loop and
     # boundary loop, because keeping the big function body allows Julia to do further
@@ -141,7 +141,7 @@ function _extreme_filter_generic!(f, out, A, Ω)
         # for interior points, boundary check is unnecessary
         s = A[p]
         for o in Ω
-            v = A[p+o]
+            v = A[p + o]
             s = f(s, v)
         end
         out[p] = s
@@ -150,7 +150,7 @@ function _extreme_filter_generic!(f, out, A, Ω)
         # for edge points, skip if the offset exceeds the boundary
         s = A[p]
         for o in Ω
-            q = p+o
+            q = p + o
             checkbounds(Bool, A, q) || continue
             s = f(s, A[q])
         end
@@ -161,12 +161,12 @@ end
 
 # optimized implementation for SEDiamond -- a typical case of separable filter
 function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
-    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname=_extreme_filter_diamond!
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname = _extreme_filter_diamond!
     rΩ = strel_size(Ω) .÷ 2
     r = maximum(rΩ)
 
     # To avoid the result affected by loop order, we need two arrays
-    src = (out === A) || (r>1) ? copy(A) : A
+    src = (out === A) || (r > 1) ? copy(A) : A
     out .= src
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
@@ -179,8 +179,8 @@ function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
             if size(out, d) == 1 || rΩ[d] == 0
                 continue
             end
-            Rpre = CartesianIndices(inds[1:d-1])
-            Rpost = CartesianIndices(inds[d+1:end])
+            Rpre = CartesianIndices(inds[1:(d - 1)])
+            Rpost = CartesianIndices(inds[(d + 1):end])
             _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
         end
 
@@ -197,20 +197,20 @@ end
     # for r>1 case, it is equivalently to apply r times
     @inbounds for Ipost in Rpost, Ipre in Rpre
         # loop inner region
-        for i in first(inds)+1:last(inds)-1
-            a1 = src[Ipre, i-1, Ipost]
+        for i in (first(inds) + 1):(last(inds) - 1)
+            a1 = src[Ipre, i - 1, Ipost]
             a2 = dst[Ipre, i, Ipost]
-            a3 = src[Ipre, i+1, Ipost]
+            a3 = src[Ipre, i + 1, Ipost]
             dst[Ipre, i, Ipost] = f(f(a1, a2), a3)
         end
         # process two edge points
         i = first(inds)
         a2 = dst[Ipre, i, Ipost]
-        a3 = src[Ipre, i+1, Ipost]
+        a3 = src[Ipre, i + 1, Ipost]
         dst[Ipre, i, Ipost] = f(a2, a3)
 
         i = last(inds)
-        a1 = src[Ipre, i-1, Ipost]
+        a1 = src[Ipre, i - 1, Ipost]
         a2 = dst[Ipre, i, Ipost]
         dst[Ipre, i, Ipost] = f(a1, a2)
     end
@@ -221,12 +221,12 @@ end
 # 1) use &&, || instead of max, min
 # 2) short-circuit the result to avoid unnecessary indexing and computation
 function _extreme_filter_bool!(f, out, A::AbstractArray{Bool}, Ω)
-    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname=_extreme_filter_bool!
+    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname = _extreme_filter_bool!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R)+δ):(last(R)-δ)
+    R_inner = (first(R) + δ):(last(R) - δ)
 
     select = _fast_select(f)
     @inbounds for p in R_inner
@@ -247,7 +247,7 @@ Base.@propagate_inbounds function _maximum_fast(A::AbstractArray{Bool}, p, Ω)
     for o in Ω
         # the complicated control flow ruins the SIMD and thus for small Ω, the performance
         # will be worse
-        q = p+o
+        q = p + o
         @boundscheck checkbounds(Bool, A, q) || continue
         x = A[q]
         x && return true
@@ -260,7 +260,7 @@ Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
     for o in Ω
         # the complicated control flow ruins the SIMD and thus for small Ω, the performance
         # will be worse
-        q = p+o
+        q = p + o
         @boundscheck checkbounds(Bool, A, q) || continue
         x = A[q]
         x || return false
