@@ -381,10 +381,12 @@ julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
+    dims = _to_dims(dims)
     sz = ntuple(i -> in(i, dims) ? 3 : 1, N)
     return strel_diamond(sz, dims; kw...)
 end
-function strel_diamond(sz::Dims{N}, dims::Dims=ntuple(identity, N); kw...) where {N}
+function strel_diamond(sz::Dims{N}, dims::Union{Int,Dims}=ntuple(identity, N); kw...) where {N}
+    dims = _to_dims(dims)
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
     ax = map(r -> (-r):r, sz .÷ 2)
     return _strel_array(SEDiamond{N}(ax, dims; kw...))
@@ -424,18 +426,23 @@ julia> se = strel_box((5,5); r=(1,2))
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 strel_box(A::AbstractArray; kw...) = strel_box(ntuple(i -> 3, ndims(A)); kw...)
-strel_box(A::AbstractArray, dims::Dims) = strel_box(ntuple(i -> 3, ndims(A)), dims)
+strel_box(A::AbstractArray, dims::Union{Int,Dims}) = strel_box(ntuple(i -> 3, ndims(A)), dims)
 function strel_box(sz::Dims{N}; kw...) where {N}
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
     ax = map(r -> (-r):r, sz .÷ 2)
     return _strel_array(SEBox{N}(ax; kw...))
 end
-function strel_box(sz::Dims{N}, dims::Dims) where {N}
+function strel_box(sz::Dims{N}, dims::Union{Int,Dims}) where {N}
+    dims = _to_dims(dims)
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
     radius = ntuple(i -> in(i, dims) ? sz[i] ÷ 2 : 0, N)
     ax = map(r -> (-r):r, radius)
     return _strel_array(SEBox{N}(ax; r=radius))
 end
+
+# Tuple(1) is not inferable
+@inline _to_dims(i::Int) = (i,)
+@inline _to_dims(dims::Dims) = dims
 
 # conversion between different SE arrays
 function strel(SET::MorphologySE, se::T) where {T}
