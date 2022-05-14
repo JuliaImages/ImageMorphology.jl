@@ -78,7 +78,7 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-extreme_filter(f, A; dims::Dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
+extreme_filter(f, A; dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
 extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
@@ -88,7 +88,7 @@ extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 The in-place version of [`extreme_filter`](@ref) where `out` is the output array that gets
 modified.
 """
-extreme_filter!(f, out, A, dims::Dims) = extreme_filter!(f, out, A, strel_box(A, dims))
+extreme_filter!(f, out, A, dims) = extreme_filter!(f, out, A, strel_box(A, dims))
 function extreme_filter!(f, out, A, Ω::AbstractArray=strel_box(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
