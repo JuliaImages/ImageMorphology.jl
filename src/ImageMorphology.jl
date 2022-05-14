@@ -13,6 +13,8 @@ include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
 include("extreme_filter.jl")
+include("ops/dilate.jl")
+include("ops/erode.jl")
 include("dilation_and_erosion.jl")
 include("isboundary.jl")
 include("thinning.jl")
@@ -95,10 +97,12 @@ function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
         # morphological operations for ImageMeta
         function dilate(img::ImageMetadata.ImageMeta; kwargs...)
-            return ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)); kwargs...))
+            out = dilate!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
+            return ImageMetadata.shareproperties(img, out)
         end
         function erode(img::ImageMetadata.ImageMeta; kwargs...)
-            return ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)); kwargs...))
+            out = erode!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
+            return ImageMetadata.shareproperties(img, out)
         end
     end
 end

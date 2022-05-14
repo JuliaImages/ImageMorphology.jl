@@ -6,10 +6,8 @@
 
 @deprecate imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, dims::Union{Dims, AbstractVector{Int}}) imfill(img, interval; dims=dims)
 
-@deprecate dilate(img::AbstractArray, region)   dilate(img; dims=region)
-@deprecate dilate!(img::AbstractArray, region)  dilate!(img; dims=region)
-@deprecate erode(img::AbstractArray, region)    erode(img; dims=region)
-@deprecate erode!(img::AbstractArray, region)   erode!(img; dims=region)
+@deprecate dilate!(img; kwargs...) dilate!(img, copy(img); kwargs...)
+@deprecate erode!(img; kwargs...) erode!(img, copy(img); kwargs...)
 
 @deprecate opening(img::AbstractArray, region)  opening(img; dims=region)
 @deprecate opening!(img::AbstractArray, region) opening!(img; dims=region)
