@@ -13,13 +13,13 @@ iteratively in a `f(...(f(f(A[p], A[p+Ω[1]]), A[p+Ω[2]]), ...)` manner. For in
 behavior.
 
 The Ω-neighborhood is defined by the `dims` or `Ω` argument. The `dims` argument specifies
-the dimensions of the neighborhood that can be used to construct a diamond shape `Ω` using
-[`strel_diamond`](@ref). The `Ω` is also known as structuring element (SE), it can be either
+the dimensions of the neighborhood that can be used to construct a box shape `Ω` using
+[`strel_box`](@ref). The `Ω` is also known as structuring element (SE), it can be either
 displacement offsets or bool array mask, please refer to [`strel`](@ref) for more details.
 
 # Examples
 
-```jldoctest; setup=:(using ImageMorphology)
+```jldoctest extreme_filter; setup=:(using ImageMorphology)
 julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
 5×5 Matrix{$Int}:
  4  6  5  3  4
@@ -30,13 +30,13 @@ julia> M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
 
 julia> extreme_filter(max, M) # max-filter using 4 direct neighbors along both dimensions
 5×5 Matrix{$Int}:
- 8  6  9  5  8
  8  9  9  9  8
+ 8  9  9  9  9
+ 8  9  9  9  9
  8  8  9  9  9
- 7  8  5  9  7
- 6  6  6  6  7
+ 6  6  6  7  7
 
-julia> extreme_filter(max, M; dims=(1, )) # max-filter along the first dimension (column)
+julia> extreme_filter(max, M; dims=1) # max-filter along the first dimension (column)
 5×5 Matrix{$Int}:
  8  6  9  4  8
  8  8  9  9  8
@@ -49,9 +49,9 @@ julia> extreme_filter(max, M; dims=(1, )) # max-filter along the first dimension
 connectivity, or a `AbstractArray{<:CartesianIndex}` array with each element indicating the
 displacement offset to its center element.
 
-```
-julia> Ω_mask = Bool[1 1 0; 1 1 0; 1 0 0] # custom neighborhood in mask format
-3×3 Matrix{Bool}:
+```jldoctest extreme_filter
+julia> Ω_mask = centered(Bool[1 1 0; 1 1 0; 1 0 0]) # custom neighborhood in mask format
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
  1  1  0
  1  1  0
  1  0  0
@@ -78,7 +78,7 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-extreme_filter(f, A; dims::Dims=coords_spatial(A)) = extreme_filter(f, A, strel_diamond(A, dims))
+extreme_filter(f, A; dims::Dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
 extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
@@ -88,8 +88,8 @@ extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 The in-place version of [`extreme_filter`](@ref) where `out` is the output array that gets
 modified.
 """
-extreme_filter!(f, out, A, dims::Dims) = extreme_filter!(f, out, A, strel_diamond(A, dims))
-function extreme_filter!(f, out, A, Ω::AbstractArray=strel_diamond(A))
+extreme_filter!(f, out, A, dims::Dims) = extreme_filter!(f, out, A, strel_box(A, dims))
+function extreme_filter!(f, out, A, Ω::AbstractArray=strel_box(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end

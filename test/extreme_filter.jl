@@ -3,7 +3,7 @@
         # Bool
         img = fill(false, 5, 5)
         img[3, 3] = 1
-        ref = collect(strel_diamond((5, 5); r=1))
+        ref = collect(strel_box((5, 5); r=1))
 
         img_d = @inferred extreme_filter(max, img)
         @test img_d == ref
@@ -12,6 +12,9 @@
         # Int
         A = Int[4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
         ref = [8 6 9 5 8; 8 9 9 9 8; 8 8 9 9 9; 7 8 5 9 7; 6 6 6 6 7]
+        Ad = @inferred extreme_filter(max, A, strel_diamond(A))
+        @test Ad == ref
+        ref = [8 9 9 9 8; 8 9 9 9 9; 8 9 9 9 9; 8 8 9 9 9; 6 6 6 7 7]
         Ad = @inferred extreme_filter(max, A)
         @test Ad == ref
 
