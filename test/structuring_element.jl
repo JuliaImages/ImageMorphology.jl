@@ -102,6 +102,9 @@ end
         @test se == @inferred strel_diamond(img, 1)
         @test se == centered(reshape(Bool[1, 1, 1], (3, 1)))
 
+        se = @inferred strel_diamond((5, 5), (2, 1))
+        @test se == strel_diamond((5, 5), 1:2) # not inferable
+
         se = @inferred strel_diamond((5, 5))
         @test se == centered(Bool[0 0 1 0 0; 0 1 1 1 0; 1 1 1 1 1; 0 1 1 1 0; 0 0 1 0 0])
 
@@ -181,6 +184,9 @@ end
         se = @inferred strel_box(img, (1,))
         @test se == @inferred strel_box((3, 3), (1,))
         @test se == @inferred strel_box((3, 3), 1)
+
+        se = @inferred strel_box((5, 5), (2, 1))
+        @test se == @inferred strel_box((5, 5), 1:2)
 
         se = @inferred strel_box((3, 5); r=1)
         @test se == centered(Bool[0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0])
