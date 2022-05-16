@@ -12,9 +12,6 @@
 @deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
 @deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
-@deprecate tophat(img::AbstractArray, region)   tophat(img; dims=region)
-@deprecate bothat(img::AbstractArray, region)   bothat(img; dims=region)
-
 @deprecate morphogradient(img::AbstractArray, region)   morphogradient(img; dims=region)
 @deprecate morpholaplace(img::AbstractArray, region)    morpholaplace(img; dims=region)
 

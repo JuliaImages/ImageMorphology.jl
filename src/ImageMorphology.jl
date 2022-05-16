@@ -17,6 +17,8 @@ include("ops/dilate.jl")
 include("ops/erode.jl")
 include("ops/closing.jl")
 include("ops/opening.jl")
+include("ops/tophat.jl")
+include("ops/bothat.jl")
 include("dilation_and_erosion.jl")
 include("isboundary.jl")
 include("thinning.jl")
@@ -49,7 +51,9 @@ export
     closing,
     closing!,
     tophat,
+    tophat!,
     bothat,
+    bothat!,
     morphogradient,
     morpholaplace,
 

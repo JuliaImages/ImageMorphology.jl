@@ -171,64 +171,6 @@ end
 end
 
 """
-`imgth = tophat(img; dims=coords_spatial(img))` performs `top hat` of an image,
-which is defined as the image minus its morphological opening.
-`dims` allows you to control the dimensions over which this operation is performed.
-
-# Examples
-
-```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
-julia> img = zeros(5, 5); img[1, 1] = 1.; img[3:5, 3:5] .= 1.; img
-5×5 Array{Float64,2}:
- 1.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
-
-julia> tophat(img)
-5×5 Array{Float64,2}:
- 1.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
-```
-"""
-tophat(img::AbstractArray; kwargs...) = img - opening(img; kwargs...)
-
-"""
-`imgbh = bothat(img; dims=coords_spatial(img))` performs `bottom hat` of an image,
-which is defined as its morphological closing minus the original image.
-`dims` allows you to control the dimensions over which this operation is performed.
-
-# Examples
-
-```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
-julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img[4, 4] = 0.; img
-7×7 Array{Float64,2}:
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  1.0  0.0  1.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
-
-julia> bothat(img)
-7×7 Array{Float64,2}:
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  1.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
-```
-"""
-bothat(img::AbstractArray; kwargs...) = closing(img; kwargs...) - img
-
-"""
 `imgmg = morphogradient(img; dims=coords_spatial(img))` returns morphological gradient of the image,
 which is the difference between the dilation and the erosion of a given image.
 `dims` allows you to control the dimensions over which this operation is performed.
