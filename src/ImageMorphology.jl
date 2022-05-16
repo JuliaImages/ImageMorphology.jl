@@ -15,6 +15,8 @@ include("clearborder.jl")
 include("extreme_filter.jl")
 include("ops/dilate.jl")
 include("ops/erode.jl")
+include("ops/closing.jl")
+include("ops/opening.jl")
 include("dilation_and_erosion.jl")
 include("isboundary.jl")
 include("thinning.jl")
@@ -43,7 +45,9 @@ export
     extreme_filter,
     extreme_filter!,
     opening,
+    opening!,
     closing,
+    closing!,
     tophat,
     bothat,
     morphogradient,

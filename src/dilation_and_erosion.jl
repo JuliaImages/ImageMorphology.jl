@@ -171,64 +171,6 @@ end
 end
 
 """
-`imgo = opening(img; dims=coords_spatial(img))` performs the `opening` morphology operation, equivalent to `dilate(erode(img))`.
-`dims` allows you to control the dimensions over which this operation is performed.
-
-# Examples
-
-```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
-julia> img = zeros(5, 5); img[1, 1] = 1.; img[3:5, 3:5] .= 1.; img
-5×5 Array{Float64,2}:
- 1.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
-
-julia> opening(img)
-5×5 Array{Float64,2}:
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
- 0.0  0.0  1.0  1.0  1.0
-```
-"""
-opening(img::AbstractArray; kwargs...) = opening!(copy(img); kwargs...)
-opening!(img::AbstractArray; kwargs...) = dilate!(erode!(img; kwargs...); kwargs...)
-
-"""
-`imgc = closing(img; dims=coords_spatial(img))` performs the `closing` morphology operation, equivalent to `erode(dilate(img))`.
-`dims` allows you to control the dimensions over which this operation is performed.
-
-# Examples
-
-```jldoctest; setup = :(using ImageMorphology), filter = r"Array{Float64,2}|Matrix{Float64}"
-julia> img = zeros(7, 7); img[3:5, 3:5] .= 1.; img[4, 4] = 0.; img
-7×7 Array{Float64,2}:
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  1.0  0.0  1.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
-
-julia> closing(img)
-7×7 Array{Float64,2}:
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  1.0  1.0  1.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  0.0  0.0  0.0  0.0
-```
-"""
-closing(img::AbstractArray; kwargs...) = closing!(copy(img); kwargs...)
-closing!(img::AbstractArray; kwargs...) = erode!(dilate!(img; kwargs...); kwargs...)
-
-"""
 `imgth = tophat(img; dims=coords_spatial(img))` performs `top hat` of an image,
 which is defined as the image minus its morphological opening.
 `dims` allows you to control the dimensions over which this operation is performed.

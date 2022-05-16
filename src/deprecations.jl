@@ -9,10 +9,8 @@
 @deprecate dilate!(img; kwargs...) dilate!(img, copy(img); kwargs...)
 @deprecate erode!(img; kwargs...) erode!(img, copy(img); kwargs...)
 
-@deprecate opening(img::AbstractArray, region)  opening(img; dims=region)
-@deprecate opening!(img::AbstractArray, region) opening!(img; dims=region)
-@deprecate closing(img::AbstractArray, region)  closing(img; dims=region)
-@deprecate closing!(img::AbstractArray, region) closing!(img; dims=region)
+@deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
+@deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
 @deprecate tophat(img::AbstractArray, region)   tophat(img; dims=region)
 @deprecate bothat(img::AbstractArray, region)   bothat(img; dims=region)
