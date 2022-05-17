@@ -12,8 +12,5 @@
 @deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
 @deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
-@deprecate morphogradient(img::AbstractArray, region)   morphogradient(img; dims=region)
-@deprecate morpholaplace(img::AbstractArray, region)    morpholaplace(img; dims=region)
-
 import .FeatureTransform: feature_transform
 @deprecate feature_transform(img, weights; kwargs...) feature_transform(img; weights=weights, kwargs...)
