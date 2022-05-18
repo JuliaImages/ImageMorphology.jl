@@ -6,21 +6,13 @@
 
 @deprecate imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, dims::Union{Dims, AbstractVector{Int}}) imfill(img, interval; dims=dims)
 
-@deprecate dilate(img::AbstractArray, region)   dilate(img; dims=region)
-@deprecate dilate!(img::AbstractArray, region)  dilate!(img; dims=region)
-@deprecate erode(img::AbstractArray, region)    erode(img; dims=region)
-@deprecate erode!(img::AbstractArray, region)   erode!(img; dims=region)
+@deprecate dilate!(img; kwargs...) dilate!(img, copy(img); kwargs...)
+@deprecate erode!(img; kwargs...) erode!(img, copy(img); kwargs...)
 
-@deprecate opening(img::AbstractArray, region)  opening(img; dims=region)
-@deprecate opening!(img::AbstractArray, region) opening!(img; dims=region)
-@deprecate closing(img::AbstractArray, region)  closing(img; dims=region)
-@deprecate closing!(img::AbstractArray, region) closing!(img; dims=region)
+@deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
+@deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
-@deprecate tophat(img::AbstractArray, region)   tophat(img; dims=region)
-@deprecate bothat(img::AbstractArray, region)   bothat(img; dims=region)
-
-@deprecate morphogradient(img::AbstractArray, region)   morphogradient(img; dims=region)
-@deprecate morpholaplace(img::AbstractArray, region)    morpholaplace(img; dims=region)
+@deprecate extremefilt!(A, select; kwargs...) extreme_filter!(select, A, copy(A); kwargs...)
 
 import .FeatureTransform: feature_transform
 @deprecate feature_transform(img, weights; kwargs...) feature_transform(img; weights=weights, kwargs...)
