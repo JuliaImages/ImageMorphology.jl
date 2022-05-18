@@ -12,5 +12,7 @@
 @deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
 @deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
+@deprecate extremefilt!(A, select; kwargs...) extreme_filter!(select, A, copy(A); kwargs...)
+
 import .FeatureTransform: feature_transform
 @deprecate feature_transform(img, weights; kwargs...) feature_transform(img; weights=weights, kwargs...)
