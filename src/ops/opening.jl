@@ -1,17 +1,11 @@
 """
-    opening(img; [dims])
+    opening(img; dims=coords_spatial(img), r=1)
     opening(img, se)
 
-Perform the morphological opening on `img`. Mathematically, a opening operation is
-[erosion](@ref erode) followed by a [dilation](@ref dilate):
+Perform the morphological opening on `img`. The opening operation is defined as
+[erosion](@ref erode) followed by a [dilation](@ref dilate): `dilate(erode(img, se), se)`.
 
-```julia
-opening(img, se) = dilate(erode(img, se), se)
-```
-
-`se` is the structuring element that defines the neighborhood of the image. See
-[`strel`](@ref) for more details. If `se` is not specified, then it will use the
-[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter.
+$(_docstring_se)
 
 # Examples
 
@@ -53,7 +47,7 @@ julia> opening(img, strel_diamond(img)) # use diamond shape SE
 - [`closing`](@ref) is the dual operator of `opening` in the sense that
   `complement.(opening(img)) == closing(complement.(img))`.
 """
-opening(img; dims=coords_spatial(img)) = opening!(similar(img), img, similar(img); dims)
+opening(img; kwargs...) = opening!(similar(img), img, similar(img); kwargs...)
 opening(img, se) = opening!(similar(img), img, se, similar(img))
 
 """
@@ -63,9 +57,12 @@ opening(img, se) = opening!(similar(img), img, se, similar(img))
 The in-place version of [`opening`](@ref) with input image `img` and output image `out`. The
 intermediate erosion result is stored in `buffer`.
 """
-opening!(out, img, buffer; dims=coords_spatial(img)) = opening!(out, img, strel_box(img, dims), buffer)
+function opening!(out, img, buffer; dims=coords_spatial(img), r=nothing)
+    return opening!(out, img, strel_box(img, dims; r), buffer)
+end
 function opening!(out, img, se, buffer)
     erode!(buffer, img, se)
     dilate!(out, buffer, se)
     return out
 end
+opening!(out::AbstractArray{<:Color3}, img, se, buffer) = throw(ArgumentError("color image is not supported"))
