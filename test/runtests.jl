@@ -12,6 +12,7 @@ Base.VERSION >= v"1.6" && doctest(ImageMorphology; manual=false)
 
 @testset "ImageMorphology" begin
     include("structuring_element.jl")
+    include("utils.jl")
     include("extreme_filter.jl")
     include("convexhull.jl")
     include("connected.jl")

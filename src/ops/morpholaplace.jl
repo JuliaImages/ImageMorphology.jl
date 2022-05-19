@@ -54,6 +54,7 @@ julia> Int.(morpholaplace(img, strel_diamond(img))) # use diamond shape SE
 """
 morpholaplace(img; dims=coords_spatial(img)) = morpholaplace(img, strel_box(img, dims))
 function morpholaplace(img::AbstractArray{T}, se) where {T}
+    require_symmetric_strel(se)
     out = dilate!(similar(img, maybe_floattype(T)), img, se)
     buffer = erode!(similar(img, maybe_floattype(T)), img, se)
     @. out = out + buffer - 2img
