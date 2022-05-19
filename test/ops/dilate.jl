@@ -1,44 +1,36 @@
+dilate_ref(img, dims, r) = dilate_ref(img, strel_box(img, dims; r))
+dilate_ref(img, se) = extreme_filter(max, img, se)
+
 @testset "dilate" begin
-    A = zeros(4, 4, 3)
-    A[2, 2, 1] = 0.8
-    A[4, 4, 2] = 0.6
-    Ae = erode(A)
-    @test Ae == zeros(size(A))
-    Ad = dilate(A; dims=1:2)
-    Ar = [
-        0.8 0.8 0.8 0
-        0.8 0.8 0.8 0
-        0.8 0.8 0.8 0
-        0 0 0 0
-    ]
-    Ag = [
-        0 0 0 0
-        0 0 0 0
-        0 0 0.6 0.6
-        0 0 0.6 0.6
-    ]
-    @test Ad == cat(Ar, Ag, zeros(4, 4); dims=3)
-    @test dilate!(similar(A), A; dims=1:2) == Ad
-    Ae = erode(Ad; dims=1:2)
-    Ar = [
-        0.8 0.8 0 0
-        0.8 0.8 0 0
-        0 0 0 0
-        0 0 0 0
-    ]
-    Ag = [
-        0 0 0 0
-        0 0 0 0
-        0 0 0 0
-        0 0 0 0.6
-    ]
-    @test Ae == cat(Ar, Ag, zeros(4, 4); dims=3)
-    @test erode!(similar(Ad), Ad; dims=1:2) == Ae
-    # issue Images.jl #311
-    @test dilate(trues(3)) == trues(3)
+    test_types = [Bool, Int, Float64, Gray{N0f8}, Gray{Float64}]
+    for T in test_types
+        for N in (1, 2, 3)
+            sz = ntuple(_ -> 32, N)
+            img = rand(T, sz...)
+
+            out = dilate(img)
+            @test out == dilate(img, strel_box(img, ntuple(identity, N); r=1))
+            @test out == dilate_ref(img, ntuple(identity, N), 1)
+
+            @test dilate(img; dims=(1,), r=2) == dilate_ref(img, (1,), 2)
+
+            se = centered(rand(Bool, ntuple(_ -> 3, N)))
+            @test dilate(img, se) == dilate_ref(img, se)
+        end
+    end
+
+    img = rand(1:5, 7, 7)
+    out = similar(img)
+    dilate!(out, img)
+    @test out == dilate(img)
+
+    img = rand(RGB, 7, 7)
+    @test_throws ArgumentError("color image is not supported") dilate(img)
+
     # ImageMeta
-    @test arraydata(dilate(ImageMeta(A))) == dilate(A)
-    @test arraydata(dilate(ImageMeta(A); dims=1:2)) == dilate(A; dims=1:2)
-    @test arraydata(erode(ImageMeta(A))) == erode(A)
-    @test arraydata(erode(ImageMeta(A); dims=1:2)) == erode(A; dims=1:2)
+    @testset "ImageMeta" begin
+        A = rand(1:5, 7, 7)
+        @test arraydata(dilate(ImageMeta(A))) == dilate(A)
+        @test arraydata(dilate(ImageMeta(A); dims=1:2)) == dilate(A; dims=1:2)
+    end
 end
