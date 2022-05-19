@@ -333,25 +333,25 @@ _strel_array(se::SEDiamond) = SEDiamondArray(se)
 _strel_array(se::SEBox) = SEBoxArray(se)
 
 """
-    strel_diamond(A, [dims]; [r])
+    strel_diamond(A::AbstractArray, [dims]; r=1)
     strel_diamond(size, [dims]; [r])
 
 Construct the N-dimensional structuring element (SE) for a diamond shape.
 
-If image `A` is provided, then `size=(3, 3, ...)` and `(1, 2, ..., N)` are the default
-values for `size` and `dims`. The diamond half-size `r::Int` will be `maximum(size)÷2` if
-not specified.
+If image `A` is provided, then the SE size will be `(2r+1, 2r+1, ...)` with default
+half-size `r=1`. If `size` is provided, the default `r` will be `maximum(size)÷2`. The
+default `dims` will be all dimensions, that is, `(1, 2, ..., length(size))`.
 
 ```jldoctest; setup=:(using ImageMorphology)
 julia> img = rand(64, 64);
 
-julia> se = strel_diamond(img) # default size for image input is (3, 3)
+julia> strel_diamond(img) # default size for image input is (3, 3)
 3×3 ImageMorphology.SEDiamondArray{2, 2, UnitRange{$Int}, 0} with indices -1:1×-1:1:
  0  1  0
  1  1  1
  0  1  0
 
-julia> se = strel_diamond((5,5))
+julia> strel_diamond(img; r=2) # equivalent to `strel_diamond((5,5))`
 5×5 ImageMorphology.SEDiamondArray{2, 2, UnitRange{$Int}, 0} with indices -2:2×-2:2:
  0  0  1  0  0
  0  1  1  1  0
@@ -359,13 +359,13 @@ julia> se = strel_diamond((5,5))
  0  1  1  1  0
  0  0  1  0  0
 
-julia> se = strel_diamond(img, (1,)) # mask along dimension 1
+julia> strel_diamond(img, (1,)) # mask along dimension 1
 3×1 ImageMorphology.SEDiamondArray{2, 1, UnitRange{$Int}, 1} with indices -1:1×0:0:
  1
  1
  1
 
-julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
+julia> strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 3×3 ImageMorphology.SEDiamondArray{2, 1, UnitRange{$Int}, 1} with indices -1:1×-1:1:
  0  1  0
  0  1  0
@@ -380,10 +380,14 @@ julia> se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
-function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); kw...) where {T,N}
+function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); r::Union{Nothing,Int}=nothing) where {T,N}
     dims = _to_dims(dims)
-    sz = ntuple(i -> in(i, dims) ? 3 : 1, N)
-    return strel_diamond(sz, dims; kw...)
+    sz, r = if isnothing(r)
+        ntuple(i -> in(i, dims) ? 3 : 1, N), 1
+    else
+        ntuple(i -> in(i, dims) ? 2r + 1 : 1, N), r
+    end
+    return strel_diamond(sz, dims; r)
 end
 function strel_diamond(sz::Dims{N}, dims=ntuple(identity, N); kw...) where {N}
     dims = _to_dims(dims)
@@ -393,22 +397,34 @@ function strel_diamond(sz::Dims{N}, dims=ntuple(identity, N); kw...) where {N}
 end
 
 """
-    strel_box(A; [r])
-    strel_box(size; [r=size .÷ 2])
+    strel_box(A; r=1)
+    strel_box(size; r=size .÷ 2)
 
 Construct the N-dimensional structuring element (SE) with all elements in the local window
-connected. If image `A` is provided, then `size=(3, 3, ...)` is the default value for `size`.
+connected.
+
+If image `A` is provided, then the SE size will be `(2r+1, 2r+1, ...)` with default
+half-size `r=1`. If `size` is provided, the default `r` will be `size .÷ 2`. The default
+`dims` will be all dimensions, that is, `(1, 2, ..., length(size))`.
 
 ```jldoctest; setup=:(using ImageMorphology)
 julia> img = rand(64, 64);
 
-julia> se = strel_box(img)
+julia> strel_box(img)
 3×3 ImageMorphology.SEBoxArray{2, UnitRange{$Int}} with indices -1:1×-1:1:
  1  1  1
  1  1  1
  1  1  1
 
-julia> se = strel_box((5,5); r=(1,2))
+julia> strel_box(img; r=2)
+5×5 ImageMorphology.SEBoxArray{2, UnitRange{$Int}} with indices -2:2×-2:2:
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+
+julia> strel_box((5,5); r=(1,2))
 5×5 ImageMorphology.SEBoxArray{2, UnitRange{$Int}} with indices -2:2×-2:2:
  0  0  0  0  0
  1  1  1  1  1
@@ -418,25 +434,34 @@ julia> se = strel_box((5,5); r=(1,2))
 ```
 
 !!! note "specialization and performance"
-    The box shape `SEBox` is a special type for which many morphology algorithms may
-    provide efficient implementations. For this reason, if one tries to collect an
-    `SEBoxArray` into other array types (e.g. `Array{Bool}` via `collect`), then a
-    significant performance drop is very likely to occur.
+    The box shape `SEBox` is a special type for which many morphology algorithms may provide
+    efficient implementations. For this reason, if one tries to collect an `SEBoxArray` into
+    other array types (e.g. `Array{Bool}` via `collect`), then a significant performance
+    drop is very likely to occur.
 
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
-strel_box(A::AbstractArray; kw...) = strel_box(ntuple(i -> 3, ndims(A)); kw...)
-strel_box(A::AbstractArray, dims) = strel_box(ntuple(i -> 3, ndims(A)), dims)
-function strel_box(sz::Dims{N}; kw...) where {N}
-    all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
-    ax = map(r -> (-r):r, sz .÷ 2)
-    return _strel_array(SEBox{N}(ax; kw...))
+function strel_box(A::AbstractArray{T,N}, dims=coords_spatial(A); r::Union{Nothing,Dims{N},Int}=nothing) where {T,N}
+    sz, r = if isnothing(r)
+        ntuple(i -> in(i, dims) ? 3 : 1, N), 1
+    elseif r isa Dims{N}
+        ntuple(i -> in(i, dims) ? 2r[i] + 1 : 1, N), r
+    elseif r isa Integer
+        ntuple(i -> in(i, dims) ? 2r + 1 : 1, N), r
+    end
+    return strel_box(sz, dims)
 end
-function strel_box(sz::Dims{N}, dims) where {N}
+function strel_box(sz::Dims{N}, dims=ntuple(identity, N); r::Union{Nothing,Dims{N},Int}=nothing) where {N}
     dims = _to_dims(dims)
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
-    radius = ntuple(i -> in(i, dims) ? sz[i] ÷ 2 : 0, N)
-    ax = map(r -> (-r):r, radius)
+    radius = if isnothing(r)
+        ntuple(i -> in(i, dims) ? sz[i] ÷ 2 : 0, N)
+    elseif r isa Dims{N}
+        r
+    elseif r isa Integer
+        ntuple(i -> in(i, dims) ? r : 0, N)
+    end
+    ax = map(r -> (-r):r, sz .÷ 2)
     return _strel_array(SEBox{N}(ax; r=radius))
 end
 
