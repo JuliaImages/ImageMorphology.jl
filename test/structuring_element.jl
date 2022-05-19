@@ -179,30 +179,37 @@ end
         @test se isa ImageMorphology.SEBoxArray
         @test eltype(se) == Bool
         @test se == centered(Bool[1 1 1; 1 1 1; 1 1 1])
-        @test se == strel_box(img; r=2)
+        @test se == strel_box(img; r=1)
 
         se = @inferred strel_box(img, (1,))
-        @test se == @inferred strel_box((3, 3), (1,))
-        @test se == @inferred strel_box((3, 3), 1)
+        @test se == @inferred strel_box((3, 1), (1,))
+        @test se == @inferred strel_box((3, 1), 1)
+
+        se = @inferred strel_box(img; r=2)
+        @test se == centered(trues((5, 5)))
+
+        se = @inferred strel_box(img; r=(1, 2))
+        @test se == centered(trues((3, 5)))
 
         se = @inferred strel_box((5, 5), (2, 1))
         @test se == @inferred strel_box((5, 5), 1:2)
+
+        se = @inferred strel_box((3, 5))
+        @test se == centered(Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1])
 
         se = @inferred strel_box((3, 5); r=1)
         @test se == centered(Bool[0 1 1 1 0; 0 1 1 1 0; 0 1 1 1 0])
 
         se = @inferred strel_box((3, 5); r=(1, 0))
-        @test se == centered(Bool[0 0 1 0 0; 0 0 1 0 0; 0 0 1 0 0])
-
-        se = @inferred strel_box((3, 5), (1,))
+        @test se == @inferred strel_box((3, 5), (1,))
         @test se == @inferred strel_box((3, 5), 1)
-        @test se == centered(reshape(Bool[1, 1, 1], 3, 1))
+        @test se == centered(Bool[0 0 1 0 0; 0 0 1 0 0; 0 0 1 0 0])
 
         se = @inferred strel_box((3, 5); r=(0, 1))
         @test se == centered(Bool[0 0 0 0 0; 0 1 1 1 0; 0 0 0 0 0])
 
         se = @inferred strel_box((3, 5), (2,))
-        @test se == centered(Bool[1 1 1 1 1;])
+        @test se == centered(Bool[0 0 0 0 0; 1 1 1 1 1; 0 0 0 0 0])
 
         se = @inferred strel_box((3, 5); r=2)
         @test se == centered(Bool[1 1 1 1 1; 1 1 1 1 1; 1 1 1 1 1])
@@ -217,7 +224,7 @@ end
         @test se[:, :, 0] == strel_box((3, 3))
 
         se = @inferred strel_box((3, 3, 3), (1, 2))
-        @test axes(se) == (-1:1, -1:1, 0:0)
+        @test axes(se) == (-1:1, -1:1, -1:1)
         @test se[:, :, 0] == strel_box((3, 3))
     end
 
