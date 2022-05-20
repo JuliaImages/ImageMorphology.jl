@@ -1,12 +1,10 @@
 """
-    bothat(img; dims=coords_spatial(img))
+    bothat(img; dims=coords_spatial(img), r=1)
     bothat(img, se)
 
 Performs morphological bottom-hat transform for given image, i.e., `closing(img, se) - img`.
 
-`se` is the structuring element that defines the neighborhood of the image. See
-[`strel`](@ref) for more details. If `se` is not specified, then it will use the
-[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter.
+$(_docstring_se)
 
 This bottom-hat transform, also known as _black_ top-hat transform, can be used to extract
 small black elements and details from an image. To extract white details, the _white_
@@ -25,8 +23,8 @@ julia> img = falses(7, 7); img[3:5, 3:5] .= true; img[4, 6] = true; img[4, 4] = 
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
 
-julia> bothat(img)
-7×7 BitMatrix:
+julia> Int.(bothat(img))
+7×7 Matrix{$Int}:
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
@@ -35,8 +33,8 @@ julia> bothat(img)
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
 
-julia> bothat(img, strel_diamond(img)) # use diamond shape SE
-7×7 BitMatrix:
+julia> Int.(bothat(img, strel_diamond(img))) # use diamond shape SE
+7×7 Matrix{$Int}:
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
@@ -48,8 +46,8 @@ julia> bothat(img, strel_diamond(img)) # use diamond shape SE
 
 See also [`bothat!`](@ref) for the in-place version.
 """
-bothat(img; dims=coords_spatial(img)) = bothat(img, strel_box(img, dims))
-bothat(img, se) = bothat!(similar(img), img, se, similar(img))
+bothat(img; kwargs...) = bothat!(similar(img, maybe_floattype(eltype(img))), img, similar(img); kwargs...)
+bothat(img, se) = bothat!(similar(img, maybe_floattype(eltype(img))), img, se, similar(img))
 
 """
     bothat!(out, img, buffer; dims=coords_spatial(img))
@@ -58,9 +56,12 @@ bothat(img, se) = bothat!(similar(img), img, se, similar(img))
 The in-place version of [`bothat`](@ref) with input image `img` and output image `out`. The
 intermediate dilation result is stored in `buffer`.
 """
-bothat!(out, img, buffer; dims=coords_spatial(img)) = bothat!(out, img, strel_box(img, dims), buffer)
+function bothat!(out, img, buffer; dims=coords_spatial(img), r=nothing)
+    return bothat!(out, img, strel_box(img, dims; r), buffer)
+end
 function bothat!(out, img, se, buffer)
     closing!(out, img, se, buffer)
     @. out = out - img
     return out
 end
+bothat!(out::AbstractArray{<:Color3}, img, se, buffer) = throw(ArgumentError("color image is not supported"))

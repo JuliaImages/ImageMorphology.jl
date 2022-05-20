@@ -1,5 +1,5 @@
 """
-    morpholaplace(img; dims=coords_spatial(img))
+    morpholaplace(img; dims=coords_spatial(img), r=1)
     morpholaplace(img, se)
 
 Calculate morphological laplacian of the image.
@@ -52,10 +52,13 @@ julia> Int.(morpholaplace(img, strel_diamond(img))) # use diamond shape SE
 - `ImageBase.FiniteDiff` also provides a few finite difference operators, including `fdiff`,
   `fgradient`, etc.
 """
-morpholaplace(img; dims=coords_spatial(img)) = morpholaplace(img, strel_box(img, dims))
+function morpholaplace(img; dims=coords_spatial(img), r=nothing)
+    return morpholaplace(img, strel_box(img, dims; r))
+end
 function morpholaplace(img::AbstractArray{T}, se) where {T}
     out = dilate!(similar(img, maybe_floattype(T)), img, se)
     buffer = erode!(similar(img, maybe_floattype(T)), img, se)
     @. out = out + buffer - 2img
     return out
 end
+morpholaplace(img::AbstractArray{<:Color3}, se) = throw(ArgumentError("color image is not supported"))

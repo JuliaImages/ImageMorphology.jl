@@ -1,12 +1,10 @@
 """
-    out = erode(img; [dims])
+    out = erode(img; dims=coords_spatial(img), r=1)
     out = erode(img, se)
 
 Perform a min-filter over the neighborhood of `img`, specified by structuring element `se`.
 
-`se` is the structuring element that defines the neighborhood of the image. See
-[`strel`](@ref) for more details. If `se` is not specified, then it will use the
-[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter.
+$(_docstring_se)
 
 # Examples
 
@@ -54,7 +52,7 @@ julia> erode(img, strel_diamond(img)) # use diamond shape SE
     If `se` is symmetric with repsect to origin, i.e., `se[b] == se[-b]` for any `b`, then
     erosion becomes the Minkowski difference: A⊖B={a-b|a∈A, b∈B}.
 """
-erode(img::AbstractArray; dims=coords_spatial(img)) = erode!(similar(img), img; dims)
+erode(img::AbstractArray; kwargs...) = erode!(similar(img), img; kwargs...)
 erode(img::AbstractArray, se::AbstractArray) = erode!(similar(img), img, se)
 
 """
@@ -63,5 +61,8 @@ erode(img::AbstractArray, se::AbstractArray) = erode!(similar(img), img, se)
 
 The in-place version of [`erode`](@ref) with input image `img` and output image `out`.
 """
-erode!(out, img; dims=coords_spatial(img)) = erode!(out, img, strel_box(img, dims))
+function erode!(out, img; dims=coords_spatial(img), r=nothing)
+    return erode!(out, img, strel_box(img, dims; r))
+end
 erode!(out, img, se::AbstractArray) = extreme_filter!(min, out, img, se)
+erode!(out::AbstractArray{<:Color3}, img, se::AbstractArray) = throw(ArgumentError("color image is not supported"))
