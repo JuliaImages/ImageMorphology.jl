@@ -1,12 +1,30 @@
-@testset "Morphological Gradient" begin
-    A = zeros(13, 13)
-    A[5:9, 5:9] .= 1
-    Ao = morphogradient(A)
-    @test morphogradient(A; dims=1:2) == morphogradient(A)
-    Ae = zeros(13, 13)
-    Ae[4:10, 4:10] .= 1
-    Ae[6:8, 6:8] .= 0
-    @test Ao == Ae
-    Aee = dilate(A) - erode(A)
-    @test Aee == Ae
+beucher_gradient_ref(img, dims, r) = beucher_gradient_ref(img, strel_box(img, dims; r))
+beucher_gradient_ref(img, se) = float.(dilate(img, se)) .- float.(erode(img, se))
+
+@testset "morphogradient" begin
+    test_ranges = [Bool, 1:10, Float64, Gray{N0f8}, Gray{Float64}]
+    for T in test_ranges
+        for N in (1, 2, 3)
+            sz = ntuple(_ -> 32, N)
+            img = rand(T, sz...)
+
+            out = morphogradient(img)
+            @test out == morphogradient(img, strel_box(img, ntuple(identity, N); r=1))
+            @test out == beucher_gradient_ref(img, ntuple(identity, N), 1)
+
+            @test morphogradient(img; dims=(1,), r=2) == beucher_gradient_ref(img, (1,), 2)
+
+            se = centered(rand(Bool, ntuple(_ -> 3, N)))
+            @test morphogradient(img, se) == beucher_gradient_ref(img, se)
+        end
+    end
+
+    # TODO(johnnychen94): support this
+    # img = rand(1:5, 7, 7)
+    # out = similar(img)
+    # morphogradient!(out, img, similar(img))
+    # @test out == morphogradient(img)
+
+    img = rand(RGB, 7, 7)
+    @test_throws ArgumentError("color image is not supported") morphogradient(img)
 end
