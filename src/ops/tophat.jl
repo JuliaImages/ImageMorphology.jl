@@ -1,12 +1,10 @@
 """
-    tophat(img; dims=coords_spatial(img))
+    tophat(img; dims=coords_spatial(img), r=1)
     tophat(img, se)
 
 Performs morphological top-hat transform for given image, i.e., `img - opening(img, se)`.
 
-`se` is the structuring element that defines the neighborhood of the image. See
-[`strel`](@ref) for more details. If `se` is not specified, then it will use the
-[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter.
+$(_docstring_se)
 
 This _white_ top-hat transform can be used to extract small white elements and details from
 an image. To extract black details, the _black_ top-hat transform, also known as bottom-hat
@@ -23,16 +21,16 @@ julia> img = falses(5, 5); img[1, 1] = true; img[3:5, 3:5] .= true; img
  0  0  1  1  1
  0  0  1  1  1
 
-julia> tophat(img)
-5×5 BitMatrix:
+julia> Int.(tophat(img))
+5×5 Matrix{$Int}:
  1  0  0  0  0
  0  0  0  0  0
  0  0  0  0  0
  0  0  0  0  0
  0  0  0  0  0
 
-julia> tophat(img, strel_diamond(img)) # use diamond shape SE
-5×5 BitMatrix:
+julia> Int.(tophat(img, strel_diamond(img))) # use diamond shape SE
+5×5 Matrix{$Int}:
  1  0  0  0  0
  0  0  0  0  0
  0  0  1  0  0
@@ -40,8 +38,8 @@ julia> tophat(img, strel_diamond(img)) # use diamond shape SE
  0  0  0  0  0
 ```
 """
-tophat(img; dims=coords_spatial(img)) = tophat(img, strel_box(img, dims))
-tophat(img, se) = tophat!(similar(img), img, se, similar(img))
+tophat(img; kwargs...) = tophat!(similar(img, maybe_floattype(eltype(img))), img, similar(img); kwargs...)
+tophat(img, se) = tophat!(similar(img, maybe_floattype(eltype(img))), img, se, similar(img))
 
 """
     tophat!(out, img, buffer; dims=coords_spatial(img))
@@ -50,9 +48,12 @@ tophat(img, se) = tophat!(similar(img), img, se, similar(img))
 The in-place version of [`tophat`](@ref) with input image `img` and output image `out`. The
 intermediate erosion result is stored in `buffer`.
 """
-tophat!(out, img, buffer; dims=coords_spatial(img)) = tophat!(out, img, strel_box(img, dims), buffer)
+function tophat!(out, img, buffer; dims=coords_spatial(img), r=nothing)
+    return tophat!(out, img, strel_box(img, dims; r), buffer)
+end
 function tophat!(out, img, se, buffer)
     opening!(out, img, se, buffer)
     @. out = img - out
     return out
 end
+tophat!(out::AbstractArray{<:Color3}, img, se, buffer) = throw(ArgumentError("color image is not supported"))
