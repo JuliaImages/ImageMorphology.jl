@@ -51,6 +51,7 @@ function morphogradient(img; dims=coords_spatial(img), r=nothing)
     return morphogradient(img, strel_box(img, dims; r))
 end
 function morphogradient(img::AbstractArray{T}, se) where {T}
+    require_symmetric_strel(se)
     buffer = similar(img)
     out = dilate!(similar(img, maybe_floattype(T)), img, se)
     buffer = erode!(similar(img, maybe_floattype(T)), img, se)
