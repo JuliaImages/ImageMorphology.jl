@@ -15,6 +15,9 @@ maybe_floattype(::Type{CT}) where {CT<:Color} = base_color_type(CT){maybe_floatt
 
 Check if a given structuring element array `se` is symmetric with respect to its center
 pixel.
+
+More formally, this checks if `mask[I] == mask[-I]` for any valid `I ∈ CartesianIndices(se)`
+in the connectivity mask represetation `mask = strel(Bool, se)`.
 """
 function is_symmetric(se::AbstractArray)
     # first check the axes, and then the values
