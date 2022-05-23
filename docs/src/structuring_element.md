@@ -31,7 +31,7 @@ point that changes during the iteration, and `Ω` is usually a pre-defined and u
 contains the neighborhood and shape information. We call this `Ω` a _structuring element_. There are
 usually two ways to express `Ω`:
 
-- **displacement offset**: a list of `CartesianIndex` to inidcate the offset to the center point `p`
+- **displacement offset**: a list of `CartesianIndex` to indicate the offset to the center point `p`
 - **connectivity mask**: a bool array mask to indicate the connectivity to the center point `p`
 
 For instance, in the following code block we build a commonly named C4 connectivity in the 2-dimensional case:
