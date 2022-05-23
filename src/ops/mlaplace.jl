@@ -1,6 +1,6 @@
 """
-    morpholaplace(img; dims=coords_spatial(img), r=1)
-    morpholaplace(img, se)
+    mlaplace(img; dims=coords_spatial(img), r=1)
+    mlaplace(img, se)
 
 Calculate morphological laplacian of the image.
 
@@ -25,7 +25,7 @@ julia> img = falses(7, 7); img[3:5, 3:5] .= true; img[4, 4] = false; img
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
 
-julia> Int.(morpholaplace(img))
+julia> Int.(mlaplace(img))
 7×7 Matrix{$Int}:
  0  0   0   0   0  0  0
  0  1   1   1   1  1  0
@@ -35,7 +35,7 @@ julia> Int.(morpholaplace(img))
  0  1   1   1   1  1  0
  0  0   0   0   0  0  0
 
-julia> Int.(morpholaplace(img, strel_diamond(img))) # use diamond shape SE
+julia> Int.(mlaplace(img, strel_diamond(img))) # use diamond shape SE
 7×7 Matrix{$Int}:
  0  0   0   0   0  0  0
  0  0   1   1   1  0  0
@@ -48,18 +48,18 @@ julia> Int.(morpholaplace(img, strel_diamond(img))) # use diamond shape SE
 
 ## See also
 
-- [`morphogradient`](@ref) for the gradient operator.
+- [`mgradient`](@ref) for the gradient operator.
 - `ImageBase.FiniteDiff` also provides a few finite difference operators, including `fdiff`,
   `fgradient`, etc.
 """
-function morpholaplace(img; dims=coords_spatial(img), r=nothing)
-    return morpholaplace(img, strel_box(img, dims; r))
+function mlaplace(img; dims=coords_spatial(img), r=nothing)
+    return mlaplace(img, strel_box(img, dims; r))
 end
-function morpholaplace(img::AbstractArray{T}, se) where {T}
+function mlaplace(img::AbstractArray{T}, se) where {T}
     require_symmetric_strel(se)
     out = dilate!(similar(img, maybe_floattype(T)), img, se)
     buffer = erode!(similar(img, maybe_floattype(T)), img, se)
     @. out = out + buffer - 2img
     return out
 end
-morpholaplace(img::AbstractArray{<:Color3}, se) = throw(ArgumentError("color image is not supported"))
+mlaplace(img::AbstractArray{<:Color3}, se) = throw(ArgumentError("color image is not supported"))
