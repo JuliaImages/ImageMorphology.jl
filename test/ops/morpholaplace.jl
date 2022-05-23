@@ -14,7 +14,7 @@ morpholaplace_ref(img, se) = float.(dilate(img, se)) .+ float.(erode(img, se)) .
 
             @test morpholaplace(img; dims=(1,), r=2) == morpholaplace_ref(img, (1,), 2)
 
-            se = centered(rand(Bool, ntuple(_ -> 3, N)))
+            se = rand_se_mask(3, N; symmetric=true)
             @test morpholaplace(img, se) == morpholaplace_ref(img, se)
         end
     end
@@ -27,4 +27,9 @@ morpholaplace_ref(img, se) = float.(dilate(img, se)) .+ float.(erode(img, se)) .
 
     img = rand(RGB, 7, 7)
     @test_throws ArgumentError("color image is not supported") morpholaplace(img)
+
+    img = rand(1:10, 7, 7)
+    se = Bool[1 0 0; 0 1 0; 0 0 0]
+    msg = "structuring element must be symmetric with respect to its center"
+    @test_throws ArgumentError(msg) morpholaplace(img, se)
 end
