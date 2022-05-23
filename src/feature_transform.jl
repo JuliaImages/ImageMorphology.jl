@@ -26,9 +26,9 @@ See also: [`distance_transform`](@ref).
 
 # Citation
 
-'A Linear Time Algorithm for Computing Exact Euclidean Distance
-Transforms of Binary Images in Arbitrary Dimensions' [Maurer et al.,
-2003] (DOI: 10.1109/TPAMI.2003.1177156)
+- [1] Maurer, Calvin R., Rensheng Qi, and Vijay Raghavan. "A linear time algorithm for
+  computing exact Euclidean distance transforms of binary images in arbitrary dimensions."
+  _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 25.2 (2003): 265-270.
 """
 function feature_transform(
     img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N};

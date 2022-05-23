@@ -81,3 +81,54 @@ bothat!
 morphogradient
 morpholaplace
 ```
+
+## Components and segmentations
+
+```@docs
+label_components
+component_boxes
+component_lengths
+component_indices
+component_subscripts
+component_centroids
+```
+
+## Max tree
+
+```@docs
+MaxTree
+areas
+boundingboxes
+diameters
+area_opening
+area_opening!
+area_closing
+area_closing!
+diameter_opening
+diameter_opening!
+diameter_closing
+diameter_closing!
+local_maxima!
+local_maxima
+local_minima!
+local_minima
+ImageMorphology.rebuild!
+ImageMorphology.filter_components!
+```
+
+## Feature transform
+
+```@docs
+feature_transform
+distance_transform
+clearborder
+```
+
+## Misc
+
+```@docs
+convexhull
+isboundary
+isboundary!
+ImageMorphology.isboundary_thick
+```
