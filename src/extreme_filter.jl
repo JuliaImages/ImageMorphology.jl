@@ -91,6 +91,7 @@ modified.
 extreme_filter!(f, out, A; r=nothing, dims=coords_spatial(A)) = extreme_filter!(f, out, A, strel_box(A, dims; r))
 function extreme_filter!(f, out, A, Ω::AbstractArray=strel_box(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
+    require_select_function(f, eltype(A))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end
 
