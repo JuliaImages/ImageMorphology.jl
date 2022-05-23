@@ -18,10 +18,11 @@ mosaic(img, img01; nrow=1)
 
 #-
 
-out1 = opening(img)
-out2 = opening(img; dims=(2,))
-out3 = opening(img; r=5)
+out1 = opening(img) # default: all spatial dimensions, r=1, a box-shape SE
+out2 = opening(img; dims=(2,)) # only apply to the second dimension
+out3 = opening(img; r=5) # half-size r=5
 
+## also to the binary version
 out1_01 = opening(img01)
 out2_01 = opening(img01; dims=(2,))
 out3_01 = opening(img01; r=5)

@@ -22,9 +22,9 @@ img = restrict(testimage_dip3e("fig1005")) # wirebond mask
 # The simplest usage is `dilate(img; [dims], [r])`, where `dims` and `r` controls the
 # neighborhood shape.
 
-out1 = dilate(img)
-out2 = dilate(img; dims=(2,))
-out3 = dilate(img; r=5)
+out1 = dilate(img) # default: all spatial dimensions, r=1, a box-shape SE
+out2 = dilate(img; dims=(2,)) # only apply to the second dimension
+out3 = dilate(img; r=5) # half-size r=5
 mosaic(out1, out2, out3; nrow=1)
 
 # It uses the [`strel_box`](@ref) to create a box-shaped structuring element. You can also
