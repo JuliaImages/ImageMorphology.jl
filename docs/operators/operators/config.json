@@ -1,3 +1,11 @@
 {
-    "order":["extreme_filter.jl"]
+    "order":[
+        "extreme_filter.jl",
+        "dilate.jl",
+        "erode.jl",
+        "opening.jl",
+        "closing.jl",
+        "tophat.jl",
+        "bothat.jl"
+    ]
 }
