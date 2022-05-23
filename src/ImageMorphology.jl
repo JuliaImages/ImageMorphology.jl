@@ -57,6 +57,7 @@ export
     bothat,
     bothat!,
     mgradient,
+    mgradient!,
     mlaplace,
 
     # connected.jl
