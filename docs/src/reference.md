@@ -49,7 +49,7 @@ morphogradient
 morpholaplace
 ```
 
-## Components and segmentations
+## Components and segmentation
 
 ```@docs
 label_components

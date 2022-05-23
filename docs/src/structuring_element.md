@@ -149,7 +149,7 @@ single line:
 ## [Symmetricity](@id concept_symmetric)
 
 Among all the structuring elements, the symmetric ones are used most in practice -- they have better
-properties and thus enables optimized algorithm implementation.
+properties and their symmetry enables certain implementation optimizations.
 
 The SE symmetricity is defined with respect to the center point for the mask representation `mask =
 strel(Bool, se)`: `se` is symmetric if `mask[I] == mask[-I]` holds for `I ∈ CartesianIndices(mask)`.

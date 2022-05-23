@@ -7,10 +7,10 @@
 [![][docs-stable-img]][docs-stable-url]
 [![][docs-dev-img]][docs-dev-url]
 
-This package provides morphology-related functionalities for structure analysis and image processing.
+This package provides morphology operations for structure analysis and image processing.
 
-ImageMorphology is a sub-package of the umbrella package [Images.jl][images-url] -- you can choose
-to use either `using Images` or `using ImageMorphology` for the functionality.
+ImageMorphology is a sub-package of the umbrella package [Images.jl][images-url] -- either `using
+Images` or `using ImageMorphology` will give you access to this functionality.
 
 ## Documentation
 
@@ -18,7 +18,7 @@ Full documentation and description can be found [here][docs-stable-url].
 
 ## Installation
 
-Just like all normal Julia packages, you can use Pkg to install it:
+Just like all normal Julia packages, you can use [Pkg][Pkg-docs-url] to install it:
 
 ```julia
 pkg> add ImageMorphology # hit ] to enter Pkg mode
@@ -38,3 +38,4 @@ pkg> add ImageMorphology # hit ] to enter Pkg mode
 [docs-dev-url]: https://JuliaImages.github.io/ImageMorphology.jl/latest
 
 [images-url]: https://github.com/JuliaImages/Images.jl
+[Pkg-docs-url]: https://pkgdocs.julialang.org/v1/getting-started/

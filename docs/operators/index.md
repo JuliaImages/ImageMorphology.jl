@@ -1,6 +1,6 @@
 # [Morphology Operators](@id op_index)
 
-This page includes the interfaces for the basic morphology operators that you can use to
+This page describes the interfaces for the basic morphology operators that you can use to
 build your own pipeline.
 
 !!! note "🚧 work in progress"
