@@ -21,16 +21,14 @@ The following tables give an overview of ImageMorphology interfaces
 | name                                                   | summary | examples |
 | :----------------------------------------------------- | :------ | ---- |
 | [`extreme_filter`](@ref) and [`extreme_filter!`](@ref) | iteratively apply a select function `f(x, y)` to each neighborhood | [`extreme_filter` operation](@ref op_extreme_filter) |
-| [`dilate`](@ref) | | |
-| [`erode`](@ref) | | |
-| [`opening`](@ref) | | |
-| [`closing`](@ref) | | |
-| [`bothat`](@ref) | | |
-| [`tophat`](@ref) | | |
-| [`morphogradient`](@ref) | | |
-| [`morpholaplace`](@ref) | | |
-
-
+| [`dilate`](@ref) and [`dilate!`](@ref)                 | morphological max filter  | [`dilate` operation](@ref op_dilate)   |
+| [`erode`](@ref) and [`erode!`](@ref)                   | morphological min filter  | [`erode` operation](@ref op_erode)     |
+| [`opening`](@ref) and [`opening!`](@ref)               | fills white holes         | [`opening` operation](@ref op_opening) |
+| [`closing`](@ref) and [`closing!`](@ref)               | fills black holes         | [`closing` operation](@ref op_closing) |
+| [`bothat`](@ref) and [`bothat!`](@ref)                 | extract black details     | [`bothat` operation](@ref op_bothat)   |
+| [`tophat`](@ref) and [`tophat!`](@ref)                 | extract white details     | [`tophat` operation](@ref op_tophat)   |
+| [`morphogradient`](@ref)                               | morphological gradient    |                                        |
+| [`morpholaplace`](@ref)                                | morpholigical laplacian   |                                        |
 
 ## [Structuring element](@id reference_se)
 
@@ -52,6 +50,8 @@ ImageMorphology.strel_ndims
 OffsetArrays.centered
 OffsetArrays.center
 
+ImageMorphology.is_symmetric
+
 ## types
 ImageMorphology.SEMask
 ImageMorphology.SEOffset
@@ -64,16 +64,20 @@ ImageMorphology.SEBoxArray
 ## [Morphological operations](@id reference_ops)
 
 ```@docs
-bothat
-closing
+extreme_filter
+extreme_filter!
 dilate
 dilate!
 erode
 erode!
-extreme_filter
-extreme_filter!
+opening
+opening!
+closing
+closing!
+tophat
+tophat!
+bothat
+bothat!
 morphogradient
 morpholaplace
-opening
-tophat
 ```
