@@ -4,67 +4,25 @@
 [![][action-img]][action-url]
 [![][pkgeval-img]][pkgeval-url]
 [![][codecov-img]][codecov-url]
+[![][docs-stable-img]][docs-stable-url]
+[![][docs-dev-img]][docs-dev-url]
 
-This package provides morphology-related functionality to the [Images.jl][images-url] project.
+This package provides morphology-related functionalities for structure analysis and image processing.
 
-## Installation
-
-Get the latest stable release with Julia's package manager:
-
-```julia
-Pkg.add("ImageMorphology")
-```
-
-## Exported functions
-
-```julia
-area_closing
-area_closing!
-area_opening
-area_opening!
-areas
-bothat
-boundingboxes
-clearborder
-closing
-closing!
-component_boxes
-component_centroids
-component_indices
-component_lengths
-component_subscripts
-convexhull
-diameter_closing
-diameter_closing!
-diameter_opening
-diameter_opening!
-diameters
-dilate
-dilate!
-distance_transform
-erode
-erode!
-feature_transform
-imfill
-isboundary
-isboundary!
-label_components
-label_components!
-local_maxima
-local_maxima!
-local_minima
-local_minima!
-morphogradient
-morpholaplace
-opening
-opening!
-thinning
-tophat
-```
+ImageMorphology is a sub-package of the umbrella package [Images.jl][images-url] -- you can choose
+to use either `using Images` or `using ImageMorphology` for the functionality.
 
 ## Documentation
 
-Please check the top-level documentation at [Images.jl][images-url].
+Full documentation and description can be found [here][docs-stable-url].
+
+## Installation
+
+Just like all normal Julia packages, you can use Pkg to install it:
+
+```julia
+pkg> add ImageMorphology # hit ] to enter Pkg mode
+```
 
 <!-- URLS -->
 
@@ -74,5 +32,9 @@ Please check the top-level documentation at [Images.jl][images-url].
 [action-url]: https://action-ci.org/JuliaImages/ImageMorphology.jl
 [codecov-img]: https://codecov.io/github/JuliaImages/ImageMorphology.jl/coverage.svg?branch=master
 [codecov-url]: https://codecov.io/github/JuliaImages/ImageMorphology.jl?branch=master
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://JuliaImages.github.io/ImageMorphology.jl/stable
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://JuliaImages.github.io/ImageMorphology.jl/latest
 
 [images-url]: https://github.com/JuliaImages/Images.jl

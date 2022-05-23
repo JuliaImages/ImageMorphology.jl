@@ -1,4 +1,4 @@
-# Reference
+# [Reference](@id reference_index)
 
 ## Interface overview
 
