@@ -2,8 +2,8 @@
     closing(img; dims=coords_spatial(img), r=1)
     closing(img, se)
 
-Perform the morphological closing on `img`.The closing operation is defined as
-[dilation](@ref dilate) followed by a [erosion](@ref erode): `erode(dilate(img, se), se)`.
+Perform the morphological closing on `img`. The closing operation is defined as dilation
+followed by an erosion: `erode(dilate(img, se), se)`.
 
 $(_docstring_se)
 
