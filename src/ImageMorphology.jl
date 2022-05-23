@@ -59,6 +59,7 @@ export
     mgradient,
     mgradient!,
     mlaplace,
+    mlaplace!,
 
     # connected.jl
     label_components,

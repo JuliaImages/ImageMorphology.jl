@@ -19,11 +19,10 @@ mlaplace_ref(img, se) = float.(dilate(img, se)) .+ float.(erode(img, se)) .- 2 .
         end
     end
 
-    # TODO(johnnychen94): support this
-    # img = rand(1:5, 7, 7)
-    # out = similar(img)
-    # mlaplace!(out, img, similar(img))
-    # @test out == mlaplace(img)
+    img = rand(1:5, 7, 7)
+    out = similar(img)
+    mlaplace!(out, img, similar(img))
+    @test out == mlaplace(img)
 
     img = rand(RGB, 7, 7)
     @test_throws ArgumentError("color image is not supported") mlaplace(img)
