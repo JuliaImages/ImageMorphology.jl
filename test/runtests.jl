@@ -10,6 +10,7 @@ using Suppressor
 using Documenter
 Base.VERSION >= v"1.6" && doctest(ImageMorphology; manual=false)
 
+include("testutils.jl")
 @testset "ImageMorphology" begin
     include("structuring_element.jl")
     include("utils.jl")

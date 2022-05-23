@@ -35,4 +35,4 @@ is_symmetric(se::SEDiamondArray) = true
 Some morphological operation only makes sense for symmetric structuring elements.
 Here we provide a checker in spirit of Base.require_one_based_idnexing.
 =#
-require_symmetric_strel(se) = is_symmetric(se) || throw(ArgumentError("Structuring element must be symmetric with respect to its center"))
+require_symmetric_strel(se) = is_symmetric(se) || throw(ArgumentError("structuring element must be symmetric with respect to its center"))
