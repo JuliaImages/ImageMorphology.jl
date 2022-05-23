@@ -146,6 +146,38 @@ single line:
      R = CartesianIndices(A)
 ```
 
+## [Symmetricity](@id concept_symmetric)
+
+Among all the structuring elements, the symmetric ones are used most in practice -- they have better
+properties and thus enables optimized algorithm implementation.
+
+The SE symmetricity is defined with respect to the center point for the mask representation `mask =
+strel(Bool, se)`: `se` is symmetric if `mask[I] == mask[-I]` holds for `I ∈ CartesianIndices(mask)`.
+-- This is also why mask representation requires a `centered` array.
+
+```@example concept_se
+se = centered(Bool[
+    1 0 1
+    0 1 0
+    1 0 1
+])
+ImageMorphology.is_symmetric(se) # true
+
+se = centered(Bool[
+    1 1 1
+    0 1 0
+    1 0 1
+])
+ImageMorphology.is_symmetric(se) # false
+
+se = [CartesianIndex(1), CartesianIndex(-1)]
+ImageMorphology.is_symmetric(se) # true
+
+se = [CartesianIndex(1)]
+ImageMorphology.is_symmetric(se) # false
+nothing #hide
+```
+
 ## Convenient constructors
 
 Among all the SE possibilities, this package provides constructors for two commonly used cases:
