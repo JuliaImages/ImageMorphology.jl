@@ -12,6 +12,8 @@
 @deprecate opening!(img; kwargs...) opening!(img, copy(img), similar(img); kwargs...)
 @deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
+Base.@deprecate_binding morphogradient mgradient
+
 @deprecate extremefilt!(A, select; kwargs...) extreme_filter!(select, A, copy(A); kwargs...)
 
 import .FeatureTransform: feature_transform
