@@ -51,7 +51,7 @@ opening(img; kwargs...) = opening!(similar(img), img, similar(img); kwargs...)
 opening(img, se) = opening!(similar(img), img, se, similar(img))
 
 """
-    opening!(out, img, buffer; dims=coords_spatial(img))
+    opening!(out, img, buffer; [dims], [r])
     opening!(out, img, se, buffer)
 
 The in-place version of [`opening`](@ref) with input image `img` and output image `out`. The

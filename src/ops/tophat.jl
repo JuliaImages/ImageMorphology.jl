@@ -42,7 +42,7 @@ tophat(img; kwargs...) = tophat!(similar(img, maybe_floattype(eltype(img))), img
 tophat(img, se) = tophat!(similar(img, maybe_floattype(eltype(img))), img, se, similar(img))
 
 """
-    tophat!(out, img, buffer; dims=coords_spatial(img))
+    tophat!(out, img, buffer; [dims], [r])
     tophat!(out, img, se, buffer)
 
 The in-place version of [`tophat`](@ref) with input image `img` and output image `out`. The

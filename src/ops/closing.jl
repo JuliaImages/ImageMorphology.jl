@@ -51,7 +51,7 @@ closing(img; kwargs...) = closing!(similar(img), img, similar(img); kwargs...)
 closing(img, se) = closing!(similar(img), img, se, similar(img))
 
 """
-    closing!(out, img, buffer; dims=coords_spatial(img))
+    closing!(out, img, buffer; [dims], [r])
     closing!(out, img, se, buffer)
 
 The in-place version of [`closing`](@ref) with input image `img` and output image `out`. The

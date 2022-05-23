@@ -56,7 +56,7 @@ erode(img::AbstractArray; kwargs...) = erode!(similar(img), img; kwargs...)
 erode(img::AbstractArray, se::AbstractArray) = erode!(similar(img), img, se)
 
 """
-    erode!(out, img; [dims])
+    erode!(out, img; [dims], [r])
     erode!(out, img, se)
 
 The in-place version of [`erode`](@ref) with input image `img` and output image `out`.

@@ -57,7 +57,7 @@ dilate(img::AbstractArray; kwargs...) = dilate!(similar(img), img; kwargs...)
 dilate(img::AbstractArray, se::AbstractArray) = dilate!(similar(img), img, se)
 
 """
-    dilate!(out, img; [dims])
+    dilate!(out, img; [dims], [r])
     dilate!(out, img, se)
 
 The in-place version of [`dilate`](@ref) with input image `img` and output image `out`.

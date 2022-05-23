@@ -50,7 +50,7 @@ bothat(img; kwargs...) = bothat!(similar(img, maybe_floattype(eltype(img))), img
 bothat(img, se) = bothat!(similar(img, maybe_floattype(eltype(img))), img, se, similar(img))
 
 """
-    bothat!(out, img, buffer; dims=coords_spatial(img))
+    bothat!(out, img, buffer; [dims], [r])
     bothat!(out, img, se, buffer)
 
 The in-place version of [`bothat`](@ref) with input image `img` and output image `out`. The
