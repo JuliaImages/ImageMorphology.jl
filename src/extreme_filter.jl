@@ -1,7 +1,7 @@
 const MAX_OR_MIN = Union{typeof(max),typeof(min)}
 
 """
-    extreme_filter(f, A; [dims]) -> out
+    extreme_filter(f, A; r=1, [dims]) -> out
     extreme_filter(f, A, Ω) -> out
 
 Filter the array `A` using select function `f(x, y)` for each Ω-neighborhood. The name
@@ -12,10 +12,10 @@ iteratively in a `f(...(f(f(A[p], A[p+Ω[1]]), A[p+Ω[2]]), ...)` manner. For in
 1-dimensional case, `out[p] = f(f(A[p], A[p-1]), A[p+1])` for each `p` is the default
 behavior.
 
-The Ω-neighborhood is defined by the `dims` or `Ω` argument. The `dims` argument specifies
-the dimensions of the neighborhood that can be used to construct a box shape `Ω` using
-[`strel_box`](@ref). The `Ω` is also known as structuring element (SE), it can be either
-displacement offsets or bool array mask, please refer to [`strel`](@ref) for more details.
+The Ω-neighborhood is defined by the `dims` or `Ω` argument. The `r` and `dims` keywords
+specifies the box shape neighborhood `Ω` using [`strel_box`](@ref). The `Ω` is also known as
+structuring element (SE), it can be either displacement offsets or bool array mask, please
+refer to [`strel`](@ref) for more details.
 
 # Examples
 
@@ -78,19 +78,20 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-extreme_filter(f, A; dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
+extreme_filter(f, A; r=nothing, dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims; r))
 extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
-    extreme_filter!(f, out, A, [dims])
+    extreme_filter!(f, out, A; [r], [dims])
     extreme_filter!(f, out, A, Ω)
 
 The in-place version of [`extreme_filter`](@ref) where `out` is the output array that gets
 modified.
 """
-extreme_filter!(f, out, A, dims) = extreme_filter!(f, out, A, strel_box(A, dims))
+extreme_filter!(f, out, A; r=nothing, dims=coords_spatial(A)) = extreme_filter!(f, out, A, strel_box(A, dims; r))
 function extreme_filter!(f, out, A, Ω::AbstractArray=strel_box(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
+    require_select_function(f, eltype(A))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
 end
 

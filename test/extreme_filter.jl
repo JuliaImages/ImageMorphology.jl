@@ -1,4 +1,38 @@
 @testset "extreme_filter" begin
+    @testset "interface" begin
+        img = rand(1:10, 7, 7)
+
+        out = extreme_filter(max, img)
+        @test out == extreme_filter(max, img; dims=(1, 2), r=1)
+
+        se = strel_box(img, (1, 2); r=(1, 1))
+        @test out == extreme_filter(max, img, se)
+
+        se = strel_box(img, (1, 2); r=(1, 3))
+        @test extreme_filter(max, img; dims=(1, 2), r=(1, 3)) == extreme_filter(max, img, se)
+
+        out = similar(img)
+        rst = extreme_filter!(max, out, img)
+        @test rst === out
+        @test out == extreme_filter!(max, out, img)
+
+        out = similar(img)
+        rst = extreme_filter!(max, out, img; dims=(1, 2), r=1)
+        @test rst === out
+        se = strel_box(img, (1, 2); r=(1, 1))
+        ref_out = similar(img)
+        extreme_filter!(max, ref_out, img, se)
+        @test ref_out == out
+
+        out = similar(img)
+        rst = extreme_filter!(max, out, img; dims=(1, 2), r=(1, 3))
+        @test rst === out
+        se = strel_box(img, (1, 2); r=(1, 3))
+        ref_out = similar(img)
+        extreme_filter!(max, ref_out, img, se)
+        @test ref_out == out
+    end
+
     @testset "numerical" begin
         # Bool
         img = fill(false, 5, 5)
@@ -31,6 +65,31 @@
         out = extreme_filter(max, A, se_mask)
         se_offsets = strel(CartesianIndex, se_mask)
         @test out == extreme_filter(max, A, se_offsets)
+    end
+
+    @testset "offset arrays" begin
+        img = centered(rand(1:10, 32, 32))
+        out = extreme_filter(max, img)
+        @test out == centered(extreme_filter(max, OffsetArrays.no_offset_view(img)))
+    end
+
+    @testset "multi channel image" begin
+        # supporting color image requires some reduced ordering function
+        img = rand(RGB, 32, 32)
+        msg = "function `max` is not a well-defined select function on type `RGB{Float64}`: does `f(x::T, y::T)` work as expected?"
+        @test_throws ArgumentError(msg) extreme_filter(max, img)
+
+        # the test functions below don't make much sense in practice, but it's good to test them
+        _to_number(c::AbstractRGB) = red(c)
+        _to_number(x::Number) = x
+        _select(x, y) = _to_number(x) > _to_number(y) ? x : y
+        out = extreme_filter(_select, img)
+        @test issubset(Set(unique(out)), Set(unique(img)))
+
+        _select_new(x, y) = max(_to_number(x), _to_number(y))
+        out = extreme_filter(_select_new, img)
+        @test eltype(out) == eltype(img)
+        @test sum(abs, channelview(RGB.(Gray.(out))) - channelview(out)) < 1e-4
     end
 
     @testset "optimization: diamond" begin
