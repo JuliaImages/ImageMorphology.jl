@@ -19,8 +19,8 @@ include("ops/closing.jl")
 include("ops/opening.jl")
 include("ops/tophat.jl")
 include("ops/bothat.jl")
-include("ops/morphogradient.jl")
-include("ops/morpholaplace.jl")
+include("ops/mgradient.jl")
+include("ops/mlaplace.jl")
 include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
@@ -56,8 +56,10 @@ export
     tophat!,
     bothat,
     bothat!,
-    morphogradient,
-    morpholaplace,
+    mgradient,
+    mgradient!,
+    mlaplace,
+    mlaplace!,
 
     # connected.jl
     label_components,
