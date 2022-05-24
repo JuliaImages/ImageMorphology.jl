@@ -13,7 +13,7 @@
 @deprecate closing!(img; kwargs...) closing!(img, copy(img), similar(img); kwargs...)
 
 Base.@deprecate_binding morphogradient mgradient
-Base.@deprecate_binding morpholaplace mlaplace
+Base.@deprecate_binding morpholaplace mlaplacian
 
 @deprecate extremefilt!(A, select; kwargs...) extreme_filter!(select, A, copy(A); kwargs...)
 

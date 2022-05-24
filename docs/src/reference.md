@@ -47,8 +47,8 @@ bothat
 bothat!
 mgradient
 mgradient!
-mlaplace
-mlaplace!
+mlaplacian
+mlaplacian!
 ```
 
 ## Components and segmentation

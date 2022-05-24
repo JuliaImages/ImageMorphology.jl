@@ -41,5 +41,5 @@ internal_gradient_ref(img, se) = img .- float.(erode(img, se))
     img = rand(1:10, 7, 7)
     se = Bool[1 0 0; 0 1 0; 0 0 0]
     msg = "structuring element must be symmetric with respect to its center"
-    @test_throws ArgumentError(msg) mlaplace(img, se)
+    @test_throws ArgumentError(msg) mlaplacian(img, se)
 end

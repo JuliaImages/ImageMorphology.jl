@@ -8,6 +8,6 @@
         "tophat.jl",
         "bothat.jl",
         "mgradient.jl",
-        "mlaplace.jl"
+        "mlaplacian.jl"
     ]
 }

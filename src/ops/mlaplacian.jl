@@ -1,6 +1,6 @@
 """
-    mlaplace(img; dims=coords_spatial(img), r=1)
-    mlaplace(img, se)
+    mlaplacian(img; dims=coords_spatial(img), r=1)
+    mlaplacian(img, se)
 
 Calculate morphological laplacian of the image.
 
@@ -25,7 +25,7 @@ julia> img = falses(7, 7); img[3:5, 3:5] .= true; img[4, 4] = false; img
  0  0  0  0  0  0  0
  0  0  0  0  0  0  0
 
-julia> Int.(mlaplace(img))
+julia> Int.(mlaplacian(img))
 7×7 Matrix{$Int}:
  0  0   0   0   0  0  0
  0  1   1   1   1  1  0
@@ -35,7 +35,7 @@ julia> Int.(mlaplace(img))
  0  1   1   1   1  1  0
  0  0   0   0   0  0  0
 
-julia> Int.(mlaplace(img, strel_diamond(img))) # use diamond shape SE
+julia> Int.(mlaplacian(img, strel_diamond(img))) # use diamond shape SE
 7×7 Matrix{$Int}:
  0  0   0   0   0  0  0
  0  0   1   1   1  0  0
@@ -48,35 +48,35 @@ julia> Int.(mlaplace(img, strel_diamond(img))) # use diamond shape SE
 
 ## See also
 
-- [`mlaplace!`](@ref) is the in-place version of this function.
+- [`mlaplacian!`](@ref) is the in-place version of this function.
 - [`mgradient`](@ref) for the gradient operator.
 - `ImageBase.FiniteDiff` also provides a few finite difference operators, including `fdiff`,
   `fgradient`, etc.
 """
-function mlaplace(img; dims=coords_spatial(img), r=nothing)
-    return mlaplace(img, strel_box(img, dims; r))
+function mlaplacian(img; dims=coords_spatial(img), r=nothing)
+    return mlaplacian(img, strel_box(img, dims; r))
 end
-function mlaplace(img::AbstractArray{T}, se) where {T}
+function mlaplacian(img::AbstractArray{T}, se) where {T}
     out = similar(img, maybe_floattype(T))
     buffer = similar(img, maybe_floattype(T))
-    return mlaplace!(out, img, se, buffer)
+    return mlaplacian!(out, img, se, buffer)
 end
 
 """
-    mlaplace!(out, img, buffer; [dims], [r])
-    mlaplace!(out, img, se, buffer)
+    mlaplacian!(out, img, buffer; [dims], [r])
+    mlaplacian!(out, img, se, buffer)
 
-The in-place version of [`mlaplace`](@ref) with input image `img` and output image `out`.
+The in-place version of [`mlaplacian`](@ref) with input image `img` and output image `out`.
 The intermediate erosion result is stored in `buffer`.
 """
-function mlaplace!(out, img, buffer; dims=coords_spatial(img), r=nothing)
-    return mlaplace!(out, img, strel_box(img, dims; r), buffer)
+function mlaplacian!(out, img, buffer; dims=coords_spatial(img), r=nothing)
+    return mlaplacian!(out, img, strel_box(img, dims; r), buffer)
 end
-function mlaplace!(out, img, se, buffer)
+function mlaplacian!(out, img, se, buffer)
     require_symmetric_strel(se)
     dilate!(out, img, se)
     erode!(buffer, img, se)
     @. out = out + buffer - 2img
     return out
 end
-mlaplace!(out::AbstractArray{<:Color3}, img, se, buffer=nothing) = throw(ArgumentError("color image is not supported"))
+mlaplacian!(out::AbstractArray{<:Color3}, img, se, buffer=nothing) = throw(ArgumentError("color image is not supported"))
