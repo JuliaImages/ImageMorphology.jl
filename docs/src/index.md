@@ -58,5 +58,5 @@ Structuring element is the key concept in morphology. If you're not familiar wit
 | [`closing`](@ref) and [`closing!`](@ref)               | fills black holes         | [`closing` operation](@ref op_closing) |
 | [`bothat`](@ref) and [`bothat!`](@ref)                 | extract black details     | [`bothat` operation](@ref op_bothat)   |
 | [`tophat`](@ref) and [`tophat!`](@ref)                 | extract white details     | [`tophat` operation](@ref op_tophat)   |
-| [`morphogradient`](@ref)                               | morphological gradient    |                                        |
-| [`morpholaplace`](@ref)                                | morpholigical laplacian   |                                        |
+| [`mgradient`](@ref) and [`mgradient!`](@ref)           | morphological gradient    | [`mgradient` operation](@ref op_mgradient)|
+| [`mlaplace`](@ref) and [`mlaplace!`](@ref)             | morpholigical laplacian   | [`mlaplace` operation](@ref op_mlaplace) |
