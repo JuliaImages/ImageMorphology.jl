@@ -1,7 +1,7 @@
 # ---
 # title: "`erode`"
 # id: op_erode
-# cover: assets/erode.gif
+# cover: assets/erode.png
 # ---
 
 # The dilation operator `erode` is essentially a min filter. This is a basic term in
@@ -57,7 +57,7 @@ complement.(erode(img)) == erode(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [erode(img; r) for r in 1:2:9] #src
-ImageMagick.save("assets/erode.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/erode.png", erode(img; r=1)) #src

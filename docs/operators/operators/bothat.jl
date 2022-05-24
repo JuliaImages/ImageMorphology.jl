@@ -1,7 +1,7 @@
 # ---
 # title: "`bothat`"
 # id: op_bothat
-# cover: assets/bothat.gif
+# cover: assets/bothat.png
 # ---
 
 # The (black) tophat operator, also known as bottom hat, is defined as `closing(img) - img`.
@@ -34,7 +34,7 @@ tophat(img) == bothat(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [bothat(img; r) for r in 1:5] #src
-ImageMagick.save("assets/bothat.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/bothat.png", bothat(img; r=2)) #src

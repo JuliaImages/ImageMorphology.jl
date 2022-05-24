@@ -1,7 +1,7 @@
 # ---
 # title: "`tophat`"
 # id: op_tophat
-# cover: assets/tophat.gif
+# cover: assets/tophat.png
 # ---
 
 # The (white) tophat operator is defined as `img - opening(img)`. Intuitively, this filter
@@ -34,7 +34,7 @@ bothat(img) == tophat(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [tophat(img; r) for r in 1:5] #src
-ImageMagick.save("assets/tophat.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/tophat.png", tophat(img; r=2)) #src

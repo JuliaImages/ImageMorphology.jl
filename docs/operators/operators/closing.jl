@@ -1,7 +1,7 @@
 # ---
 # title: "`closing`"
 # id: op_closing
-# cover: assets/closing.gif
+# cover: assets/closing.png
 # ---
 
 # `closing` operator is defined as `dilate(erode(img))`. Intuitively, closing operation
@@ -40,7 +40,7 @@ complement.(closing(img)) == closing(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [closing(img01; r) for r in 1:5] #src
-ImageMagick.save("assets/closing.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/closing.png", closing(img; r=2)) #src

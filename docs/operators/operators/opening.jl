@@ -1,7 +1,7 @@
 # ---
 # title: "`opening`"
 # id: op_opening
-# cover: assets/opening.gif
+# cover: assets/opening.png
 # ---
 
 # `opening` operator is defined as `dilate(erode(img))`. Intuitively, opening operation
@@ -40,7 +40,7 @@ complement.(opening(img)) == closing(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [opening(img01; r) for r in 1:5] #src
-ImageMagick.save("assets/opening.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/opening.png", opening(img; r=2)) #src

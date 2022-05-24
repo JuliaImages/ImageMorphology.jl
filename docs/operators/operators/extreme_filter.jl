@@ -1,12 +1,12 @@
 # ---
 # title: "`extreme_filter`"
 # id: op_extreme_filter
-# cover: assets/extreme_filter.gif
+# cover: assets/extreme_filter.png
 # ---
 
 # The `extreme_filter` function is the core operation in ImageMorphology. Many other
 # morphological operations such as [`dilate`](@ref) and [`erode`](@ref) are direct usages of
-# it.
+# it. The cover image shows a pixel jitter using random select function.
 
 # This page gives an overview of the `extreme_filter` function as a tutorial. It might not
 # exactly show every details. For a comprehensive and more accurate documentation, please
@@ -113,6 +113,6 @@ img1 == img2
 
 # save cover image #src
 using FileIO #src
-using ImageMagick #src
 mkpath("assets") #src
-ImageMagick.save("assets/extreme_filter.gif", cat(img, img_1, img_2, img_3, img_4, img_5; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/extreme_filter.png", extreme_filter((x, y) -> rand() > 0.5 ? x : y, img; r=1)) #src

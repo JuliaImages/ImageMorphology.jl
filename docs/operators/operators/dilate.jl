@@ -1,7 +1,7 @@
 # ---
 # title: "`dilate`"
 # id: op_dilate
-# cover: assets/dilate.gif
+# cover: assets/dilate.png
 # ---
 
 # The dilation operator `dilate` is essentially a max filter. This is a basic term in
@@ -57,7 +57,7 @@ complement.(dilate(img)) == erode(complement.(img))
 # reference page.
 
 # save cover image #src
-using ImageMagick #src
+using FileIO #src
 mkpath("assets") #src
-outs = [dilate(img; r) for r in 1:2:9] #src
-ImageMagick.save("assets/dilate.gif", cat(outs...; dims=3); fps=1) #src
+img = Gray.(restrict(testimage("blobs"))) #src
+save("assets/dilate.png", dilate(img; r=1)) #src
