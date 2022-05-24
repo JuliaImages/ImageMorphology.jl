@@ -35,7 +35,7 @@ pkg> add ImageMorphology # hit ] to enter Pkg mode
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://JuliaImages.github.io/ImageMorphology.jl/stable
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-dev-url]: https://JuliaImages.github.io/ImageMorphology.jl/latest
+[docs-dev-url]: https://JuliaImages.github.io/ImageMorphology.jl/dev
 
 [images-url]: https://github.com/JuliaImages/Images.jl
 [Pkg-docs-url]: https://pkgdocs.julialang.org/v1/getting-started/
