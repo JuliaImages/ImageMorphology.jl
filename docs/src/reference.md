@@ -45,8 +45,10 @@ tophat
 tophat!
 bothat
 bothat!
-morphogradient
-morpholaplace
+mgradient
+mgradient!
+mlaplacian
+mlaplacian!
 ```
 
 ## Components and segmentation

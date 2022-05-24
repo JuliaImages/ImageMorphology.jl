@@ -6,6 +6,8 @@
         "opening.jl",
         "closing.jl",
         "tophat.jl",
-        "bothat.jl"
+        "bothat.jl",
+        "mgradient.jl",
+        "mlaplacian.jl"
     ]
 }

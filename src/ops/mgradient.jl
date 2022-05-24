@@ -77,7 +77,7 @@ _directional gradient_.
 ## See also
 
 - [`mgradient!`](@ref) is the in-place version of this function.
-- [`mlaplace`](@ref) for the laplacian operator.
+- [`mlaplacian`](@ref) for the laplacian operator.
 - `ImageBase.FiniteDiff` also provides a few finite difference operators, including `fdiff`,
   `fgradient`, etc.
 
