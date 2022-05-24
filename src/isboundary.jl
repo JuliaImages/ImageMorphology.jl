@@ -57,7 +57,7 @@ Finds the boundaries that are just within each object.
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See also its in-place version [`find_boundaries!`](@ref) and the alternative version that finds thick boundaries, [`isboundary_thick`](@ref).
+See also its in-place version [`isboundary!`](@ref) and the alternative version that finds thick boundaries, [`isboundary_thick`](@ref ImageMorphology.isboundary_thick).
 
 # Examples
 

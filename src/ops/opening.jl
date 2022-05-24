@@ -2,8 +2,8 @@
     opening(img; dims=coords_spatial(img), r=1)
     opening(img, se)
 
-Perform the morphological opening on `img`. The opening operation is defined as
-[erosion](@ref erode) followed by a [dilation](@ref dilate): `dilate(erode(img, se), se)`.
+Perform the morphological opening on `img`. The opening operation is defined as erosion
+followed by a dilation: `dilate(erode(img, se), se)`.
 
 $(_docstring_se)
 

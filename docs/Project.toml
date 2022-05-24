@@ -1,9 +1,15 @@
 [deps]
+DemoCards = "311a05b2-6137-4a5a-b473-18580a3d38b5"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 ImageBase = "c817782e-172a-44cc-b673-b171935fbb9e"
+ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
 ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 ImageMorphology = "787d08f9-d448-5407-9aad-5290dd7ab264"
 ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
+
+[compat]
+TestImages = "1.7"
