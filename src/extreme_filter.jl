@@ -269,3 +269,112 @@ Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
     end
     return rst
 end
+
+
+function _shift_up_and_padd!(out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd) where {T}
+    isempty(out) && return A
+    sizeVector = length(A)
+    fill!(out, padd)
+    idxt = 1
+    @inbounds for idxs in (shift+1):(sizeVector) #memcopy in julia ?
+        out[idxt] = A[idxs]
+        idxt +=1 
+    end
+end
+
+function _shift_down_and_padd!(out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd) where {T}
+    isempty(out) && return A
+    sizeVector = length(A)
+    fill!(out, padd)
+    idxt = shift+1
+    @inbounds for idxs in (1):(sizeVector-shift)
+        out[idxt] = A[idxs]
+        idxt +=1 
+    end
+end
+
+
+function _mapf!(f,out::AbstractArray{T,1},A::AbstractArray{T,1},B::AbstractArray{T,1}) where {T}
+    @fastmath @inbounds @simd for i in eachindex(A)
+       out[i] = f(A[i],B[i])
+    end
+end
+
+function _shift_arith!(f, out::AbstractArray{T,1}, tmp::AbstractArray{T,1}, A::AbstractArray{T,1}, shiftup, shiftdown) where {T} #tmp external to reuse external allocation
+    if f === min
+        padd = typemax(T)
+    else
+        padd = typemin(T)
+    end
+    _shift_up_and_padd!(tmp, A, shiftup, padd)
+    _mapf!(f,out,A,tmp)
+    _shift_down_and_padd!(tmp, A, shiftdown, padd)
+    _mapf!(f,out,out,tmp)
+end
+
+function _extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname = _extreme_filter_C4_2D!
+    if size(out) != size(A)
+        throw(ArgumentError("source and destination must have same size (got $(size(out)) and $(size(A)))"))
+    end
+    if ndims(out) != 2
+        throw(ArgumentError("source and destination must have to be 2D (got $(size(out))"))
+    end
+    
+    # To avoid the result affected by loop order, we need two arrays
+    src = (out === A) || (iter > 1) ? copy(A) : A
+    out .= src
+
+    #creating temporaries
+    ySize, xSize = size(A)
+    tmp = Array{T,1}(undef, ySize)
+    tmp2 = similar(tmp)
+
+    # applying radius=r filter is equivalent to applying radius=1 filter r times
+    for i in 1:iter
+        #compute first edge column
+        #translate to clipped connection
+        #x ? 
+        #. x
+        #x ?
+        viewprevious = view(src, :, 1)
+        # dilate/erode col 1
+        _shift_arith!(f, tmp2, tmp, viewprevious, 1, 1)
+        viewnext = view(src, :, 2)
+        viewout = view(out, :, 1)
+        # inf/sup between dilate/erode col 1 0 and col 2
+        _mapf!(f, viewout, viewnext, tmp2)
+        #next->current
+        viewcurrent = view(src, :, 2)
+        for c in 3:xSize
+            #? x ? <--- viewprevious y-2
+            #x . x <--- viewcurrent  y-1
+            #? x ? <--- viewnext     y
+            viewout = view(out, :, c-1)
+            viewnext = view(src, :, c)
+            # dilate(x-1)/erode(x-1)
+            _shift_arith!(f, tmp2, tmp, viewcurrent, 1, 1)
+            #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+            _mapf!(f, tmp, viewprevious, tmp2)
+            #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
+            _mapf!(f, viewout, tmp, viewnext)
+            #current->previous
+            viewprevious = view(src, :, c-1)
+            #next->current
+            viewcurrent = view(src, :, c)            
+        end
+        #end last column
+        #translate to clipped connection
+        #? x 
+        #x .
+        #? x
+        # dilate/erode col x
+        viewout = view(out, :, xSize)
+        _shift_arith!(f, tmp2, tmp, viewcurrent, 1, 1)
+        _mapf!(f, viewout, tmp2, viewprevious)
+        if iter > 1 && i < iter
+            src .= out
+        end
+    end
+    return out
+end

@@ -129,4 +129,23 @@
             end
         end
     end
+
+    @testset "optimization: 2D diamond" begin
+        img = Int[
+            0 0 0 0 0
+            0 0 0 0 0
+            0 0 5 0 0
+            0 0 0 0 0
+            0 0 0 0 0
+        ]
+        ref_iter1=Int[
+            0 0 0 0 0
+            0 0 5 0 0
+            0 5 5 5 0
+            0 0 5 0 0
+            0 0 0 0 0
+        ]
+        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img), img, 1)
+        @test out == ref_iter1
+    end
 end

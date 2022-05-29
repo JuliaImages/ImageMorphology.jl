@@ -33,6 +33,8 @@ let grp = SUITE["extreme_filter"]
             grp[T]["$sz×$sz"]["r5_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = centered(collect(se))
             grp[T]["$sz×$sz"]["r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            grp[T]["$sz×$sz"]["r6_diamond_2D_optim"] = @benchmarkable ImageMorphology._extreme_filter_C4_2D!(max,similar($tst_img), $tst_img, 1)
+            
         end
     end
 end
