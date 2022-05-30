@@ -309,14 +309,6 @@ function _shift_down_and_padd!(
     end
 end
 
-@noinline function _mapf!(
-    f, out::AbstractArray{T,1}, A::AbstractArray{T,1}, B::AbstractArray{T,1}
-) where {T}
-    @fastmath @inbounds @simd for i in eachindex(A)
-        out[i] = f(A[i], B[i])
-    end
-end
-
 function _shift_arith!(
     f,
     out::AbstractArray{T,1},

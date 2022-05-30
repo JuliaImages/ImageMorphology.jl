@@ -146,6 +146,12 @@
             0 0 0 0 0
         ]
         out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img), img, 1)
+        @test eltype(out) == Int
         @test out == ref_iter1
+
+        img_gray = Gray{Float32}.(img ./ 5)
+        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img_gray), img_gray, 1)
+        @test eltype(out) == Gray{Float32}
+        @test out == ref_iter1 ./ 5
     end
 end

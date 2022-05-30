@@ -7,6 +7,8 @@ using OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
+using LoopVectorization
+using ArrayInterface
 
 const _docstring_se = """
 `se` is the structuring element that defines the neighborhood of the image. See
@@ -35,8 +37,9 @@ include("imfill.jl")
 include("maxtree.jl")
 
 include("feature_transform.jl")
-include("utils.jl")
 using .FeatureTransform
+include("utils.jl")
+include("loopvectorization.jl")
 
 include("deprecations.jl")
 
