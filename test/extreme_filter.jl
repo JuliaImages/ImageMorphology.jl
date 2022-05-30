@@ -153,5 +153,10 @@
         out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img_gray), img_gray, 1)
         @test eltype(out) == Gray{Float32}
         @test out == ref_iter1 ./ 5
+
+        imgc = centered(img)
+        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(imgc), imgc, 1)
+        @test axes(out) == (-2:2, -2:2)
+        @test collect(out) == ref_iter1
     end
 end

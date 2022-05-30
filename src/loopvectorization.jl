@@ -6,6 +6,8 @@ Optimized version of `@. out = f.(A, B)` for a few things:
 - Apply LoopVectorization when possible
 =#
 function _mapf!(f, out, A, B)
+    # CUDA support requires ArrayInterfaceGPUArrays being loaded -- but the current GPU
+    # implementation is so slow (much worse than CPU) so we don't load it by default.
     use_broadcast = !all(ArrayInterface.fast_scalar_indexing, (out, A, B))
     if use_broadcast
         @. out = f(A, B)

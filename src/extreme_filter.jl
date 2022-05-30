@@ -279,34 +279,22 @@ Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
     return rst
 end
 
-function _shift_up_and_padd!(
-    out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd
-) where {T}
-    isempty(out) && return A
-    sizeVector = length(A)
-    idxt = 1
-    @inbounds for idxs in (shift + 1):(sizeVector) #memcopy in julia ?
-        out[idxt] = A[idxs]
-        idxt += 1
+function _padded_copyto!(dest::AbstractVector, src::AbstractVector, shift, v)
+    Base.require_one_based_indexing(dest, src)
+    if shift >= 0
+        o = shift
+        vsrc = @view src[(1 + o):end]
+        N = length(vsrc)
+        copyto!(dest, 1, vsrc, 1, N)
+        vdest = @view dest[(N + 1):end]
+        fill!(vdest, v)
+    else
+        o = -shift
+        vdest = @view dest[1:o]
+        fill!(vdest, v)
+        copyto!(dest, 1 + o, src, 1, length(dest) - o)
     end
-    @inbounds for idxt in (sizeVector - shift + 1):(sizeVector) #memset in julia ?
-        out[idxt] = padd
-    end
-end
-
-function _shift_down_and_padd!(
-    out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd
-) where {T}
-    isempty(out) && return A
-    sizeVector = length(A)
-    @inbounds for idxt in (1):(shift)
-        out[idxt] = padd
-    end
-    idxt = shift + 1
-    @inbounds for idxs in (1):(sizeVector - shift)
-        out[idxt] = A[idxs]
-        idxt += 1
-    end
+    return dest
 end
 
 function _shift_arith!(
@@ -314,18 +302,18 @@ function _shift_arith!(
     out::AbstractArray{T,1},
     tmp::AbstractArray{T,1},
     A::AbstractArray{T,1},
-    shiftup,
-    shiftdown,
+    shift,
 ) where {T} #tmp external to reuse external allocation
     if f === min
         padd = typemax(T)
     else
         padd = typemin(T)
     end
-    _shift_up_and_padd!(tmp, A, shiftup, padd)
+    _padded_copyto!(tmp, A, shift, padd)
     _mapf!(f, out, A, tmp)
-    _shift_down_and_padd!(tmp, A, shiftdown, padd)
-    return _mapf!(f, out, out, tmp)
+    _padded_copyto!(tmp, A, -shift, padd)
+    _mapf!(f, out, out, tmp)
+    return out
 end
 
 function _extreme_filter_C4_2D!(
@@ -333,16 +321,13 @@ function _extreme_filter_C4_2D!(
 ) where {T}
     @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname =
         _extreme_filter_C4_2D!
-    if size(out) != size(A)
-        throw(
-            ArgumentError(
-                "source and destination must have same size (got $(size(out)) and $(size(A)))",
-            ),
-        )
-    end
-    if ndims(out) != 2
-        throw(ArgumentError("source and destination must have to be 2D (got $(size(out))"))
-    end
+    axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
+
+    # We're almost there to support generic offset arrays except that SubArray doesn't work
+    # very nicely https://github.com/JuliaSIMD/LoopVectorization.jl/issues/406
+    out_actual = out
+    out = OffsetArrays.no_offset_view(out)
+    A = OffsetArrays.no_offset_view(A)
 
     # To avoid the result affected by loop order, we need two arrays
     src = (out === A) || (iter > 1) ? copy(A) : A
@@ -350,7 +335,7 @@ function _extreme_filter_C4_2D!(
 
     #creating temporaries
     ySize, xSize = size(A)
-    tmp = Array{T,1}(undef, ySize)
+    tmp = similar(out, eltype(out), ySize)
     tmp2 = similar(tmp)
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
@@ -362,7 +347,7 @@ function _extreme_filter_C4_2D!(
         #x ?
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
-        _shift_arith!(f, tmp2, tmp, viewprevious, 1, 1)
+        _shift_arith!(f, tmp2, tmp, viewprevious, 1)
         viewnext = view(src, :, 2)
         viewout = view(out, :, 1)
         # inf/sup between dilate/erode col 1 0 and col 2
@@ -376,7 +361,7 @@ function _extreme_filter_C4_2D!(
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x-1)/erode(x-1)
-            _shift_arith!(f, tmp2, tmp, viewcurrent, 1, 1)
+            _shift_arith!(f, tmp2, tmp, viewcurrent, 1)
             #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
             _mapf!(f, tmp, viewprevious, tmp2)
             #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
@@ -393,11 +378,12 @@ function _extreme_filter_C4_2D!(
         #? x
         # dilate/erode col x
         viewout = view(out, :, xSize)
-        _shift_arith!(f, tmp2, tmp, viewcurrent, 1, 1)
+        _shift_arith!(f, tmp2, tmp, viewcurrent, 1)
         _mapf!(f, viewout, tmp2, viewprevious)
         if iter > 1 && i < iter
             src .= out
         end
     end
-    return out
+
+    return out_actual
 end
