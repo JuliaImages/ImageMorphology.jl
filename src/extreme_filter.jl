@@ -97,19 +97,26 @@ end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
-function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
+function _extreme_filter!(
+    ::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω
+) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
     true_ratio == 0 && (out .= false; return out)
-    use_bool = prod(strel_size(Ω)) > 9 || (f === max && true_ratio > 0.8) || (f === min && true_ratio < 0.2)
+    use_bool =
+        prod(strel_size(Ω)) > 9 ||
+        (f === max && true_ratio > 0.8) ||
+        (f === min && true_ratio < 0.2)
     if use_bool
         return _extreme_filter_bool!(f, out, A, Ω)
     else
         return _extreme_filter_generic!(f, out, A, Ω)
     end
 end
-function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
+function _extreme_filter!(
+    ::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω
+) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
@@ -122,13 +129,13 @@ function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, 
     end
 end
 
-
 ###
 # Implementation details
 ###
 
 function _extreme_filter_generic!(f, out, A, Ω)
-    @debug "call the generic `extreme_filter` implementation" fname = _extreme_filter_generic!
+    @debug "call the generic `extreme_filter` implementation" fname =
+        _extreme_filter_generic!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
@@ -162,7 +169,8 @@ end
 
 # optimized implementation for SEDiamond -- a typical case of separable filter
 function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
-    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname = _extreme_filter_diamond!
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname =
+        _extreme_filter_diamond!
     rΩ = strel_size(Ω) .÷ 2
     r = maximum(rΩ)
 
@@ -222,7 +230,8 @@ end
 # 1) use &&, || instead of max, min
 # 2) short-circuit the result to avoid unnecessary indexing and computation
 function _extreme_filter_bool!(f, out, A::AbstractArray{Bool}, Ω)
-    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname = _extreme_filter_bool!
+    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname =
+        _extreme_filter_bool!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
@@ -270,57 +279,79 @@ Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
     return rst
 end
 
-
-function _shift_up_and_padd!(out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd) where {T}
+function _shift_up_and_padd!(
+    out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd
+) where {T}
     isempty(out) && return A
     sizeVector = length(A)
-    fill!(out, padd)
     idxt = 1
-    @inbounds for idxs in (shift+1):(sizeVector) #memcopy in julia ?
+    @inbounds for idxs in (shift + 1):(sizeVector) #memcopy in julia ?
         out[idxt] = A[idxs]
-        idxt +=1 
+        idxt += 1
+    end
+    @inbounds for idxt in (sizeVector - shift + 1):(sizeVector) #memset in julia ?
+        out[idxt] = padd
     end
 end
 
-function _shift_down_and_padd!(out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd) where {T}
+function _shift_down_and_padd!(
+    out::AbstractArray{T,1}, A::AbstractArray{T,1}, shift, padd
+) where {T}
     isempty(out) && return A
     sizeVector = length(A)
-    fill!(out, padd)
-    idxt = shift+1
-    @inbounds for idxs in (1):(sizeVector-shift)
+    @inbounds for idxt in (1):(shift)
+        out[idxt] = padd
+    end
+    idxt = shift + 1
+    @inbounds for idxs in (1):(sizeVector - shift)
         out[idxt] = A[idxs]
-        idxt +=1 
+        idxt += 1
     end
 end
 
-
-function _mapf!(f,out::AbstractArray{T,1},A::AbstractArray{T,1},B::AbstractArray{T,1}) where {T}
+@noinline function _mapf!(
+    f, out::AbstractArray{T,1}, A::AbstractArray{T,1}, B::AbstractArray{T,1}
+) where {T}
     @fastmath @inbounds @simd for i in eachindex(A)
-       out[i] = f(A[i],B[i])
+        out[i] = f(A[i], B[i])
     end
 end
 
-function _shift_arith!(f, out::AbstractArray{T,1}, tmp::AbstractArray{T,1}, A::AbstractArray{T,1}, shiftup, shiftdown) where {T} #tmp external to reuse external allocation
+function _shift_arith!(
+    f,
+    out::AbstractArray{T,1},
+    tmp::AbstractArray{T,1},
+    A::AbstractArray{T,1},
+    shiftup,
+    shiftdown,
+) where {T} #tmp external to reuse external allocation
     if f === min
         padd = typemax(T)
     else
         padd = typemin(T)
     end
     _shift_up_and_padd!(tmp, A, shiftup, padd)
-    _mapf!(f,out,A,tmp)
+    _mapf!(f, out, A, tmp)
     _shift_down_and_padd!(tmp, A, shiftdown, padd)
-    _mapf!(f,out,out,tmp)
+    return _mapf!(f, out, out, tmp)
 end
 
-function _extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
-    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname = _extreme_filter_C4_2D!
+function _extreme_filter_C4_2D!(
+    f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter
+) where {T}
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname =
+        _extreme_filter_C4_2D!
     if size(out) != size(A)
-        throw(ArgumentError("source and destination must have same size (got $(size(out)) and $(size(A)))"))
+        throw(
+            ArgumentError(
+                "source and destination must have same size (got $(size(out)) and $(size(A)))",
+            ),
+        )
     end
     if ndims(out) != 2
         throw(ArgumentError("source and destination must have to be 2D (got $(size(out))"))
     end
-    
+
     # To avoid the result affected by loop order, we need two arrays
     src = (out === A) || (iter > 1) ? copy(A) : A
     out .= src
@@ -350,7 +381,7 @@ function _extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2
             #? x ? <--- viewprevious y-2
             #x . x <--- viewcurrent  y-1
             #? x ? <--- viewnext     y
-            viewout = view(out, :, c-1)
+            viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x-1)/erode(x-1)
             _shift_arith!(f, tmp2, tmp, viewcurrent, 1, 1)
@@ -359,9 +390,9 @@ function _extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2
             #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
             _mapf!(f, viewout, tmp, viewnext)
             #current->previous
-            viewprevious = view(src, :, c-1)
+            viewprevious = view(src, :, c - 1)
             #next->current
-            viewcurrent = view(src, :, c)            
+            viewcurrent = view(src, :, c)
         end
         #end last column
         #translate to clipped connection
