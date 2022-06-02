@@ -2,13 +2,21 @@ module ImageMorphology
 
 using ImageCore
 using ImageCore: GenericGrayImage
-using ImageCore.OffsetArrays
-using ImageCore.OffsetArrays: centered
+using OffsetArrays
+using OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
 
-include("structuring_element.jl")
+const _docstring_se = """
+`se` is the structuring element that defines the neighborhood of the image. See
+[`strel`](@ref) for more details. If `se` is not specified, then it will use the
+[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter,
+and half-size `r` to control the diamond size.
+"""
+include("StructuringElements/StructuringElements.jl")
+using .StructuringElements
+
 include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
