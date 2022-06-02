@@ -7,6 +7,8 @@
 strel
 
 # constructor
+strel_chain
+strel_product
 strel_box
 strel_diamond
 

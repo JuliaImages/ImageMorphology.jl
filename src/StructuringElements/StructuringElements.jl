@@ -4,6 +4,7 @@ export strel, strel_type, strel_size, strel_ndims
 export SEMask, MorphologySE, SEOffset
 export strel_box, SEBox, SEBoxArray
 export strel_diamond, SEDiamond, SEDiamondArray
+export strel_chain, strel_product, SEChain, SEChainArray
 
 # TODO(johnnychen94): remove ImageCore dependency
 using ImageCore: coords_spatial
@@ -66,6 +67,7 @@ struct SEOffset{N} <: MorphologySE{N} end
 
 include("strel.jl")
 # SE constructors
+include("strel_chain.jl")
 include("strel_box.jl")
 include("strel_diamond.jl")
 

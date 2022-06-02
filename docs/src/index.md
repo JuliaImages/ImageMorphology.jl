@@ -42,6 +42,7 @@ Structuring element is the key concept in morphology. If you're not familiar wit
 | [`strel`](@ref)               | convert between different SE representations    |
 | [`strel_type`](@ref)          | infer the SE type                               |
 | [`strel_size`](@ref)          | get the minimal block size that contains the SE |
+| [`strel_chain`](@ref) and [`strel_product`](@ref) | compose multiple SEs into a bigger one |
 | [`strel_box`](@ref)           | construct a box-shaped SE, e.g., C8, C26 connectivity |
 | [`strel_diamond`](@ref)       | construct a diamond-shaped SE, e.g., C4, C6 connectivity |
 | [`centered`](@ref OffsetArrays.centered) | shift the array center to `(0, 0, ..., 0)`    |
