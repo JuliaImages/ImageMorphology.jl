@@ -10,7 +10,7 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
 
 [compat]
-Documenter = "0.24, 0.25"
+Documenter = "0.24, 0.25, 0.26, 0.27"
 ImageCore = "0.9"
 OffsetArrays = "1.9"
 Requires = "1"
