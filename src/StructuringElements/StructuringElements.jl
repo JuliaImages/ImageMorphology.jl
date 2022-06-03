@@ -3,6 +3,7 @@ module StructuringElements
 export strel, strel_type, strel_size, strel_ndims
 export SEMask, MorphologySE, SEOffset
 export is_symmetric, require_symmetric_strel
+export strel_split
 export strel_box, SEBox, SEBoxArray
 export strel_diamond, SEDiamond, SEDiamondArray
 
