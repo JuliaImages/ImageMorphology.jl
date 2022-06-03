@@ -2,6 +2,7 @@ module StructuringElements
 
 export strel, strel_type, strel_size, strel_ndims
 export SEMask, MorphologySE, SEOffset
+export is_symmetric, require_symmetric_strel
 export strel_box, SEBox, SEBoxArray
 export strel_diamond, SEDiamond, SEDiamondArray
 
@@ -68,5 +69,7 @@ include("strel.jl")
 # SE constructors
 include("strel_box.jl")
 include("strel_diamond.jl")
+
+include("utils.jl")
 
 end
