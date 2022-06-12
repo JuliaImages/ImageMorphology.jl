@@ -78,7 +78,8 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-extreme_filter(f, A; r=nothing, dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims; r))
+
+extreme_filter(f, A; dims = coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
 extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
@@ -88,8 +89,9 @@ extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 The in-place version of [`extreme_filter`](@ref) where `out` is the output array that gets
 modified.
 """
-extreme_filter!(f, out, A; r=nothing, dims=coords_spatial(A)) = extreme_filter!(f, out, A, strel_box(A, dims; r))
-function extreme_filter!(f, out, A, Ω)
+
+extreme_filter!(f, out, A, dims) = extreme_filter!(f, out, A, strel_box(A, dims))
+function extreme_filter!(f, out, A, Ω::AbstractArray = strel_box(A))
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
     require_select_function(f, eltype(A))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
@@ -97,26 +99,19 @@ end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
-function _extreme_filter!(
-    ::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω
-) where {T<:Union{Gray{Bool},Bool}}
+function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
     true_ratio == 0 && (out .= false; return out)
-    use_bool =
-        prod(strel_size(Ω)) > 9 ||
-        (f === max && true_ratio > 0.8) ||
-        (f === min && true_ratio < 0.2)
+    use_bool = prod(strel_size(Ω)) > 9 || (f === max && true_ratio > 0.8) || (f === min && true_ratio < 0.2)
     if use_bool
         return _extreme_filter_bool!(f, out, A, Ω)
     else
         return _extreme_filter_generic!(f, out, A, Ω)
     end
 end
-function _extreme_filter!(
-    ::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω
-) where {T<:Union{Gray{Bool},Bool}}
+function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
@@ -134,13 +129,12 @@ end
 ###
 
 function _extreme_filter_generic!(f, out, A, Ω)
-    @debug "call the generic `extreme_filter` implementation" fname =
-        _extreme_filter_generic!
+    @debug "call the generic `extreme_filter` implementation" fname = _extreme_filter_generic!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R) + δ):(last(R) - δ)
+    R_inner = (first(R)+δ):(last(R)-δ)
 
     # NOTE(johnnychen94): delibrately duplicate the kernel codes here for inner loop and
     # boundary loop, because keeping the big function body allows Julia to do further
@@ -149,7 +143,7 @@ function _extreme_filter_generic!(f, out, A, Ω)
         # for interior points, boundary check is unnecessary
         s = A[p]
         for o in Ω
-            v = A[p + o]
+            v = A[p+o]
             s = f(s, v)
         end
         out[p] = s
@@ -169,8 +163,7 @@ end
 
 # optimized implementation for SEDiamond -- a typical case of separable filter
 function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
-    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname =
-        _extreme_filter_diamond!
+    @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname = _extreme_filter_diamond!
     rΩ = strel_size(Ω) .÷ 2
     r = maximum(rΩ)
 
@@ -179,17 +172,17 @@ function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
     out .= src
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
-    for i in 1:r
+    for i = 1:r
         Ω = strel_diamond(A, Ω.dims)
         rΩ = strel_size(Ω) .÷ 2
         inds = axes(A)
-        for d in 1:ndims(A)
+        for d = 1:ndims(A)
             # separately apply to each dimension
             if size(out, d) == 1 || rΩ[d] == 0
                 continue
             end
-            Rpre = CartesianIndices(inds[1:(d - 1)])
-            Rpost = CartesianIndices(inds[(d + 1):end])
+            Rpre = CartesianIndices(inds[1:(d-1)])
+            Rpost = CartesianIndices(inds[(d+1):end])
             _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
         end
 
@@ -206,20 +199,20 @@ end
     # for r>1 case, it is equivalently to apply r times
     @inbounds for Ipost in Rpost, Ipre in Rpre
         # loop inner region
-        for i in (first(inds) + 1):(last(inds) - 1)
-            a1 = src[Ipre, i - 1, Ipost]
+        for i = (first(inds)+1):(last(inds)-1)
+            a1 = src[Ipre, i-1, Ipost]
             a2 = dst[Ipre, i, Ipost]
-            a3 = src[Ipre, i + 1, Ipost]
+            a3 = src[Ipre, i+1, Ipost]
             dst[Ipre, i, Ipost] = f(f(a1, a2), a3)
         end
         # process two edge points
         i = first(inds)
         a2 = dst[Ipre, i, Ipost]
-        a3 = src[Ipre, i + 1, Ipost]
+        a3 = src[Ipre, i+1, Ipost]
         dst[Ipre, i, Ipost] = f(a2, a3)
 
         i = last(inds)
-        a1 = src[Ipre, i - 1, Ipost]
+        a1 = src[Ipre, i-1, Ipost]
         a2 = dst[Ipre, i, Ipost]
         dst[Ipre, i, Ipost] = f(a1, a2)
     end
@@ -230,13 +223,12 @@ end
 # 1) use &&, || instead of max, min
 # 2) short-circuit the result to avoid unnecessary indexing and computation
 function _extreme_filter_bool!(f, out, A::AbstractArray{Bool}, Ω)
-    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname =
-        _extreme_filter_bool!
+    @debug "call the optimized max/min `extreme_filter` implementation for boolean array" fname = _extreme_filter_bool!
     Ω = strel(CartesianIndex, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R) + δ):(last(R) - δ)
+    R_inner = (first(R)+δ):(last(R)-δ)
 
     select = _fast_select(f)
     @inbounds for p in R_inner
@@ -283,10 +275,10 @@ function _padded_copyto!(dest::AbstractVector, src::AbstractVector, shift, v)
     Base.require_one_based_indexing(dest, src)
     if shift >= 0
         o = shift
-        vsrc = @view src[(1 + o):end]
+        vsrc = @view src[(1+o):end]
         N = length(vsrc)
         copyto!(dest, 1, vsrc, 1, N)
-        vdest = @view dest[(N + 1):end]
+        vdest = @view dest[(N+1):end]
         fill!(vdest, v)
     else
         o = -shift
@@ -297,32 +289,40 @@ function _padded_copyto!(dest::AbstractVector, src::AbstractVector, shift, v)
     return dest
 end
 
-function _shift_arith!(
-    f,
-    out::AbstractArray{T,1},
-    tmp::AbstractArray{T,1},
-    A::AbstractArray{T,1},
-    shift,
-) where {T} #tmp external to reuse external allocation
+# ptr level optimized implementation for Real types
+# short-circuit all check
+function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v) where {T}
+    if dir
+        unsafe_store!(pointer(dest), v)
+        unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
+    else
+        unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
+        unsafe_store!(pointer(dest), v, N)
+    end
+    return dest
+end
+
+# ptr level optimized implementation for Real types
+# short-circuit all check
+# call LoopVectorization directly
+function _unsafe_shift_arith!(f, out::AbstractArray{T,1}, tmp::AbstractArray{T,1}, A::AbstractArray{T,1}) where {T} #tmp external to reuse external allocation
     if f === min
         padd = typemax(T)
     else
         padd = typemin(T)
     end
-    _padded_copyto!(tmp, A, shift, padd)
-    _mapf!(f, out, A, tmp)
-    _padded_copyto!(tmp, A, -shift, padd)
-    _mapf!(f, out, out, tmp)
+    N = length(out)
+    _unsafe_padded_copyto!(tmp, A, true, N, padd)
+    LoopVectorization.vmap!(f, out, A, tmp)
+    _unsafe_padded_copyto!(tmp, A, false, N, padd)
+    LoopVectorization.vmap!(f, out, out, tmp)
     return out
 end
 
-function _extreme_filter_C4_2D!(
-    f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter
-) where {T}
+function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
     @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname =
-        _extreme_filter_C4_2D!
+        _unsafe_extreme_filter_C4_2D!
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
-
     # We're almost there to support generic offset arrays except that SubArray doesn't work
     # very nicely https://github.com/JuliaSIMD/LoopVectorization.jl/issues/406
     out_actual = out
@@ -339,7 +339,7 @@ function _extreme_filter_C4_2D!(
     tmp2 = similar(tmp)
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
-    for i in 1:iter
+    for i = 1:iter
         #compute first edge column
         #translate to clipped connection
         #x ? 
@@ -347,25 +347,25 @@ function _extreme_filter_C4_2D!(
         #x ?
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
-        _shift_arith!(f, tmp2, tmp, viewprevious, 1)
+        _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
         viewnext = view(src, :, 2)
         viewout = view(out, :, 1)
         # inf/sup between dilate/erode col 1 0 and col 2
-        _mapf!(f, viewout, viewnext, tmp2)
+        LoopVectorization.vmap!(f, viewout, viewnext, tmp2)
         #next->current
         viewcurrent = view(src, :, 2)
-        for c in 3:xSize
+        for c = 3:xSize
             #? x ? <--- viewprevious y-2
             #x . x <--- viewcurrent  y-1
             #? x ? <--- viewnext     y
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x-1)/erode(x-1)
-            _shift_arith!(f, tmp2, tmp, viewcurrent, 1)
+            _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
             #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
-            _mapf!(f, tmp, viewprevious, tmp2)
+            LoopVectorization.vmap!(f, tmp, viewprevious, tmp2)
             #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
-            _mapf!(f, viewout, tmp, viewnext)
+            LoopVectorization.vmap!(f, viewout, tmp, viewnext)
             #current->previous
             viewprevious = view(src, :, c - 1)
             #next->current
@@ -378,8 +378,8 @@ function _extreme_filter_C4_2D!(
         #? x
         # dilate/erode col x
         viewout = view(out, :, xSize)
-        _shift_arith!(f, tmp2, tmp, viewcurrent, 1)
-        _mapf!(f, viewout, tmp2, viewprevious)
+        _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
+        LoopVectorization.vmap!(f, viewout, tmp2, viewprevious)
         if iter > 1 && i < iter
             src .= out
         end
@@ -387,3 +387,89 @@ function _extreme_filter_C4_2D!(
 
     return out_actual
 end
+
+#Note we only need to swap pointer ....
+#penalty of 3 copy :/
+function swap(tmp::AbstractVector, B::AbstractVector, A::AbstractVector) where {T}
+    tmp .= A
+    A .= B
+    B .= tmp
+end
+
+function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
+    @debug "call the optimized `extreme_filter` implementation for SEBox SE and 2D images" fname =
+        _unsafe_extreme_filter_C8_2D!
+    axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
+    # We're almost there to support generic offset arrays except that SubArray doesn't work
+    # very nicely https://github.com/JuliaSIMD/LoopVectorization.jl/issues/406
+    out_actual = out
+    out = OffsetArrays.no_offset_view(out)
+    A = OffsetArrays.no_offset_view(A)
+
+    # To avoid the result affected by loop order, we need two arrays
+    src = (out === A) || (iter > 1) ? copy(A) : A
+    out .= src
+
+    #creating temporaries
+    ySize, xSize = size(A)
+    tmp = similar(out, eltype(out), ySize)
+    tmp2 = similar(tmp)
+    tmp3 = similar(tmp)
+    tmp4 = similar(tmp)
+    tmp5 = similar(tmp) #only used for swap by copy
+
+    # applying radius=r filter is equivalent to applying radius=1 filter r times
+    for i = 1:iter
+        #compute first edge column
+        #translate to clipped connection
+        #x x 
+        #. x
+        #x x
+        viewprevious = view(src, :, 1)
+        # dilate/erode col 1
+        _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
+        viewnext = view(src, :, 2)
+        viewout = view(out, :, 1)
+        # dilate/erode col 2
+        _unsafe_shift_arith!(f, tmp3, tmp, viewnext)
+        #sup(dilate col 1,dilate col 0) or inf(erode col 1,erode col 0)
+        LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
+        #next->current
+        viewcurrent = view(src, :, 2)
+        for c = 3:xSize
+            # Invariant of the loop
+            # temp2 contains dilation/erosion of previous col x-2
+            # temp3 contains dilation/erosion of current col x-1
+            # temp4 contains dilation/erosion of next col ie x
+            #x x x 
+            #x . x 
+            #x x x 
+            viewout = view(out, :, c - 1)
+            viewnext = view(src, :, c)
+            # dilate(x)/erode(x)
+            _unsafe_shift_arith!(f, tmp4, tmp, viewnext)
+            #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+            LoopVectorization.vmap!(f, tmp, tmp3, tmp2)
+            #sup(dilate(x-2),dilate(x-1),dilate(y)) or inf(erode(x-2),erode(x-1),erode(x))
+            LoopVectorization.vmap!(f, viewout, tmp4, tmp)
+            #swap
+            swap(tmp5, tmp4, tmp3)
+            swap(tmp5, tmp4, tmp2)
+        end
+        #end last column
+        #translate to clipped connection
+        #x x 
+        #x .
+        #x x
+        # dilate/erode col x
+        viewout = view(out, :, xSize)
+        _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
+        LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
+        if iter > 1 && i < iter
+            src .= out
+        end
+    end
+
+    return out_actual
+end
+

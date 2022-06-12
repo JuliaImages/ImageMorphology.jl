@@ -37,7 +37,7 @@
         # Bool
         img = fill(false, 5, 5)
         img[3, 3] = 1
-        ref = collect(strel_box((5, 5); r=1))
+        ref = collect(strel_box((5, 5); r = 1))
 
         img_d = @inferred extreme_filter(max, img)
         @test img_d == ref
@@ -138,24 +138,64 @@
             0 0 0 0 0
             0 0 0 0 0
         ]
-        ref_iter1=Int[
+        ref_iter1 = Int[
             0 0 0 0 0
             0 0 5 0 0
             0 5 5 5 0
             0 0 5 0 0
             0 0 0 0 0
         ]
-        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img), img, 1)
+        out = ImageMorphology._unsafe_extreme_filter_C4_2D!(max, similar(img), img, 1)
         @test eltype(out) == Int
         @test out == ref_iter1
 
+        img_gray = Gray{N0f8}.(img ./ 5)
+        out = ImageMorphology._unsafe_extreme_filter_C4_2D!(max, similar(img_gray), img_gray, 1)
+        @test eltype(out) == Gray{N0f8}
+        @test out == ref_iter1 ./ 5
+
         img_gray = Gray{Float32}.(img ./ 5)
-        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(img_gray), img_gray, 1)
+        out = ImageMorphology._unsafe_extreme_filter_C4_2D!(max, similar(img_gray), img_gray, 1)
         @test eltype(out) == Gray{Float32}
         @test out == ref_iter1 ./ 5
 
         imgc = centered(img)
-        out = ImageMorphology._extreme_filter_C4_2D!(max, similar(imgc), imgc, 1)
+        out = ImageMorphology._unsafe_extreme_filter_C4_2D!(max, similar(imgc), imgc, 1)
+        @test axes(out) == (-2:2, -2:2)
+        @test collect(out) == ref_iter1
+    end
+
+    @testset "optimization: 2D box" begin
+        img = Int[
+            0 0 0 0 0
+            0 0 0 0 0
+            0 0 5 0 0
+            0 0 0 0 0
+            0 0 0 0 0
+        ]
+        ref_iter1 = Int[
+            0 0 0 0 0
+            0 5 5 5 0
+            0 5 5 5 0
+            0 5 5 5 0
+            0 0 0 0 0
+        ]
+        out = ImageMorphology._unsafe_extreme_filter_C8_2D!(max, similar(img), img, 1)
+        @test eltype(out) == Int
+        @test out == ref_iter1
+
+        img_gray = Gray{N0f8}.(img ./ 5)
+        out = ImageMorphology._unsafe_extreme_filter_C8_2D!(max, similar(img_gray), img_gray, 1)
+        @test eltype(out) == Gray{N0f8}
+        @test out == ref_iter1 ./ 5
+
+        img_gray = Gray{Float32}.(img ./ 5)
+        out = ImageMorphology._unsafe_extreme_filter_C8_2D!(max, similar(img_gray), img_gray, 1)
+        @test eltype(out) == Gray{Float32}
+        @test out == ref_iter1 ./ 5
+
+        imgc = centered(img)
+        out = ImageMorphology._unsafe_extreme_filter_C8_2D!(max, similar(imgc), imgc, 1)
         @test axes(out) == (-2:2, -2:2)
         @test collect(out) == ref_iter1
     end

@@ -9,11 +9,11 @@ using TestImages
 
 on_CI = haskey(ENV, "GITHUB_ACTIONS")
 
-cameraman = Gray{N0f8}.(testimage("cameraman"))
-blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
+const cameraman = Gray{N0f8}.(testimage("cameraman"))
+const blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
 
-tst_sizes = on_CI ? (64, ) : (256, 512)
-tst_types = (Gray{N0f8}, Gray{Float32})
+const tst_sizes = on_CI ? (64,) : (256, 512, 1024)
+const tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
 
@@ -33,8 +33,10 @@ let grp = SUITE["extreme_filter"]
             grp[T]["$sz×$sz"]["r5_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = centered(collect(se))
             grp[T]["$sz×$sz"]["r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
-            grp[T]["$sz×$sz"]["r6_diamond_2D_optim"] = @benchmarkable ImageMorphology._extreme_filter_C4_2D!(max,similar($tst_img), $tst_img, 1)
-            
+            grp[T]["$sz×$sz"]["r1_diamond_2D_optim"] =
+                @benchmarkable ImageMorphology._unsafe_extreme_filter_C4_2D!(max, similar($tst_img), $tst_img, 1)
+            grp[T]["$sz×$sz"]["r1_box_2D_optim"] =
+                @benchmarkable ImageMorphology._unsafe_extreme_filter_C8_2D!(max, similar($tst_img), $tst_img, 1)
         end
     end
 end
