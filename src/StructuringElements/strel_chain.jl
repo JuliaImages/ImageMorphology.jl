@@ -57,6 +57,7 @@ true
 """
 strel_chain(se, se_rest...) = strel_chain([se, se_rest...])
 strel_chain(se_list::Vector{<:AbstractArray{T,N}}) where {T,N} = SEChainArray{N}(se_list)
+strel_chain(se_list::Tuple) = SEChainArray(se_list)
 strel_chain(se) = se
 
 function _strel_chain(data::AbstractVector{<:AbstractArray})

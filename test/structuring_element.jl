@@ -80,7 +80,9 @@ end
     @test eltype(se) == Bool
     @test axes(se) == (-1:1, -1:1)
     @test se == strel_box((3, 3))
-    @test se == strel_chain([se1, se2])
+    @test se == strel_chain([se1, se2]) == strel_chain((se1, se2))
+    @test se === strel_chain(se)
+    @test strel_size(se) == (3, 3)
 
     for f in Any[dilate, erode]
         se1 = centered(rand(Bool, 3, 3))
