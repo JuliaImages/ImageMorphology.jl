@@ -275,6 +275,23 @@ end
     end
 end
 
+@testset "strel_split" begin
+    se = strel_diamond((3, 3))
+    upper, lower = ImageMorphology.strel_split(se)
+    @test upper == centered(Bool[0 1 0; 1 1 0; 0 0 0])
+    @test lower == centered(Bool[0 0 0; 0 1 1; 0 1 0])
+    se = strel(CartesianIndex, se)
+    upper, lower = ImageMorphology.strel_split(se)
+    @test upper == [CartesianIndex(0, -1), CartesianIndex(-1, 0)]
+    @test lower == [CartesianIndex(1, 0), CartesianIndex(0, 1)]
+
+    # non-symmetric is not allowed
+    se = collect(strel_diamond((3, 3)))
+    se[1, 1] = true
+    msg = "structuring element must be symmetric with respect to its center"
+    @test_throws ArgumentError(msg) ImageMorphology.strel_split(se)
+end
+
 @testset "strel_type" begin
     @test strel_type(strel_diamond((3, 3))) isa ImageMorphology.SEDiamond
     @test strel_type(strel_box((3, 3))) isa ImageMorphology.SEBox
