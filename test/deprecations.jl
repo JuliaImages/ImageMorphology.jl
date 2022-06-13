@@ -1,15 +1,3 @@
-@testset "label_components" begin
-    A = [
-        true  true  false true
-        true  false true  true
-    ]
-    lbltarget1 = [
-        1 2 0 4
-        1 0 3 4
-    ]
-    @test label_components(A, [1]) == lbltarget1
-end
-
 @testset "Feature transform/Anisotropic images" begin
     function ind2cart(F)
         s = CartesianIndices(axes(F))

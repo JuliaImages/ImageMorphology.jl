@@ -1,71 +1,56 @@
-import Base.push!  # for DisjointMinSets
-
 """
-    label = label_components(A; bkg = zero(eltype(A)), dims=coords_spatial(A))
-    label = label_components(A, connectivity; bkg = zero(eltype(A)))
+    label = label_components(A; [dims=coords_spatial(A)], [r=1], [bkg])
+    label = label_components(A, se; [bkg])
 
-Find the connected components in an array `A`. Components are defined as
-connected voxels that all have the same value distinct from `bkg`, which
-corresponds to the "background" component.
+Find and label the connected components of array `A` where the connectivity is defined by
+_symmetric_ structuring element `se`. Each component is assigned a unique integer value as
+its label with `0` representing the background defined by `bkg`.
 
-Specify connectivity in one of three ways:
-
-- A list indicating which dimensions are used to determine
-  connectivity. For example, `dims = (1,3)` would not test neighbors along
-  dimension 2 for connectivity. This corresponds to just the nearest neighbors,
-  i.e., default 4-connectivity in 2d and 6-connectivity in 3d.
-
-- An iterable `connectivity` object with `CartesianIndex` elements encoding the
-  displacement of each checked neighbor.
-
-- A symmetric boolean array of the same dimensionality as `A`, of size 1 or 3
-  along each dimension. Each entry in the array determines whether a given
-  neighbor is used for connectivity analyses. For example, in two dimensions
-  `connectivity = trues(3,3)` would include all pixels that touch the
-  current one, even the corners.
-
-The output `label` is an integer array, where `bkg` elements get a value of 0.
+$(_docstring_se)
 
 # Examples
 
 ```jldoctest; setup=:(using ImageMorphology)
-julia> A = [true false false true  false;
-            true false true  true  true]
+julia> A = [false true false true  false;
+            true false false  true  true]
 2×5 Matrix{Bool}:
- 1  0  0  1  0
- 1  0  1  1  1
+ 0  1  0  1  0
+ 1  0  0  1  1
 
-julia> label_components(A)
+julia> label_components(A) # default diamond shape C4 connectivity
 2×5 Matrix{$Int}:
- 1  0  0  2  0
- 1  0  2  2  2
+ 0  2  0  3  0
+ 1  0  0  3  3
 
-julia> label_components(A; dims=2)
+julia> label_components(A; dims=2) # only the rows are considered
 2×5 Matrix{$Int}:
- 1  0  0  4  0
- 2  0  3  3  3
+ 0  2  0  3  0
+ 1  0  0  4  4
+
+julia> label_components(A, strel_box((3, 3))) # box shape C8 connectivity
+2×5 Matrix{$Int}:
+ 0  1  0  2  0
+ 1  0  0  2  2
 ```
-With `dims=2`, entries in `A` are connected if they are in the same row, but
-not if they are in the same column.
-"""
-function label_components(A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A))
-    return label_components(A, half_diamond(A, dims); bkg=bkg)
-end
-function label_components(A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A)))
-    return label_components(A, half_pattern(A, connectivity); bkg=bkg)
-end
-function label_components(A::AbstractArray, iter; bkg=zero(eltype(A)))
-    return label_components!(similar(A, Int), A, iter; bkg=bkg)
-end # Int is a safe choice
 
-function label_components!(out::AbstractArray{<:Integer}, A::AbstractArray; bkg=zero(eltype(A)), dims=coords_spatial(A))
-    return label_components!(out, A, half_diamond(A, dims); bkg=bkg)
-end
-function label_components!(out::AbstractArray{<:Integer}, A::AbstractArray, connectivity::AbstractArray{Bool}; bkg=zero(eltype(A)))
-    return label_components!(out, A, half_pattern(A, connectivity); bkg=bkg)
-end
-function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=zero(eltype(A))) where {T<:Integer}
+The in-place version is [`label_components!`](@ref). See also [`component_boxes`](@ref),
+[`component_lengths`](@ref), [`component_indices`](@ref), [`component_subscripts`](@ref),
+[`component_centroids`](@ref) for basic properties of the labeled components.
+"""
+label_components(A; dims=coords_spatial(A), r=1, kwargs...) = label_components(A, strel_diamond(A, dims; r); kwargs...)
+label_components(A, se; kwargs...) = label_components!(similar(A, Int), A, se; kwargs...)
+
+"""
+    label_components!(out, A; [dims], [r] [bkg])
+    label_components!(out, A, se; [bkg])
+
+The in-place version of [`label_components`](@ref).
+"""
+label_components!(out, A; dims=coords_spatial(A), r=1, kwargs...) = label_components!(out, A, strel_diamond(A, dims; r); kwargs...)
+
+function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero(eltype(A))) where {T<:Integer}
     axes(out) == axes(A) || throw_dmm(axes(out), axes(A))
+    upper_se, _ = strel_split(CartesianIndex, se)
     fill!(out, zero(T))
     sets = DisjointMinSets{T}()
     sizehint!(sets.parents, floor(Int, sqrt(length(A))))
@@ -73,7 +58,7 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, iter; bkg=ze
         val = A[i]
         val == bkg && continue
         label = typemax(T)    # sentinel value
-        for Δi in iter
+        for Δi in upper_se
             ii = i + Δi
             checkbounds(Bool, A, ii) || continue
             if A[ii] == val
@@ -102,41 +87,6 @@ end
 
 function throw_dmm(ax1, ax2)
     throw(DimensionMismatch("axes of input and output must match, got $ax1 and $ax2"))
-end
-
-function half_diamond(A::AbstractArray{T,N}, dims) where {T,N}
-    offsets = CartesianIndex{N}[]
-    for d in 1:N
-        if d ∈ dims
-            push!(offsets, CartesianIndex(ntuple(i -> i == d ? -1 : 0, N)))
-        end
-    end
-    return (offsets...,)   # returning as a tuple allows specialization
-    # return offsets
-end
-half_diamond(A::AbstractArray{T,N}, ::Colon) where {T,N} = half_diamond(A, 1:N)
-
-function half_pattern(A::AbstractArray{T,N}, connectivity::AbstractArray{Bool}) where {T,N}
-    all(in((1, 3)), size(connectivity)) || throw(ArgumentError("connectivity must have size 1 or 3 in each dimension"))
-    for d in 1:ndims(connectivity)
-        size(connectivity, d) == 1 ||
-            reverse(connectivity; dims=d) == connectivity ||
-            throw(ArgumentError("connectivity must be symmetric"))
-    end
-    center = CartesianIndex(
-        map(axes(connectivity)) do ax
-            (first(ax) + last(ax)) ÷ 2
-        end,
-    )
-    offsets = CartesianIndex{N}[]
-    for i in CartesianIndices(connectivity)
-        i == center && break   # we only need the ones that come prior
-        if connectivity[i]
-            push!(offsets, i - center)
-        end
-    end
-    # return offsets
-    return (offsets...,)   # returning as a tuple allows specialization
 end
 
 # Copied directly from DataStructures.jl, but specialized
@@ -179,7 +129,7 @@ Base.@propagate_inbounds function union!(sets::DisjointMinSets, m::Integer, n::I
     return mp
 end
 
-function push!(sets::DisjointMinSets)
+function Base.push!(sets::DisjointMinSets)
     m = length(sets.parents) + 1
     m >= typemax(eltype(sets.parents)) && error("labels exhausted, use a larger integer type")
     push!(sets.parents, m)

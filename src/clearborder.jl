@@ -18,8 +18,7 @@ function clearborder(img::AbstractArray, width::Integer=1, background::Integer=0
         end
     end
 
-    connectivity = ntuple(i -> 3, ndims(img))
-    labels = label_components(img, trues(connectivity))
+    labels = label_components(img, strel_box(img))
     number = maximum(labels) + 1
 
     dimensions = size(img)
