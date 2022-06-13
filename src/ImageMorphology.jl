@@ -44,6 +44,8 @@ export
     # structuring_element.jl
     centered, # from OffsetArrays
     strel,
+    strel_chain,
+    strel_product,
     strel_type,
     strel_size,
     strel_diamond,

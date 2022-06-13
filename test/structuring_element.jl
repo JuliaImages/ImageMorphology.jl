@@ -72,6 +72,42 @@
     end
 end
 
+@testset "strel_chain" begin
+    se1 = centered(Bool[0 1 0; 0 1 0; 0 1 0])
+    se2 = centered(Bool[0 0 0; 1 1 1; 0 0 0])
+    se = @inferred strel_chain(se1, se2)
+    @test se isa ImageMorphology.SEChainArray
+    @test eltype(se) == Bool
+    @test axes(se) == (-1:1, -1:1)
+    @test se == strel_box((3, 3))
+    @test se == strel_chain([se1, se2]) == strel_chain((se1, se2))
+    @test se === strel_chain(se)
+    @test strel_size(se) == (3, 3)
+
+    for f in Any[dilate, erode]
+        se1 = centered(rand(Bool, 3, 3))
+        se2 = centered(rand(Bool, 3, 3))
+        img = rand(64, 64)
+        out_pipe = f(f(img, se1), se2)
+        out_se = f(img, strel_chain(se1, se2))
+        R = CartesianIndices(img)[2:(end - 1), 2:(end - 1)] # inner region
+        @test out_pipe[R] == out_se[R]
+    end
+end
+
+@testset "strel_product" begin
+    se1 = centered(Bool[1, 1, 1])
+    se2 = centered(Bool[1, 1, 1])
+    se = strel_product(se1, se2)
+    @test_broken @inferred strel_product(se1, se2) # if necessary, fix this inference issue
+    @test se isa ImageMorphology.SEChainArray
+    @test se == strel_box((3, 3))
+
+    se_list = [centered(rand(Bool, sz...)) for sz in Any[(3,), (3, 3), (3, 3, 3)]]
+    se = strel_product(se_list)
+    @test ndims(se) == 6
+end
+
 @testset "strel_diamond" begin
     @testset "N=1" begin
         img = rand(5)
