@@ -113,24 +113,25 @@ julia> strel_box((5,5); r=(1,2))
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_box(A::AbstractArray{T,N}, dims=coords_spatial(A); r::Union{Nothing,Dims{N},Int}=nothing) where {T,N}
+    dims = _to_dims(Val(N), dims)
     sz, r = if isnothing(r)
-        ntuple(i -> in(i, dims) ? 3 : 1, N), 1
+        ntuple(i -> !isempty(dims) && in(i, dims) ? 3 : 1, N), 1
     elseif r isa Dims{N}
-        ntuple(i -> in(i, dims) ? 2r[i] + 1 : 1, N), r
+        ntuple(i -> !isempty(dims) && in(i, dims) ? 2r[i] + 1 : 1, N), r
     elseif r isa Integer
-        ntuple(i -> in(i, dims) ? 2r + 1 : 1, N), r
+        ntuple(i -> !isempty(dims) && in(i, dims) ? 2r + 1 : 1, N), r
     end
     return strel_box(sz, dims)
 end
 function strel_box(sz::Dims{N}, dims=ntuple(identity, N); r::Union{Nothing,Dims{N},Int}=nothing) where {N}
-    dims = _to_dims(dims)
+    dims = _to_dims(Val(N), dims)
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
     radius = if isnothing(r)
-        ntuple(i -> in(i, dims) ? sz[i] ÷ 2 : 0, N)
+        ntuple(i -> !isempty(dims) && in(i, dims) ? sz[i] ÷ 2 : 0, N)
     elseif r isa Dims{N}
         r
     elseif r isa Integer
-        ntuple(i -> in(i, dims) ? r : 0, N)
+        ntuple(i -> !isempty(dims) && in(i, dims) ? r : 0, N)
     end
     ax = map(r -> (-r):r, sz .÷ 2)
     return SEBoxArray(SEBox{N}(ax; r=radius))

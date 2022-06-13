@@ -133,6 +133,7 @@ end
         @test se == centered(Bool[0 1 0; 1 1 1; 0 1 0])
         @test se == strel_diamond((3, 3), (1, 2); r=1)
         @test se == strel_diamond(img, (1, 2); r=1)
+        @test se == strel_diamond(img, :) == strel_diamond(img, (:,))
 
         se = @inferred strel_diamond(img, (1,))
         @test se == @inferred strel_diamond(img, 1)
@@ -216,6 +217,7 @@ end
         @test eltype(se) == Bool
         @test se == centered(Bool[1 1 1; 1 1 1; 1 1 1])
         @test se == strel_box(img; r=1)
+        @test se == strel_box(img, :) == strel_box(img, (:,))
 
         se = @inferred strel_box(img, (1,))
         @test se == @inferred strel_box((3, 1), (1,))
