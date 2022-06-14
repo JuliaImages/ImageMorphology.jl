@@ -3,8 +3,8 @@
     label = label_components(A, se; [bkg])
 
 Find and label the connected components of array `A` where the connectivity is defined by
-_symmetric_ structuring element `se`. Each component is assigned a unique integer value as
-its label with `0` representing the background defined by `bkg`.
+structuring element `se`. Each component is assigned a unique integer value as its label
+with `0` representing the background defined by `bkg`.
 
 $(_docstring_se)
 
@@ -46,10 +46,23 @@ label_components(A, se; kwargs...) = label_components!(similar(A, Int), A, se; k
 
 The in-place version of [`label_components`](@ref).
 """
-label_components!(out, A; dims=coords_spatial(A), r=1, kwargs...) = label_components!(out, A, strel_diamond(A, dims; r); kwargs...)
+function label_components!(out, A; dims=coords_spatial(A), r=1, kwargs...)
+    if !(axes(out) == axes(A))
+        msg = "axes of input and output must match, got $(axes(out)) and $(axes(A))"
+        hint = if eltype(A) <: Bool || eltype(A) <: CartesianIndex
+            "The second argument seems to be a structuring element, it is expected to be the input array."
+        else
+            ""
+        end
+        throw(DimensionMismatch("$msg. $hint"))
+    end
+    return label_components!(out, A, strel_diamond(A, dims; r); kwargs...)
+end
 
 function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero(eltype(A))) where {T<:Integer}
     axes(out) == axes(A) || throw_dmm(axes(out), axes(A))
+    se = _maybe_build_symmetric_strel(se) # compat patch
+    is_symmetric(se) || throw(ArgumentError("Non-symmetric structuring element is not supported yet"))
     upper_se, _ = strel_split(CartesianIndex, se)
     fill!(out, zero(T))
     sets = DisjointMinSets{T}()
@@ -83,6 +96,23 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero
         end
     end
     return out
+end
+
+function _maybe_build_symmetric_strel(iter)
+    # NOTE(johnnychen94): label_components! (<v0.4) used to accept only the splited upper
+    # half part as `se`. We should still support it with a deprecation warning.
+    new_se = strel(CartesianIndex, strel(Bool, iter)) # remove the center position
+    sym_se = union(.-new_se, new_se)
+    if length(sym_se) == 2length(new_se)
+        msg =
+            "`label_components!` now requires a complete symmetric structuring element," *
+            " but the provided structuring element is only the upper half." *
+            " This is a deprecated behavior and will be removed in a future version."
+        Base.depwarn(msg, :label_components!)
+        return sym_se
+    else
+        return iter
+    end
 end
 
 function throw_dmm(ax1, ax2)
