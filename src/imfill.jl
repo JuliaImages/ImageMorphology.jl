@@ -54,7 +54,7 @@ function _imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, labels)
 
     new_img = similar(img)
     for ind in eachindex(img)
-        if img[ind] == true && interval[1] <= count_labels[labels[ind] + 1] <= interval[2]
+        if img[ind] == true && interval[1] <= count_labels[labels[ind]] <= interval[2]
             new_img[ind] = false
         else
             new_img[ind] = img[ind]

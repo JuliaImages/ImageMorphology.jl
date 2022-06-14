@@ -77,7 +77,7 @@ export
     component_boxes,
     component_lengths,
     component_indices,
-    component_subscripts,
+    component_subscripts, # deprecated (v0.4)
     component_centroids,
 
     # convexhull.jl

@@ -1,5 +1,6 @@
 using ImageMorphology
 using ImageCore
+using ImageCore.PaddedViews
 using Test
 using OffsetArrays
 using ImageMetadata

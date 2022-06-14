@@ -100,24 +100,87 @@
         @test length(boxes) == 1
     end
 
-    @testset "traits" begin
+    @testset "component_indices" begin
+        A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+        label = label_components(A)
+        indices = component_indices(label)
+        @test IndexStyle(label) == IndexLinear()
+        @test eltype(indices) == Vector{Int}
+        @test axes(indices) == (0:maximum(label),)
+        @test indices == OffsetVector([
+                [8, 10, 17], [1, 6, 11, 16, 21], [2, 3, 4, 5, 7, 9, 12],
+                [13, 14, 15, 19, 20, 24, 25], [18, 22, 23],
+            ], -1)
+
+        @test indices == component_indices(Int, label) == component_indices(IndexLinear(), label)
+
+        indices = component_indices(CartesianIndex, label)
+        @test eltype(indices) == Vector{CartesianIndex{ndims(A)}}
+        @test axes(indices) == (0:maximum(label),)
+        @test indices == [CartesianIndices(label)[R] for R in component_indices(Int, label)]
+        @test indices == component_indices(IndexCartesian(), label)
+
+        plabel = PaddedView(0, label, (0:6, 0:6))
+        indices = component_indices(CartesianIndex, label)
+        pindices = component_indices(plabel)
+        @test IndexStyle(plabel) == IndexCartesian()
+        @test eltype(pindices) == Vector{CartesianIndex{ndims(A)}}
+        @test pindices[1:end] == indices[1:end] # they only differ in background indices
+
+        label = zeros(Int, 5, 5)
+        label[1] = -1
+        msg = "The input labeled array should contain background label `0` as the minimum value"
+        @test_throws ArgumentError(msg) component_indices(label)
+
+        indices = component_indices(ones(Int, 5, 5))
+        @test axes(indices, 1) == 0:1
+        @test isempty(indices[0])
+    end
+
+    @testset "component_lengths" begin
+        A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+        label = label_components(A)
+        counts = component_lengths(label)
+        indices = component_indices(label)
+        @test counts == length.(indices)
+        @test axes(counts) == (0:maximum(label),)
+
+        label = zeros(Int, 5, 5)
+        label[1] = -1
+        msg = "The input labeled array should contain background label `0` as the minimum value"
+        @test_throws ArgumentError(msg) component_lengths(label)
+
+        counts = component_lengths(ones(Int, 5, 5))
+        @test axes(counts, 1) == 0:1
+        @test counts[0] == 0
+    end
+
+    @testset "component_centroids" begin
+        A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+        label = label_components(A)
+        centers = component_centroids(label)
+        indices = component_indices(CartesianIndex, label)
+        @test centers == [sum(X).I ./ length(X) for X in indices]
+        @test axes(centers) == (0:maximum(label),)
+
+        label = zeros(Int, 5, 5)
+        label[1] = -1
+        msg = "The input labeled array should contain background label `0` as the minimum value"
+        @test_throws ArgumentError(msg) component_centroids(label)
+
+        centers = component_centroids(ones(Int, 5, 5))
+        @test axes(centers, 1) == 1:1
+    end
+
+    @testset "deprecations" begin
         A = [
             true  true  false true
             true  false true  true
         ]
         label = label_components(A)
-        @test component_lengths(label) == [2, 3, 3]
-        @test component_indices(label) == Array{Int}[[4, 5], [1, 2, 3], [6, 7, 8]]
-        @test component_subscripts(label) ==
+        indices = @suppress_err component_subscripts(label)
+        @test indices ==
             Array{Tuple}[[(2, 2), (1, 3)], [(1, 1), (2, 1), (1, 2)], [(2, 3), (1, 4), (2, 4)]]
-        @test @inferred(component_centroids(label)) ==
-            Tuple[(1.5, 2.5), (4 / 3, 4 / 3), (5 / 3, 11 / 3)]
-
-        @test label_components!(zeros(UInt8, 240), trues(240); dims=()) == 1:240
-        @test_throws ErrorException("labels exhausted, use a larger integer type") label_components!(
-            zeros(UInt8, 260), trues(260); dims=()
-        )
-        @test label_components!(zeros(UInt16, 260), trues(260); dims=()) == 1:260
     end
 
 end

@@ -34,8 +34,8 @@ julia> label_components(A, strel_box((3, 3))) # box shape C8 connectivity
 ```
 
 The in-place version is [`label_components!`](@ref). See also [`component_boxes`](@ref),
-[`component_lengths`](@ref), [`component_indices`](@ref), [`component_subscripts`](@ref),
-[`component_centroids`](@ref) for basic properties of the labeled components.
+[`component_lengths`](@ref), [`component_indices`](@ref), [`component_centroids`](@ref) for
+basic properties of the labeled components.
 """
 label_components(A; dims=coords_spatial(A), r=1, kwargs...) = label_components(A, strel_diamond(A, dims; r); kwargs...)
 label_components(A, se; kwargs...) = label_components!(similar(A, Int), A, se; kwargs...)
@@ -248,43 +248,177 @@ function component_boxes(A::AbstractArray{T,N}) where {T<:Integer,N}
     return boxes = [boxes[i, 1]:boxes[i, 2] for i in axes(boxes, 1)]
 end
 
-"`component_lengths(labeled_array)` -> an array of areas (2D), volumes (3D), etc. for each label, including the background label 0"
-function component_lengths(img::AbstractArray{Int})
-    n = zeros(Int, maximum(img) + 1)
-    for i in 1:length(img)
-        n[img[i] + 1] += 1
+"""
+    counts = component_lengths(labeled_array)
+
+Count the number of each labels in the input labeled array. `counts` is shifted to 0-based
+indexing vector so that the number of background pixels is `counts[0]`.
+
+```jldoctest; setup=:(using ImageMorphology)
+julia> A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{$Int}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia> label = label_components(A) # four disjoint components
+5×5 Matrix{$Int}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia> component_lengths(label)
+5-element OffsetArray(::Vector{$Int}, 0:4) with eltype $Int with indices 0:4:
+ 3
+ 5
+ 7
+ 7
+ 3
+```
+
+For gray images, labels can be computed by [`label_components`](@ref).
+"""
+function component_lengths(A::AbstractArray{T}) where {T<:Integer}
+    mn, mx = extrema(A)
+    if !(mn == 0 || mn == 1)
+        throw(ArgumentError("The input labeled array should contain background label `0` as the minimum value"))
     end
-    return n
+    counts = zeros(Int, 0:mx)
+    for i in eachindex(A)
+        counts[A[i]] += 1
+    end
+    return counts
 end
 
-"`component_indices(labeled_array)` -> an array of pixels for each label, including the background label 0"
-function component_indices(img::AbstractArray{Int})
-    n = [Int[] for i in 0:maximum(img)]
-    for i in 1:length(img)
-        push!(n[img[i] + 1], i)
+"""
+    indices = component_indices([T], labeled_array)
+
+Get the indices of each label in the input labeled array. `indices` is shifted to 0-based
+indexing vector so that the indices of background pixels is `indices[0]`.
+
+The optional type `T` can be either `Int`/`IndexLinear()` or
+`CartesianIndex`/`IndexCartesian()` that is used to specify the type of the indices. The
+default choice is `IndexStyle(labeled_array)`.
+
+```jldoctest; setup=:(using ImageMorphology)
+julia> A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{$Int}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia> label = label_components(A) # four disjoint components
+5×5 Matrix{$Int}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia> indices = component_indices(label)
+5-element OffsetArray(::Vector{Vector{$Int}}, 0:4) with eltype Vector{$Int} with indices 0:4:
+ [8, 10, 17]
+ [1, 6, 11, 16, 21]
+ [2, 3, 4, 5, 7, 9, 12]
+ [13, 14, 15, 19, 20, 24, 25]
+ [18, 22, 23]
+
+julia> indices = component_indices(CartesianIndex, label)
+5-element OffsetArray(::Vector{Vector{CartesianIndex{2}}}, 0:4) with eltype Vector{CartesianIndex{2}} with indices 0:4:
+ [CartesianIndex(3, 2), CartesianIndex(5, 2), CartesianIndex(2, 4)]
+ [CartesianIndex(1, 1), CartesianIndex(1, 2), CartesianIndex(1, 3), CartesianIndex(1, 4), CartesianIndex(1, 5)]
+ [CartesianIndex(2, 1), CartesianIndex(3, 1), CartesianIndex(4, 1), CartesianIndex(5, 1), CartesianIndex(2, 2), CartesianIndex(4, 2), CartesianIndex(2, 3)]
+ [CartesianIndex(3, 3), CartesianIndex(4, 3), CartesianIndex(5, 3), CartesianIndex(4, 4), CartesianIndex(5, 4), CartesianIndex(4, 5), CartesianIndex(5, 5)]
+ [CartesianIndex(3, 4), CartesianIndex(2, 5), CartesianIndex(3, 5)]
+```
+
+For gray images, labels can be computed by [`label_components`](@ref).
+"""
+component_indices(A) = component_indices(IndexStyle(A), A)
+component_indices(::Type{T}, A) where {T<:Integer} = component_indices(IndexLinear(), A)
+component_indices(::Type{T}, A) where {T<:CartesianIndex} = component_indices(IndexCartesian(), A)
+component_indices(::IndexCartesian, A) = _component_indices(A, CartesianIndices(A))
+component_indices(::IndexLinear, A) = _component_indices(A, LinearIndices(A))
+
+function _component_indices(A::AbstractArray{<:Integer,N}, R::AbstractArray{T,N}) where {T,N}
+    mn, mx = extrema(A)
+    if !(mn == 0 || mn == 1)
+        throw(ArgumentError("The input labeled array should contain background label `0` as the minimum value"))
     end
-    return n
+    indices = OffsetVector([T[] for _ in 0:mx], -1)
+    @inbounds for i in R
+        push!(indices[A[i]], i)
+    end
+    return indices
 end
 
+"""
+    centroids = component_centroids(labeled_array)
+
+Compute the centroid of each label in the input labeled array. `centroids` is shifted to
+0-based indexing vector so that the centroid of background pixels is `centroids[0]`.
+
+The centroid of a finite set `X`, also known as geometric center, is calculated using
+`sum(X)/length(X)`. For label `i`, all (Cartesian) indices of pixels with label `i` are used
+to build the set `X`
+
+```jldoctest; setup=:(using ImageMorphology)
+julia> A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{$Int}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia> label = label_components(A) # four disjoint components
+5×5 Matrix{$Int}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia> component_centroids(label)
+5-element OffsetArray(::Vector{Tuple{Float64, Float64}}, 0:4) with eltype Tuple{Float64, Float64} with indices 0:4:
+ (3.3333333333333335, 2.6666666666666665)
+ (1.0, 3.0)
+ (3.142857142857143, 1.5714285714285714)
+ (4.285714285714286, 3.857142857142857)
+ (2.6666666666666665, 4.666666666666667)
+```
+
+For gray images, labels can be computed by [`label_components`](@ref).
+"""
+function component_centroids(A::AbstractArray{<:Integer,N}) where {N}
+    mn, mx = extrema(A)
+    if !(mn == 0 || mn == 1)
+        throw(ArgumentError("The input labeled array should contain background label `0` as the minimum value"))
+    end
+    n = fill(zero(CartesianIndex{N}), mn:mx)
+    counts = fill(0, mn:mx)
+    @inbounds for I in CartesianIndices(size(A))
+        v = A[I]
+        n[v] += I
+        counts[v] += 1
+    end
+    return map((v, l) -> v.I ./ l, n, counts)
+end
+
+# deprecated
 "`component_subscripts(labeled_array)` -> an array of pixels for each label, including the background label 0"
 function component_subscripts(img::AbstractArray{Int})
+    Base.depwarn("`component_subscripts` is deprecated. Use `component_indices(CartesianIndex, A)` instead.", :component_subscripts)
     n = [Tuple[] for i in 0:maximum(img)]
     s = CartesianIndices(size(img))
     for i in 1:length(img)
         push!(n[img[i] + 1], s[i])
     end
     return n
-end
-
-"`component_centroids(labeled_array)` -> an array of centroids for each label, including the background label 0"
-function component_centroids(img::AbstractArray{Int,N}) where {N}
-    len = length(0:maximum(img))
-    n = fill(zero(CartesianIndex{N}), len)
-    counts = fill(0, len)
-    @inbounds for I in CartesianIndices(size(img))
-        v = img[I] + 1
-        n[v] += I
-        counts[v] += 1
-    end
-    return map(v -> n[v].I ./ counts[v], 1:len)
 end
