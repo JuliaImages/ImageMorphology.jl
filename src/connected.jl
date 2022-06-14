@@ -178,21 +178,74 @@ function minlabel(sets::DisjointMinSets)
     return out
 end
 
-"`component_boxes(labeled_array)` -> an array of bounding boxes for each label, including the background label 0"
-function component_boxes(img::AbstractArray{Int})
-    nd = ndims(img)
-    n = [Vector{Int}[fill(typemax(Int), nd), fill(typemin(Int), nd)] for i in 0:maximum(img)]
-    s = CartesianIndices(size(img))
-    for i in 1:length(img)
-        vcur = s[i]
-        vmin = n[img[i] + 1][1]
-        vmax = n[img[i] + 1][2]
-        for d in 1:nd
-            vmin[d] = min(vmin[d], vcur[d])
-            vmax[d] = max(vmax[d], vcur[d])
-        end
+"""
+    boxes = component_boxes(labeled_array)
+
+Calculates the minimal bounding boxes for each label including the background label. The
+labels can be computed by [`label_components`](@ref).
+
+Each bounding box is represented as a `CartesianIndices`. `boxes` is shifted to 0-based
+indexing vector so that background region is `boxes[0]`.
+
+```jldoctest; setup=:(using ImageMorphology)
+julia> A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{$Int}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia> label = label_components(A) # four disjoint components
+5×5 Matrix{$Int}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia> boxes = component_boxes(label) # get bounding boxes of all regions
+5-element OffsetArray(::Vector{CartesianIndices{2, Tuple{UnitRange{$Int}, UnitRange{$Int}}}}, 0:4) with eltype CartesianIndices{2, Tuple{UnitRange{$Int}, UnitRange{$Int}}} with indices 0:4:
+ CartesianIndices((2:5, 2:4))
+ CartesianIndices((1:1, 1:5))
+ CartesianIndices((2:5, 1:3))
+ CartesianIndices((3:5, 3:5))
+ CartesianIndices((2:3, 4:5))
+
+julia> A[boxes[1]] # crop the image region with label 1
+1×5 Matrix{$Int}:
+ 2  2  2  2  2
+
+julia> A[boxes[4]] # crop the image region with label 4
+2×2 Matrix{$Int}:
+ 0  1
+ 1  1
+```
+"""
+function component_boxes(A::AbstractArray{T,N}) where {T<:Integer,N}
+    mn, mx = extrema(A)
+    if !(mn == 0 || mn == 1)
+        throw(ArgumentError("The input labeled array should contain background label `0` as the minimum value"))
     end
-    return map(x -> map(y -> tuple(y...), x), n)
+    boxes = if mn == 1
+        OffsetArray(Matrix{CartesianIndex{N}}(undef, mx, 2), 0, 0)
+    elseif mn == 0
+        OffsetArray(Matrix{CartesianIndex{N}}(undef, 1 + mx, 2), -1, 0)
+    end
+    R = CartesianIndices(A)
+    boxes[:, 1] .= Ref(last(R))
+    boxes[:, 2] .= Ref(first(R))
+
+    @inbounds for i in R
+        label_idx = A[i]
+        # this actually does a few unnecessary comparison, but it's relatively harmless as
+        # the main computation is limited by memory
+        boxes[label_idx, 1] = min(i, boxes[label_idx, 1])
+        boxes[label_idx, 2] = max(i, boxes[label_idx, 2])
+    end
+
+    # convert to CartesianIndices
+    return boxes = [boxes[i, 1]:boxes[i, 2] for i in axes(boxes, 1)]
 end
 
 "`component_lengths(labeled_array)` -> an array of areas (2D), volumes (3D), etc. for each label, including the background label 0"
