@@ -289,13 +289,18 @@ function _padded_copyto!(dest::AbstractVector, src::AbstractVector, shift, v)
     return dest
 end
 
+# Shift vector of size N up or down by 1 accorded to dir, pad with v
 # ptr level optimized implementation for Real types
-# short-circuit all check
-function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v) where {T}
+# short-circuit all check so unsafe
+function _unsafe_padded_copyto!(dest::AbstractVector{T}, src::AbstractVector{T}, dir, N, v) where {T}
     if dir
+        #in  src  = [1,2,3,4], v, N=4 
+        #out dest = [V,1,2,3]
         unsafe_store!(pointer(dest), v)
         unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
     else
+        #in  src  = [1,2,3,4], v, N=4 
+        #out dest = [2,3,4,v]
         unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
         unsafe_store!(pointer(dest), v, N)
     end
@@ -305,21 +310,39 @@ end
 # ptr level optimized implementation for Real types
 # short-circuit all check
 # call LoopVectorization directly
-function _unsafe_shift_arith!(f, out::AbstractArray{T,1}, tmp::AbstractArray{T,1}, A::AbstractArray{T,1}) where {T} #tmp external to reuse external allocation
+function _unsafe_shift_arith!(
+    f::MAX_OR_MIN,
+    out::AbstractArray{T,1},
+    tmp::AbstractArray{T,1},
+    A::AbstractArray{T,1},
+) where {T} #tmp external to reuse external allocation
     if f === min
         padd = typemax(T)
     else
         padd = typemin(T)
     end
     N = length(out)
+    #in  src = [1,2,3,4], padd, N=4
+    #out tmp = [padd,1,2,3]  
     _unsafe_padded_copyto!(tmp, A, true, N, padd)
+    #in src  = [1,2,3,4], tmp  = [padd,1,2,3]
+    #out out = MinOrMaxElementWise(tmp,A)
     LoopVectorization.vmap!(f, out, A, tmp)
+    #in  src = [1,2,3,4], padd, N=4
+    #out tmp = [1,2,3,padd]  
     _unsafe_padded_copyto!(tmp, A, false, N, padd)
+    #in  tmp = [   2,3,4,padd]
+    #in  out = [padd,1,2,3]
+    #out out = MinOrMaxElementWise(tmp,out)
     LoopVectorization.vmap!(f, out, out, tmp)
     return out
 end
 
-function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
+# optimized `extreme_filter` implementation for SEDiamond SE and 2D images
+# Similar approach could be found in 
+# Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176. 
+# see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
+function _unsafe_extreme_filter_C4_2D!(f::MAX_OR_MIN, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
     @debug "call the optimized `extreme_filter` implementation for SEDiamond SE and 2D images" fname =
         _unsafe_extreme_filter_C4_2D!
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
@@ -341,10 +364,10 @@ function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
     # applying radius=r filter is equivalent to applying radius=1 filter r times
     for i = 1:iter
         #compute first edge column
-        #translate to clipped connection
-        #x ? 
-        #. x
-        #x ?
+        #translate to clipped connection, x neighborhood of interest, ? neighborhood we don't care, . center
+        # x ? 
+        # . x
+        # x ?
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
         _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
@@ -355,9 +378,12 @@ function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
         #next->current
         viewcurrent = view(src, :, 2)
         for c = 3:xSize
-            #? x ? <--- viewprevious y-2
-            #x . x <--- viewcurrent  y-1
-            #? x ? <--- viewnext     y
+            # viewprevious c-2
+            # viewcurrent  c-1
+            # viewnext     c
+            # ? x ?
+            # x . x
+            # ? x ? 
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x-1)/erode(x-1)
@@ -373,9 +399,9 @@ function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
         end
         #end last column
         #translate to clipped connection
-        #? x 
-        #x .
-        #? x
+        # ? x 
+        # x .
+        # ? x
         # dilate/erode col x
         viewout = view(out, :, xSize)
         _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
@@ -388,14 +414,10 @@ function _unsafe_extreme_filter_C4_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
     return out_actual
 end
 
-#Note we only need to swap pointer ....
-#penalty of 3 copy :/
-function swap(tmp::AbstractVector, B::AbstractVector, A::AbstractVector) where {T}
-    tmp .= A
-    A .= B
-    B .= tmp
-end
-
+# optimized `extreme_filter` implementation for SEBox SE and 2D images
+# Similar approach could be found in 
+# Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176. 
+# see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
 function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractArray{T,2}, iter) where {T}
     @debug "call the optimized `extreme_filter` implementation for SEBox SE and 2D images" fname =
         _unsafe_extreme_filter_C8_2D!
@@ -416,15 +438,14 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
     tmp2 = similar(tmp)
     tmp3 = similar(tmp)
     tmp4 = similar(tmp)
-    tmp5 = similar(tmp) #only used for swap by copy
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
     for i = 1:iter
         #compute first edge column
-        #translate to clipped connection
-        #x x 
-        #. x
-        #x x
+        #translate to clipped connection, x neighborhood of interest, ? neighborhood we don't care, . center
+        # x x 
+        # . x
+        # x x
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
         _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
@@ -441,9 +462,12 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
             # temp2 contains dilation/erosion of previous col x-2
             # temp3 contains dilation/erosion of current col x-1
             # temp4 contains dilation/erosion of next col ie x
-            #x x x 
-            #x . x 
-            #x x x 
+            # viewprevious c-2
+            # viewcurrent  c-1
+            # viewnext     c
+            # x x x 
+            # x . x 
+            # x x x 
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x)/erode(x)
@@ -453,14 +477,14 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
             #sup(dilate(x-2),dilate(x-1),dilate(y)) or inf(erode(x-2),erode(x-1),erode(x))
             LoopVectorization.vmap!(f, viewout, tmp4, tmp)
             #swap
-            swap(tmp5, tmp4, tmp3)
-            swap(tmp5, tmp4, tmp2)
+            tmp4, tmp3 = tmp3, tmp4
+            tmp4, tmp2 = tmp2, tmp4
         end
         #end last column
         #translate to clipped connection
-        #x x 
-        #x .
-        #x x
+        # x x 
+        # x .
+        # x x
         # dilate/erode col x
         viewout = view(out, :, xSize)
         _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)

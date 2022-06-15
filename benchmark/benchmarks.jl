@@ -12,7 +12,7 @@ on_CI = haskey(ENV, "GITHUB_ACTIONS")
 const cameraman = Gray{N0f8}.(testimage("cameraman"))
 const blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
 
-const tst_sizes = on_CI ? (64,) : (256, 512, 1024)
+const tst_sizes = on_CI ? (64,) : (256, 512, 1024, 2048)
 const tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
@@ -47,7 +47,7 @@ let grp = SUITE["extreme_filter"]
         grp[T]["$sz×$sz"] = BenchmarkGroup()
         for (cname, cr) in [("worst", 0.95), ("best", 0.05), ("random", 0.5)]
             tst_img = fill(zero(T), sz, sz)
-            tst_img[rand(sz, sz) .>= cr] .= true
+            tst_img[rand(sz, sz).>=cr] .= true
 
             se = strel_diamond((3, 3))
             grp[T]["$sz×$sz"]["r1_diamond_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
@@ -88,7 +88,7 @@ let grp = SUITE["Maxtree"]
     for sz in tst_sizes
         tst_img = (imresize((cameraman), (sz, sz)))
         B = similar(tst_img)
-        grp["area_opening"]["$sz×$sz"] = @benchmarkable area_opening($B, min_area=50)
+        grp["area_opening"]["$sz×$sz"] = @benchmarkable area_opening($B, min_area = 50)
     end
 end
 
