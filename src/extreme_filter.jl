@@ -110,6 +110,12 @@ function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T
     end
 end
 function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
+    rΩ = strel_size(Ω) .÷ 2
+    if ndims(A) == 2 && all(rΩ[1] .== rΩ)
+        # super fast implementation and wins in all cases
+        return _extreme_filter_diamond!(f, out, A, Ω)
+    end
+
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out .= true; return out)
@@ -161,7 +167,17 @@ function _extreme_filter_generic!(f, out, A, Ω)
 end
 
 # optimized implementation for SEDiamond -- a typical case of separable filter
-function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
+function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray{N}) where {N}
+    rΩ = strel_size(Ω) .÷ 2
+    if N == 2 && f isa MAX_OR_MIN && all(rΩ[1] .== rΩ)
+        iter = rΩ[1]
+        return _extreme_filter_diamond_2D!(f, out, A, iter)
+    else
+        return _extreme_filter_diamond_generic!(f, out, A, Ω)
+    end
+end
+
+function _extreme_filter_diamond_generic!(f, out, A, Ω::SEDiamondArray)
     @debug "call the optimized `extreme_filter` implementation for SEDiamond SE" fname = _extreme_filter_diamond!
     rΩ = strel_size(Ω) .÷ 2
     r = maximum(rΩ)
@@ -216,6 +232,51 @@ end
         dst[Ipre, i, Ipost] = f(a1, a2)
     end
     return dst
+end
+
+function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
+    @debug "call the AVX-enabled `extreme_filter` implementation for 2D SEDiamond" fname = _extreme_filter_diamond_2D!
+    actual_out = out
+
+    # To avoid the result affected by loop order, we need two arrays
+    src = (out === A) || (iter > 1) ? copy(A) : A
+
+    # LoopVectorization currently doesn't understand Gray and N0f8 types, thus we
+    # reinterpret to its raw data type UInt8
+    src = rawview(channelview(src))
+    out = rawview(channelview(out))
+
+    Ω = strel(CartesianIndex, strel_diamond((3, 3)))
+    δ = CartesianIndex(1, 1)
+    R = CartesianIndices(src)
+    R_inner = (first(R) + δ):(last(R) - δ)
+
+    ox, oy = first(R).I
+
+    # applying radius=r filter is equivalent to applying radius=1 filter iter times
+    for i in 1:iter
+        Rx, Ry = (ox + 1):(size(src, 1) + ox - 2), (oy + 1):(size(src, 2) + oy - 2)
+        @tturbo warn_check_args = false for y in Ry, x in Rx
+            tmp = f(f(src[x, y], src[x - 1, y]), src[x + 1, y])
+            out[x, y] = f(f(tmp, src[x, y - 1]), src[x, y + 1])
+        end
+
+        @inbounds for p in EdgeIterator(R, R_inner)
+            # for edge points, skip if the offset exceeds the boundary
+            s = src[p]
+            for o in Ω
+                q = p + o
+                checkbounds(Bool, src, q) || continue
+                s = f(s, src[q])
+            end
+            out[p] = s
+        end
+
+        if iter > 1 && i < iter
+            src .= out
+        end
+    end
+    return actual_out
 end
 
 # optimized implementation for Bool inputs with max/min select function

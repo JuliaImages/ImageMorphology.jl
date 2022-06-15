@@ -94,16 +94,22 @@
 
     @testset "optimization: diamond" begin
         # ensure the optimized implementation work equivalently to the generic fallback implementation
-        for N in (1, 2, 3)
-            sz = ntuple(_ -> 32, N)
-            img = rand(sz...)
-            for r in (1, 3)
-                dims_list = ntuple(i -> ntuple(identity, i), N)
-                for dims in dims_list
-                    se = strel_diamond(ntuple(_ -> 2r + 1, N), dims)
-                    ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
-                    out = extreme_filter(max, img, se)
-                    @test out == ref
+        for T in Any[Bool, Int, N0f8, Gray{N0f8}, Gray{Float64}, Float64]
+            for N in (1, 2, 3)
+                sz = ntuple(_ -> 32, N)
+                img = T == Int ? rand(1:10, sz...) : rand(T, sz...)
+                for r in (1, 3)
+                    dims_list = ntuple(i -> ntuple(identity, i), N)
+                    for dims in dims_list
+                        se = strel_diamond(ntuple(_ -> 2r + 1, N), dims)
+                        ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
+                        out = extreme_filter(max, img, se)
+                        @test out == ref
+
+                        imgc = centered(img)
+                        outc = extreme_filter(max, imgc, se)
+                        @test outc == centered(out)
+                    end
                 end
             end
         end

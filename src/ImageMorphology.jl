@@ -7,6 +7,7 @@ using OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
+using LoopVectorization
 
 const _docstring_se = """
 `se` is the structuring element that defines the neighborhood of the image. See
