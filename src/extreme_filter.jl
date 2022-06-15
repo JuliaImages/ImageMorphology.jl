@@ -78,8 +78,7 @@ true
 See also the in-place version [`extreme_filter!`](@ref). Another function in ImageFiltering
 package `ImageFiltering.mapwindow` provides similar functionality.
 """
-
-extreme_filter(f, A; dims = coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims))
+extreme_filter(f, A; r=nothing, dims=coords_spatial(A)) = extreme_filter(f, A, strel_box(A, dims; r))
 extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 
 """
@@ -89,9 +88,8 @@ extreme_filter(f, A, Ω::AbstractArray) = extreme_filter!(f, similar(A), A, Ω)
 The in-place version of [`extreme_filter`](@ref) where `out` is the output array that gets
 modified.
 """
-
-extreme_filter!(f, out, A, dims) = extreme_filter!(f, out, A, strel_box(A, dims))
-function extreme_filter!(f, out, A, Ω::AbstractArray = strel_box(A))
+extreme_filter!(f, out, A; r=nothing, dims=coords_spatial(A)) = extreme_filter!(f, out, A, strel_box(A, dims; r))
+function extreme_filter!(f, out, A, Ω)
     axes(out) == axes(A) || throw(DimensionMismatch("axes(out) must match axes(A)"))
     require_select_function(f, eltype(A))
     return _extreme_filter!(strel_type(Ω), f, out, A, Ω)
@@ -124,6 +122,7 @@ function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, 
     end
 end
 
+
 ###
 # Implementation details
 ###
@@ -134,7 +133,7 @@ function _extreme_filter_generic!(f, out, A, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R)+δ):(last(R)-δ)
+    R_inner = (first(R) + δ):(last(R) - δ)
 
     # NOTE(johnnychen94): delibrately duplicate the kernel codes here for inner loop and
     # boundary loop, because keeping the big function body allows Julia to do further
@@ -143,7 +142,7 @@ function _extreme_filter_generic!(f, out, A, Ω)
         # for interior points, boundary check is unnecessary
         s = A[p]
         for o in Ω
-            v = A[p+o]
+            v = A[p + o]
             s = f(s, v)
         end
         out[p] = s
@@ -172,17 +171,17 @@ function _extreme_filter_diamond!(f, out, A, Ω::SEDiamondArray)
     out .= src
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
-    for i = 1:r
+    for i in 1:r
         Ω = strel_diamond(A, Ω.dims)
         rΩ = strel_size(Ω) .÷ 2
         inds = axes(A)
-        for d = 1:ndims(A)
+        for d in 1:ndims(A)
             # separately apply to each dimension
             if size(out, d) == 1 || rΩ[d] == 0
                 continue
             end
-            Rpre = CartesianIndices(inds[1:(d-1)])
-            Rpost = CartesianIndices(inds[(d+1):end])
+            Rpre = CartesianIndices(inds[1:(d - 1)])
+            Rpost = CartesianIndices(inds[(d + 1):end])
             _extreme_filter_C2!(f, out, src, Rpre, inds[d], Rpost)
         end
 
@@ -199,20 +198,20 @@ end
     # for r>1 case, it is equivalently to apply r times
     @inbounds for Ipost in Rpost, Ipre in Rpre
         # loop inner region
-        for i = (first(inds)+1):(last(inds)-1)
-            a1 = src[Ipre, i-1, Ipost]
+        for i in (first(inds) + 1):(last(inds) - 1)
+            a1 = src[Ipre, i - 1, Ipost]
             a2 = dst[Ipre, i, Ipost]
-            a3 = src[Ipre, i+1, Ipost]
+            a3 = src[Ipre, i + 1, Ipost]
             dst[Ipre, i, Ipost] = f(f(a1, a2), a3)
         end
         # process two edge points
         i = first(inds)
         a2 = dst[Ipre, i, Ipost]
-        a3 = src[Ipre, i+1, Ipost]
+        a3 = src[Ipre, i + 1, Ipost]
         dst[Ipre, i, Ipost] = f(a2, a3)
 
         i = last(inds)
-        a1 = src[Ipre, i-1, Ipost]
+        a1 = src[Ipre, i - 1, Ipost]
         a2 = dst[Ipre, i, Ipost]
         dst[Ipre, i, Ipost] = f(a1, a2)
     end
@@ -228,7 +227,7 @@ function _extreme_filter_bool!(f, out, A::AbstractArray{Bool}, Ω)
     δ = CartesianIndex(strel_size(Ω) .÷ 2)
 
     R = CartesianIndices(A)
-    R_inner = (first(R)+δ):(last(R)-δ)
+    R_inner = (first(R) + δ):(last(R) - δ)
 
     select = _fast_select(f)
     @inbounds for p in R_inner

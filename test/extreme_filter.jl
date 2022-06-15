@@ -37,7 +37,7 @@
         # Bool
         img = fill(false, 5, 5)
         img[3, 3] = 1
-        ref = collect(strel_box((5, 5); r = 1))
+        ref = collect(strel_box((5, 5); r=1))
 
         img_d = @inferred extreme_filter(max, img)
         @test img_d == ref
