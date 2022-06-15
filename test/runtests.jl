@@ -1,5 +1,6 @@
 using ImageMorphology
 using ImageCore
+using ImageCore.PaddedViews
 using Test
 using OffsetArrays
 using ImageMetadata
@@ -8,7 +9,7 @@ using Suppressor
 @test isempty(detect_ambiguities(ImageMorphology))
 
 using Documenter
-Base.VERSION >= v"1.6" && doctest(ImageMorphology; manual=false)
+Base.VERSION >= v"1.8" && doctest(ImageMorphology; manual=false)
 
 include("testutils.jl")
 @testset "ImageMorphology" begin

@@ -77,7 +77,8 @@ Base.@propagate_inbounds function Base.getindex(A::SEDiamondArray{N,K}, inds::In
     all(iszero, ri) || return false
     # for masked dimensions, compare if the city-block distance to center is within radius
     mi = _tuple_getindex(inds, A.dims)
-    return ifelse(sum(abs, mi) > A.r, false, true)
+    r = isempty(mi) ? 0 : sum(abs, mi)
+    return ifelse(r > A.r, false, true)
 end
 
 _tuple_getindex(t::Tuple, inds::Dims) = ntuple(i -> t[inds[i]], length(inds))
@@ -135,22 +136,24 @@ julia> strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
 See also [`strel`](@ref) and [`strel_box`](@ref).
 """
 function strel_diamond(img::AbstractArray{T,N}, dims=coords_spatial(img); r::Union{Nothing,Int}=nothing) where {T,N}
-    dims = _to_dims(dims)
+    dims = _to_dims(Val(N), dims)
     sz, r = if isnothing(r)
-        ntuple(i -> in(i, dims) ? 3 : 1, N), 1
+        ntuple(i -> !isempty(dims) && in(i, dims) ? 3 : 1, N), 1
     else
-        ntuple(i -> in(i, dims) ? 2r + 1 : 1, N), r
+        ntuple(i -> !isempty(dims) && in(i, dims) ? 2r + 1 : 1, N), r
     end
     return strel_diamond(sz, dims; r)
 end
 function strel_diamond(sz::Dims{N}, dims=ntuple(identity, N); kw...) where {N}
-    dims = _to_dims(dims)
+    dims = _to_dims(Val(N), dims)
     all(isodd, sz) || throw(ArgumentError("size should be odd integers"))
     ax = map(r -> (-r):r, sz .÷ 2)
     return SEDiamondArray(SEDiamond{N}(ax, dims; kw...))
 end
 
-# Tuple(1) is not inferable
-@inline _to_dims(i::Int) = (i,)
-@inline _to_dims(dims::Dims) = dims
-@inline _to_dims(v) = Tuple(v) # fallback
+# Tuple(1) is not inferable before Julia 1.9
+# we want to support Colon input
+@inline _to_dims(::Val{N}, i::Int) where {N} = (i,)
+@inline _to_dims(::Val{N}, dims::Dims) where {N} = dims
+@inline _to_dims(::Val{N}, ::Union{Colon,Tuple{Colon}}) where {N} = ntuple(identity, N)
+@inline _to_dims(::Val{N}, v) where {N} = Tuple(v) # fallback
