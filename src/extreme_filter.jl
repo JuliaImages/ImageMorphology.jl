@@ -313,7 +313,8 @@ function _unsafe_shift_arith!(
     f::MAX_OR_MIN,
     out::AbstractArray{T,1},
     tmp::AbstractArray{T,1},
-    A::AbstractArray{T,1},
+    tmp2::AbstractArray{T,1},
+    A::AbstractArray{T,1}
 ) where {T} #tmp external to reuse external allocation
     if f === min
         padd = typemax(T)
@@ -321,19 +322,14 @@ function _unsafe_shift_arith!(
         padd = typemin(T)
     end
     N = length(out)
-    #in  src = [1,2,3,4], padd, N=4
-    #out tmp = [padd,1,2,3]  
+    #in  src  = [1,2,3,4], padd, N=4
+    #out tmp  = [padd,1,2,3]
+    #out tmp2 = [1,2,3,padd]
     _unsafe_padded_copyto!(tmp, A, true, N, padd)
-    #in src  = [1,2,3,4], tmp  = [padd,1,2,3]
-    #out out = MinOrMaxElementWise(tmp,A)
-    LoopVectorization.vmap!(f, out, A, tmp)
-    #in  src = [1,2,3,4], padd, N=4
-    #out tmp = [1,2,3,padd]  
-    _unsafe_padded_copyto!(tmp, A, false, N, padd)
-    #in  tmp = [   2,3,4,padd]
-    #in  out = [padd,1,2,3]
-    #out out = MinOrMaxElementWise(tmp,out)
-    LoopVectorization.vmap!(f, out, out, tmp)
+    _unsafe_padded_copyto!(tmp2, A, false, N, padd)
+    @turbo for i in eachindex(out, A, tmp, tmp2)
+        out[i] = f(f(A[i], tmp[i]), tmp2[i])
+    end
     return out
 end
 
@@ -353,12 +349,14 @@ function _unsafe_extreme_filter_C4_2D!(f::MAX_OR_MIN, out::AbstractArray{T,2}, A
 
     # To avoid the result affected by loop order, we need two arrays
     src = (out === A) || (iter > 1) ? copy(A) : A
-    out .= src
+    # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
+    # all values are generated from the read-only `src`.
 
     #creating temporaries
     ySize, xSize = size(A)
     tmp = similar(out, eltype(out), ySize)
     tmp2 = similar(tmp)
+    tmp3 = similar(tmp)
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
     for i = 1:iter
@@ -369,7 +367,7 @@ function _unsafe_extreme_filter_C4_2D!(f::MAX_OR_MIN, out::AbstractArray{T,2}, A
         # x ?
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
-        _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewprevious)
         viewnext = view(src, :, 2)
         viewout = view(out, :, 1)
         # inf/sup between dilate/erode col 1 0 and col 2
@@ -386,11 +384,12 @@ function _unsafe_extreme_filter_C4_2D!(f::MAX_OR_MIN, out::AbstractArray{T,2}, A
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x-1)/erode(x-1)
-            _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
-            #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
-            LoopVectorization.vmap!(f, tmp, viewprevious, tmp2)
-            #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
-            LoopVectorization.vmap!(f, viewout, tmp, viewnext)
+            _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewcurrent)
+            @turbo for i in eachindex(viewout, viewprevious, tmp2)
+                #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+                #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
+                viewout[i] = f(f(viewprevious[i], tmp2[i]), viewnext[i])
+            end
             #current->previous
             viewprevious = view(src, :, c - 1)
             #next->current
@@ -403,7 +402,7 @@ function _unsafe_extreme_filter_C4_2D!(f::MAX_OR_MIN, out::AbstractArray{T,2}, A
         # ? x
         # dilate/erode col x
         viewout = view(out, :, xSize)
-        _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewcurrent)
         LoopVectorization.vmap!(f, viewout, tmp2, viewprevious)
         if iter > 1 && i < iter
             src .= out
@@ -429,7 +428,8 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
 
     # To avoid the result affected by loop order, we need two arrays
     src = (out === A) || (iter > 1) ? copy(A) : A
-    out .= src
+    # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
+    # all values are generated from the read-only `src`.
 
     #creating temporaries
     ySize, xSize = size(A)
@@ -437,6 +437,7 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
     tmp2 = similar(tmp)
     tmp3 = similar(tmp)
     tmp4 = similar(tmp)
+    tmp5 = similar(tmp)
 
     # applying radius=r filter is equivalent to applying radius=1 filter r times
     for i = 1:iter
@@ -447,11 +448,11 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
         # x x
         viewprevious = view(src, :, 1)
         # dilate/erode col 1
-        _unsafe_shift_arith!(f, tmp2, tmp, viewprevious)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp5, viewprevious)
         viewnext = view(src, :, 2)
         viewout = view(out, :, 1)
         # dilate/erode col 2
-        _unsafe_shift_arith!(f, tmp3, tmp, viewnext)
+        _unsafe_shift_arith!(f, tmp3, tmp, tmp5, viewnext)
         #sup(dilate col 1,dilate col 0) or inf(erode col 1,erode col 0)
         LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
         #next->current
@@ -470,11 +471,12 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
             viewout = view(out, :, c - 1)
             viewnext = view(src, :, c)
             # dilate(x)/erode(x)
-            _unsafe_shift_arith!(f, tmp4, tmp, viewnext)
-            #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
-            LoopVectorization.vmap!(f, tmp, tmp3, tmp2)
-            #sup(dilate(x-2),dilate(x-1),dilate(y)) or inf(erode(x-2),erode(x-1),erode(x))
-            LoopVectorization.vmap!(f, viewout, tmp4, tmp)
+            _unsafe_shift_arith!(f, tmp4, tmp, tmp5, viewnext)
+            @turbo for i in eachindex(viewout, tmp4, tmp3, tmp2)
+                #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+                #sup(dilate(x-2),dilate(x-1),dilate(y)) or inf(erode(x-2),erode(x-1),erode(x))
+                viewout[i] = f(f(tmp2[i], tmp3[i]), tmp4[i])
+            end
             #swap
             tmp4, tmp3 = tmp3, tmp4
             tmp4, tmp2 = tmp2, tmp4
@@ -486,7 +488,7 @@ function _unsafe_extreme_filter_C8_2D!(f, out::AbstractArray{T,2}, A::AbstractAr
         # x x
         # dilate/erode col x
         viewout = view(out, :, xSize)
-        _unsafe_shift_arith!(f, tmp2, tmp, viewcurrent)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp5, viewcurrent)
         LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
         if iter > 1 && i < iter
             src .= out
