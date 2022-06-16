@@ -256,7 +256,7 @@ function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
     # applying radius=r filter is equivalent to applying radius=1 filter iter times
     for i in 1:iter
         Rx, Ry = (ox + 1):(size(src, 1) + ox - 2), (oy + 1):(size(src, 2) + oy - 2)
-        @tturbo warn_check_args = false for y in Ry, x in Rx
+        @turbo warn_check_args = false for y in Ry, x in Rx
             tmp = f(f(src[x, y], src[x - 1, y]), src[x + 1, y])
             out[x, y] = f(f(tmp, src[x, y - 1]), src[x, y + 1])
         end
