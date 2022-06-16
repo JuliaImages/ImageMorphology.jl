@@ -31,8 +31,8 @@ Base.@propagate_inbounds Base.getindex(A::SEChainArray, inds::Int...) = getindex
 
 For structuring elements of the same dimensions, chain them together to build a bigger one.
 
-The output dimension is the same as the inputs dimensions. See also [strel_product](@ref
-strel_product) that cartesian producting each SE.
+The output dimension is the same as the inputs dimensions. See also [`strel_product`](@ref)
+that cartesian producting each SE.
 
 !!! note "structuring element decomposition"
     For some morphological operations `f` such as dilation and erosion, if `se` can be

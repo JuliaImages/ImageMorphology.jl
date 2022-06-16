@@ -15,19 +15,20 @@ strel_diamond
 # helpers
 strel_type
 strel_size
-ImageMorphology.strel_ndims
+ImageMorphology.StructuringElements.strel_ndims
+ImageMorphology.StructuringElements.strel_split
 OffsetArrays.centered
 OffsetArrays.center
 
-ImageMorphology.is_symmetric
+ImageMorphology.StructuringElements.is_symmetric
 
 ## types
-ImageMorphology.SEMask
-ImageMorphology.SEOffset
-ImageMorphology.SEDiamond
-ImageMorphology.SEBox
-ImageMorphology.SEDiamondArray
-ImageMorphology.SEBoxArray
+ImageMorphology.StructuringElements.SEMask
+ImageMorphology.StructuringElements.SEOffset
+ImageMorphology.StructuringElements.SEDiamond
+ImageMorphology.StructuringElements.SEBox
+ImageMorphology.StructuringElements.SEDiamondArray
+ImageMorphology.StructuringElements.SEBoxArray
 ```
 
 ## [Morphological operations](@id reference_ops)
@@ -57,10 +58,10 @@ mlaplacian!
 
 ```@docs
 label_components
+label_components!
 component_boxes
 component_lengths
 component_indices
-component_subscripts
 component_centroids
 ```
 

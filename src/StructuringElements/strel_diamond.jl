@@ -2,7 +2,7 @@
     SEDiamond{N}(axes, [dims]; [r])
 
 A (holy) trait type for the N-dimensional diamond shape structuring element. This is a
-special case of [`SEMask`](@ref ImageMorphology.SEMask) that ImageMorphology algorithms
+special case of [`SEMask`](@ref SEMask) that ImageMorphology algorithms
 might provide optimized implementation.
 
 It is recommended to use [`strel_diamond`](@ref) and [`strel_type`](@ref):
@@ -51,7 +51,7 @@ end
 """
     SEDiamondArray(se::SEDiamond)
 
-The instantiated array object of [`SEDiamond`](@ref ImageMorphology.SEDiamond).
+The instantiated array object of [`SEDiamond`](@ref).
 """
 struct SEDiamondArray{N,K,R<:AbstractUnitRange{Int},S} <: MorphologySEArray{N}
     axes::NTuple{N,R}

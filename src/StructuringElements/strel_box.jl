@@ -2,7 +2,7 @@
     SEBox{N}(axes; [r])
 
 The N-dimensional structuring element with all elements connected. This is a special case of
-[`SEMask`](@ref ImageMorphology.SEMask) that ImageMorphology algorithms might provide
+[`SEMask`](@ref) that ImageMorphology algorithms might provide
 optimized implementation.
 
 It is recommended to use [`strel_box`](@ref) and [`strel_type`](@ref):
