@@ -37,7 +37,7 @@ julia> strel_type(se)
 ImageMorphology.StructuringElements.SEMask{2}()
 ```
 
-See also [`SEOffset`](@ref ImageMorphology.SEOffset) for the displacement offset
+See also [`SEOffset`](@ref StructuringElements.SEOffset) for the displacement offset
 representation. More details can be found on he documentation page [Structuring
 Element](@ref concept_se).
 """
@@ -62,7 +62,7 @@ julia> strel_type(se)
 ImageMorphology.StructuringElements.SEOffset{2}()
 ```
 
-See also [`SEMask`](@ref ImageMorphology.SEMask) for the connectivity mask representation.
+See also [`SEMask`](@ref StructuringElements.SEMask) for the connectivity mask representation.
 More details can be found on he documentation page [Structuring Element](@ref concept_se).
 """
 struct SEOffset{N} <: MorphologySE{N} end
