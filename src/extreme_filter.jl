@@ -235,26 +235,30 @@ end
 end
 
 # Shift vector of size N up or down by 1 accorded to dir, pad with v
-# ptr level optimized implementation for Real types
-# short-circuit all check so unsafe
-function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v)
+const SafeArrayTypes{T,N,NA} = Union{Array{T,N},Base.SubArray{T,N,Array{T,NA}}}
+function _unsafe_padded_copyto!(dest::SafeArrayTypes{T,1}, src::SafeArrayTypes{T,1}, dir, N, v) where {T}
+    # ptr level optimized implementation for Real types
+    # short-circuit all check so unsafe
     if dir
-        #in  src  = [1,2,3,4], v, N=4
-        #out dest = [V,1,2,3]
-        dest[begin] = v
-        copyto!(dest, 2, src, 1, N - 1)
-        # dest[(begin + 1):end] .= src[begin:(end - 1)]
-        # unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
+        unsafe_store!(pointer(dest), v)
+        unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
     else
-        #in  src  = [1,2,3,4], v, N=4
-        #out dest = [2,3,4,v]
-        dest[end] = v
-        copyto!(dest, 1, src, 2, N - 1)
-        # unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
-        # dest[begin:(end - 1)] .= src[(begin + 1):end]
+        unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
+        unsafe_store!(pointer(dest), v, N)
     end
     return dest
 end
+function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v)
+    if dir
+        dest[begin] = v
+        copyto!(dest, 2, src, 1, N - 1)
+    else
+        dest[end] = v
+        copyto!(dest, 1, src, 2, N - 1)
+    end
+    return dest
+end
+
 # ptr level optimized implementation for Real types
 # short-circuit all check
 # call LoopVectorization directly
