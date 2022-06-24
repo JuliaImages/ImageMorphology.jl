@@ -237,7 +237,7 @@ end
 # Shift vector of size N up or down by 1 accorded to dir, pad with v
 # ptr level optimized implementation for Real types
 # short-circuit all check so unsafe
-function _unsafe_padded_copyto!(dest::AbstractVector{T}, src::AbstractVector{T}, dir, N, v) where {T}
+function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v)
     if dir
         #in  src  = [1,2,3,4], v, N=4
         #out dest = [V,1,2,3]
@@ -260,15 +260,15 @@ end
 # call LoopVectorization directly
 function _unsafe_shift_arith!(
     f::MAX_OR_MIN,
-    out::AbstractVector{T},
-    tmp::AbstractVector{T},
-    tmp2::AbstractVector{T},
-    A::AbstractVector{T}
-) where {T} #tmp external to reuse external allocation
+    out::AbstractVector,
+    tmp::AbstractVector,
+    tmp2::AbstractVector,
+    A::AbstractVector,
+) #tmp external to reuse external allocation
     if f === min
-        padd = typemax(T)
+        padd = typemax(eltype(out))
     else
-        padd = typemin(T)
+        padd = typemin(eltype(out))
     end
     N = length(out)
     #in  src  = [1,2,3,4], padd, N=4
