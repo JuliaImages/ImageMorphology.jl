@@ -234,59 +234,146 @@ end
     return dst
 end
 
+# Shift vector of size N up or down by 1 accorded to dir, pad with v
+const SafeArrayTypes{T,N,NA} = Union{Array{T,N},Base.SubArray{T,N,Array{T,NA}}}
+function _unsafe_padded_copyto!(dest::SafeArrayTypes{T,1}, src::SafeArrayTypes{T,1}, dir, N, v) where {T}
+    # ptr level optimized implementation for Real types
+    # short-circuit all check so unsafe
+    if dir
+        unsafe_store!(pointer(dest), v)
+        unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
+    else
+        unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
+        unsafe_store!(pointer(dest), v, N)
+    end
+    return dest
+end
+function _unsafe_padded_copyto!(dest::AbstractVector, src::AbstractVector, dir, N, v)
+    if dir
+        dest[begin] = v
+        copyto!(dest, 2, src, 1, N - 1)
+    else
+        dest[end] = v
+        copyto!(dest, 1, src, 2, N - 1)
+    end
+    return dest
+end
+
+# ptr level optimized implementation for Real types
+# short-circuit all check
+# call LoopVectorization directly
+function _unsafe_shift_arith!(
+    f::MAX_OR_MIN,
+    out::AbstractVector,
+    tmp::AbstractVector,
+    tmp2::AbstractVector,
+    A::AbstractVector,
+) #tmp external to reuse external allocation
+    if f === min
+        padd = typemax(eltype(out))
+    else
+        padd = typemin(eltype(out))
+    end
+    N = length(out)
+    #in  src  = [1,2,3,4], padd, N=4
+    #out tmp  = [padd,1,2,3]
+    #out tmp2 = [1,2,3,padd]
+    _unsafe_padded_copyto!(tmp, A, true, N, padd)
+    _unsafe_padded_copyto!(tmp2, A, false, N, padd)
+    @turbo warn_check_args = false for i in eachindex(out, A, tmp, tmp2)
+        out[i] = f(f(A[i], tmp[i]), tmp2[i])
+    end
+    return out
+end
+
+# optimized `extreme_filter` implementation for SEDiamond SE and 2D images
+# Similar approach could be found in
+# Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176.
+# see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
 function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
     @debug "call the AVX-enabled `extreme_filter` implementation for 2D SEDiamond" fname = _extreme_filter_diamond_2D!
-    actual_out = out
+    out_actual = out
+
+    out = OffsetArrays.no_offset_view(out)
+    A = OffsetArrays.no_offset_view(A)
 
     # To avoid the result affected by loop order, we need two arrays
     src = (out === A) || (iter > 1) ? copy(A) : A
+    # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
+    # all values are generated from the read-only `src`.
 
     # LoopVectorization currently doesn't understand Gray and N0f8 types, thus we
     # reinterpret to its raw data type UInt8
     src = rawview(channelview(src))
     out = rawview(channelview(out))
 
-    Ω = strel(CartesianIndex, strel_diamond((3, 3)))
-    δ = CartesianIndex(1, 1)
-    R = CartesianIndices(src)
-    R_inner = (first(R) + δ):(last(R) - δ)
+    # creating temporaries
+    ySize, xSize = size(A)
+    tmp = similar(out, eltype(out), ySize)
+    tmp2 = similar(tmp)
+    tmp3 = similar(tmp)
 
-    ox, oy = first(R).I
-
-    # applying radius=r filter is equivalent to applying radius=1 filter iter times
+    # applying radius=r filter is equivalent to applying radius=1 filter r times
     for i in 1:iter
-        Rx, Ry = (ox + 1):(size(src, 1) + ox - 2), (oy + 1):(size(src, 2) + oy - 2)
-        @static if Sys.WORD_SIZE == 64
-            @tturbo warn_check_args = false for y in Ry, x in Rx
-                tmp = f(f(src[x, y], src[x - 1, y]), src[x + 1, y])
-                out[x, y] = f(f(tmp, src[x, y - 1]), src[x, y + 1])
-            end
-        else
-            # FIXME(johnnychen94): doesn't support 32bit machine and it would otherwise
-            # throw the following error if using `@turbo` (#98)
-            # LLVM ERROR: Do not know how to expand the result of this operator!
-            @fastmath @inbounds for y in Ry, x in Rx
-                tmp = f(f(src[x, y], src[x - 1, y]), src[x + 1, y])
-                out[x, y] = f(f(tmp, src[x, y - 1]), src[x, y + 1])
-            end
-        end
+        # NOTE(johnnychen94): this implementation is essentially equivalent to the
+        # following loop. Here we buffer the getindex to further improve the performance
+        # by explicitly introducing SIMD buffers.
 
-        @inbounds for p in EdgeIterator(R, R_inner)
-            # for edge points, skip if the offset exceeds the boundary
-            s = src[p]
-            for o in Ω
-                q = p + o
-                checkbounds(Bool, src, q) || continue
-                s = f(s, src[q])
-            end
-            out[p] = s
-        end
+        # for y in 2:(size(src, 2) - 1), x in 2:(size(src, 1) - 1)
+        #     tmp = f(f(src[x, y], src[x - 1, y]), src[x + 1, y])
+        #     out[x, y] = f(f(tmp, src[x, y - 1]), src[x, y + 1])
+        # end
 
+        #compute first edge column
+        #translate to clipped connection, x neighborhood of interest, ? neighborhood we don't care, . center
+        # x ?
+        # . x
+        # x ?
+        viewprevious = view(src, :, 1)
+        # dilate/erode col 1
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewprevious)
+        viewnext = view(src, :, 2)
+        viewout = view(out, :, 1)
+        # inf/sup between dilate/erode col 1 0 and col 2
+        LoopVectorization.vmap!(f, viewout, viewnext, tmp2)
+        #next->current
+        viewcurrent = view(src, :, 2)
+        for c in 3:xSize
+            # viewprevious c-2
+            # viewcurrent  c-1
+            # viewnext     c
+            # ? x ?
+            # x . x
+            # ? x ?
+            viewout = view(out, :, c - 1)
+            viewnext = view(src, :, c)
+            # dilate(x-1)/erode(x-1)
+            _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewcurrent)
+            @turbo warn_check_args = false for i in eachindex(viewout, viewprevious, tmp2)
+                #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+                #sup(sup(x-2,dilate(x-1),x) || inf(inf(x-2,erode(x-1),x)
+                viewout[i] = f(f(viewprevious[i], tmp2[i]), viewnext[i])
+            end
+            #current->previous
+            viewprevious = view(src, :, c - 1)
+            #next->current
+            viewcurrent = view(src, :, c)
+        end
+        #end last column
+        #translate to clipped connection
+        # ? x
+        # x .
+        # ? x
+        # dilate/erode col x
+        viewout = view(out, :, xSize)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp3, viewcurrent)
+        LoopVectorization.vmap!(f, viewout, tmp2, viewprevious)
         if iter > 1 && i < iter
             src .= out
         end
     end
-    return actual_out
+
+    return out_actual
 end
 
 # optimized implementation for Bool inputs with max/min select function
