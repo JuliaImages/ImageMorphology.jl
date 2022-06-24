@@ -241,17 +241,17 @@ function _unsafe_padded_copyto!(dest::AbstractVector{T}, src::AbstractVector{T},
     if dir
         #in  src  = [1,2,3,4], v, N=4
         #out dest = [V,1,2,3]
-        # dest[begin] = v
+        dest[begin] = v
+        copyto!(dest, 2, src, 1, N - 1)
         # dest[(begin + 1):end] .= src[begin:(end - 1)]
-        unsafe_store!(pointer(dest), v)
-        unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
+        # unsafe_copyto!(pointer(dest, 2), pointer(src, 1), N - 1)
     else
         #in  src  = [1,2,3,4], v, N=4
         #out dest = [2,3,4,v]
-        unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
-        unsafe_store!(pointer(dest), v, N)
+        dest[end] = v
+        copyto!(dest, 1, src, 2, N - 1)
+        # unsafe_copyto!(pointer(dest, 1), pointer(src, 2), N - 1)
         # dest[begin:(end - 1)] .= src[(begin + 1):end]
-        # dest[end] = v
     end
     return dest
 end
@@ -300,7 +300,7 @@ function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
 
     # LoopVectorization currently doesn't understand Gray and N0f8 types, thus we
     # reinterpret to its raw data type UInt8
-    src = collect(rawview(channelview(src)))
+    src = rawview(channelview(src))
     out = rawview(channelview(out))
 
     # creating temporaries
