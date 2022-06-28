@@ -15,17 +15,7 @@ jobs:
       matrix:
         julia-version: ['1.6', '1', 'nightly']
         os: [ubuntu-latest]
-        arch: [x64]
-        include:
-          - os: windows-latest
-            julia-version: '1'
-            arch: x64
-          - os: macOS-latest
-            julia-version: '1'
-            arch: x64
-          - os: ubuntu-latest
-            julia-version: '1'
-            arch: x86
+        arch: [x86]
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
