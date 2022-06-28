@@ -127,6 +127,15 @@ function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, 
         return _extreme_filter_diamond!(f, out, A, Ω)
     end
 end
+function _extreme_filter!(::SEBox, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
+    rΩ = strel_size(Ω) .÷ 2
+    if ndims(A) == 2 && all(rΩ[1] .== rΩ)
+        # super fast implementation and wins in all cases
+        return _extreme_filter_box!(f, out, A, Ω)
+    end
+
+    return _extreme_filter_bool!(f, out, A, Ω)
+end
 
 
 ###
