@@ -376,6 +376,94 @@ function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
     return out_actual
 end
 
+# optimized `extreme_filter` implementation for SEBox SE and 2D images
+# Similar approach could be found in
+# Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176.
+# see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
+function _extreme_filter_box_2D!(f::MAX_OR_MIN, out, A, iter)
+    @debug "call the AVX-enabled `extreme_filter` implementation for 2D SEBox" fname = _extreme_filter_box_2D!
+    out_actual = out
+
+    out = OffsetArrays.no_offset_view(out)
+    A = OffsetArrays.no_offset_view(A)
+
+    # To avoid the result affected by loop order, we need two arrays
+    src = (out === A) || (iter > 1) ? copy(A) : A
+    # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
+    # all values are generated from the read-only `src`.
+
+    # LoopVectorization currently doesn't understand Gray and N0f8 types, thus we
+    # reinterpret to its raw data type UInt8
+    src = rawview(channelview(src))
+    out = rawview(channelview(out))
+
+    #creating temporaries
+    ySize, xSize = size(A)
+    tmp = similar(out, eltype(out), ySize)
+    tmp2 = similar(tmp)
+    tmp3 = similar(tmp)
+    tmp4 = similar(tmp)
+    tmp5 = similar(tmp)
+
+    # applying radius=r filter is equivalent to applying radius=1 filter r times
+    for i in 1:iter
+        #compute first edge column
+        #translate to clipped connection, x neighborhood of interest, ? neighborhood we don't care, . center
+        # x x
+        # . x
+        # x x
+        viewprevious = view(src, :, 1)
+        # dilate/erode col 1
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp5, viewprevious)
+        viewnext = view(src, :, 2)
+        viewout = view(out, :, 1)
+        # dilate/erode col 2
+        _unsafe_shift_arith!(f, tmp3, tmp, tmp5, viewnext)
+        #sup(dilate col 1,dilate col 0) or inf(erode col 1,erode col 0)
+        LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
+        #next->current
+        viewcurrent = view(src, :, 2)
+        for c in 3:xSize
+            # Invariant of the loop
+            # temp2 contains dilation/erosion of previous col x-2
+            # temp3 contains dilation/erosion of current col x-1
+            # temp4 contains dilation/erosion of next col ie x
+            # viewprevious c-2
+            # viewcurrent  c-1
+            # viewnext     c
+            # x x x
+            # x . x
+            # x x x
+            viewout = view(out, :, c - 1)
+            viewnext = view(src, :, c)
+            # dilate(x)/erode(x)
+            _unsafe_shift_arith!(f, tmp4, tmp, tmp5, viewnext)
+            @turbo warn_check_args = false for i in eachindex(viewout, tmp4, tmp3, tmp2)
+                #sup(x-2,dilate(x-1)),inf(x-2,erode(x-1))
+                #sup(dilate(x-2),dilate(x-1),dilate(y)) or inf(erode(x-2),erode(x-1),erode(x))
+                viewout[i] = f(f(tmp2[i], tmp3[i]), tmp4[i])
+            end
+            #swap
+            tmp4, tmp3 = tmp3, tmp4
+            tmp4, tmp2 = tmp2, tmp4
+        end
+        #end last column
+        #translate to clipped connection
+        # x x
+        # x .
+        # x x
+        # dilate/erode col x
+        viewout = view(out, :, xSize)
+        _unsafe_shift_arith!(f, tmp2, tmp, tmp5, viewcurrent)
+        LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
+        if iter > 1 && i < iter
+            src .= out
+        end
+    end
+
+    return out_actual
+end
+
 # optimized implementation for Bool inputs with max/min select function
 # 1) use &&, || instead of max, min
 # 2) short-circuit the result to avoid unnecessary indexing and computation
