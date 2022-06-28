@@ -12,7 +12,7 @@ on_CI = haskey(ENV, "GITHUB_ACTIONS")
 cameraman = Gray{N0f8}.(testimage("cameraman"))
 blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
 
-tst_sizes = on_CI ? (64,) : (256, 512)
+tst_sizes = on_CI ? (256,) : (256, 512)
 tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
