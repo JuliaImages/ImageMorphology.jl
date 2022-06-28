@@ -454,8 +454,8 @@ function _extreme_filter_box_2D!(f::MAX_OR_MIN, out, A, iter)
         # x x
         # dilate/erode col x
         viewout = view(out, :, xSize)
-        _unsafe_shift_arith!(f, tmp2, tmp, tmp5, viewcurrent)
-        LoopVectorization.vmap!(f, viewout, tmp3, tmp2)
+        _unsafe_shift_arith!(f, tmp4, tmp, tmp5, viewcurrent)
+        LoopVectorization.vmap!(f, viewout, tmp2, tmp3)
         if iter > 1 && i < iter
             src .= out
         end
