@@ -307,7 +307,16 @@ end
         out = OffsetArrays.no_offset_view(out)
         A = OffsetArrays.no_offset_view(A)
 
-        src = (out === A) || (iter > 1) ? copy(A) : A
+        src = if (out === A) || (iter > 1)
+            # To avoid the result affected by loop order, we need two arrays
+            T.(A)
+        elseif eltype(A) != T
+            # To avoid incorrect result, we need to ensure the eltypes are the same
+            # https://github.com/JuliaImages/ImageMorphology.jl/issues/104
+            T.(A)
+        else
+            A
+        end
         # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
         # all values are generated from the read-only `src`.
 
@@ -414,7 +423,16 @@ end
         out = OffsetArrays.no_offset_view(out)
         A = OffsetArrays.no_offset_view(A)
 
-        src = (out === A) || (iter > 1) ? copy(A) : A
+        src = if (out === A) || (iter > 1)
+            # To avoid the result affected by loop order, we need two arrays
+            T.(A)
+        elseif eltype(A) != T
+            # To avoid incorrect result, we need to ensure the eltypes are the same
+            # https://github.com/JuliaImages/ImageMorphology.jl/issues/104
+            T.(A)
+        else
+            A
+        end
         # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
         # all values are generated from the read-only `src`.
 
