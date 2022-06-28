@@ -272,15 +272,23 @@ end
 # Similar approach could be found in
 # Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176.
 # see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
-function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
+function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out::AbstractArray{T}, A, iter) where {T}
     @debug "call the AVX-enabled `extreme_filter` implementation for 2D SEDiamond" fname = _extreme_filter_diamond_2D!
     out_actual = out
 
     out = OffsetArrays.no_offset_view(out)
     A = OffsetArrays.no_offset_view(A)
 
-    # To avoid the result affected by loop order, we need two arrays
-    src = (out === A) || (iter > 1) ? copy(A) : A
+    src = if (out === A) || (iter > 1)
+        # To avoid the result affected by loop order, we need two arrays
+        T.(A)
+    elseif eltype(A) != T
+        # To avoid incorrect result, we need to ensure the eltypes are the same
+        # https://github.com/JuliaImages/ImageMorphology.jl/issues/104
+        T.(A)
+    else
+        A
+    end
     # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
     # all values are generated from the read-only `src`.
 
@@ -372,15 +380,23 @@ end
 # Similar approach could be found in
 # Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176.
 # see https://www.researchgate.net/publication/325480366_In-place_SIMD_Accelerated_Mathematical_Morphology
-function _extreme_filter_box_2D!(f::MAX_OR_MIN, out, A, iter)
+function _extreme_filter_box_2D!(f::MAX_OR_MIN, out::AbstractArray{T}, A, iter) where {T}
     @debug "call the AVX-enabled `extreme_filter` implementation for 2D SEBox" fname = _extreme_filter_box_2D!
     out_actual = out
 
     out = OffsetArrays.no_offset_view(out)
     A = OffsetArrays.no_offset_view(A)
 
-    # To avoid the result affected by loop order, we need two arrays
-    src = (out === A) || (iter > 1) ? copy(A) : A
+    src = if (out === A) || (iter > 1)
+        # To avoid the result affected by loop order, we need two arrays
+        T.(A)
+    elseif eltype(A) != T
+        # To avoid incorrect result, we need to ensure the eltypes are the same
+        # https://github.com/JuliaImages/ImageMorphology.jl/issues/104
+        T.(A)
+    else
+        A
+    end
     # NOTE(johnnychen94): we don't need to do `out .= src` here because it is write-only;
     # all values are generated from the read-only `src`.
 

@@ -110,6 +110,14 @@
                             out = extreme_filter(max, img, se)
                             @test out == ref
 
+                            # `maybe_floattype` is used to pre-allocate the output for
+                            # higher level operators (e.g., tophat) to avoid overflow
+                            # behavior. We need to ensure it works correctly.
+                            # https://github.com/JuliaImages/ImageMorphology.jl/issues/104
+                            out = similar(img, ImageMorphology.maybe_floattype(T))
+                            extreme_filter!(max, out, img, se)
+                            @test out == ref
+
                             imgc = centered(img)
                             outc = extreme_filter(max, imgc, se)
                             @test outc == centered(out)
