@@ -97,6 +97,7 @@ end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω) = _extreme_filter_diamond!(f, out, A, Ω)
+_extreme_filter!(::SEBox, f, out, A, Ω) = _extreme_filter_box!(f, out, A, Ω)
 function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
@@ -109,25 +110,6 @@ function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T
         return _extreme_filter_generic!(f, out, A, Ω)
     end
 end
-function _extreme_filter!(::SEDiamond, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
-    rΩ = strel_size(Ω) .÷ 2
-    if ndims(A) == 2 && all(rΩ[1] .== rΩ)
-        # super fast implementation and wins in all cases
-        return _extreme_filter_diamond!(f, out, A, Ω)
-    end
-
-    # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
-    true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
-    true_ratio == 1 && (out .= true; return out)
-    true_ratio == 0 && (out .= false; return out)
-    use_bool = (f === max && true_ratio > 0.4) || (f === min && true_ratio < 0.6)
-    if use_bool
-        return _extreme_filter_bool!(f, out, A, Ω)
-    else
-        return _extreme_filter_diamond!(f, out, A, Ω)
-    end
-end
-
 
 ###
 # Implementation details
@@ -376,6 +358,16 @@ function _extreme_filter_diamond_2D!(f::MAX_OR_MIN, out, A, iter)
     return out_actual
 end
 
+function _extreme_filter_box!(f, out, A, Ω::SEBoxArray{N}) where {N}
+    rΩ = strel_size(Ω) .÷ 2
+    if N == 2 && f isa MAX_OR_MIN && all(rΩ[1] .== rΩ)
+        iter = rΩ[1]
+        return _extreme_filter_box_2D!(f, out, A, iter)
+    else
+        return _extreme_filter_generic!(f, out, A, Ω)
+    end
+end
+
 # optimized `extreme_filter` implementation for SEBox SE and 2D images
 # Similar approach could be found in
 # Žlaus, Danijel & Mongus, Domen. (2018). In-place SIMD Accelerated Mathematical Morphology. 76-79. 10.1145/3206157.3206176.
@@ -514,4 +506,27 @@ Base.@propagate_inbounds function _minimum_fast(A::AbstractArray{Bool}, p, Ω)
         rst = rst && x
     end
     return rst
+end
+
+
+# runtime check to decide whether call optimized SEType implementation or Bool implementation
+for (SEType, func) in ((SEBox, _extreme_filter_box!), (SEDiamond, _extreme_filter_diamond!))
+    @eval function _extreme_filter!(::$SEType, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω) where {T<:Union{Gray{Bool},Bool}}
+        rΩ = strel_size(Ω) .÷ 2
+        if ndims(A) == 2 && all(rΩ[1] .== rΩ)
+            # super fast implementation and wins in all cases
+            return $func(f, out, A, Ω)
+        end
+
+        # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
+        true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
+        true_ratio == 1 && (out .= true; return out)
+        true_ratio == 0 && (out .= false; return out)
+        use_bool = (f === max && true_ratio > 0.4) || (f === min && true_ratio < 0.6)
+        if use_bool
+            return _extreme_filter_bool!(f, out, A, Ω)
+        else
+            return $func(f, out, A, Ω)
+        end
+    end
 end
