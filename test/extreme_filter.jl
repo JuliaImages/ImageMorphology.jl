@@ -92,23 +92,28 @@
         @test sum(abs, channelview(RGB.(Gray.(out))) - channelview(out)) < 1e-4
     end
 
-    @testset "optimization: diamond" begin
-        # ensure the optimized implementation work equivalently to the generic fallback implementation
-        for T in Any[Bool, Int, N0f8, Gray{N0f8}, Gray{Float64}, Float64]
-            for N in (1, 2, 3)
-                sz = ntuple(_ -> 32, N)
-                img = T == Int ? rand(1:10, sz...) : rand(T, sz...)
-                for r in (1, 3)
-                    dims_list = ntuple(i -> ntuple(identity, i), N)
-                    for dims in dims_list
-                        se = strel_diamond(ntuple(_ -> 2r + 1, N), dims)
-                        ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
-                        out = extreme_filter(max, img, se)
-                        @test out == ref
+    # Ensure our various implementations of extreme_filter are equivalent by testing against
+    # the generic implementation
+    for (se_gen_func, se_name) in Any[(strel_diamond, "diamond"), (strel_box, "box")]
+        test_name = "optimization: $se_name"
+        @testset "$test_name" begin
+            # ensure the optimized implementation work equivalently to the generic fallback implementation
+            for T in Any[Bool, Int, N0f8, Gray{N0f8}, Gray{Float64}, Float64]
+                for N in (1, 2, 3)
+                    sz = ntuple(_ -> 32, N)
+                    img = T == Int ? rand(1:10, sz...) : rand(T, sz...)
+                    for r in (1, 3)
+                        dims_list = ntuple(i -> ntuple(identity, i), N)
+                        for dims in dims_list
+                            se = se_gen_func(ntuple(_ -> 2r + 1, N), dims)
+                            ref = ImageMorphology._extreme_filter_generic!(max, similar(img), img, se)
+                            out = extreme_filter(max, img, se)
+                            @test out == ref
 
-                        imgc = centered(img)
-                        outc = extreme_filter(max, imgc, se)
-                        @test outc == centered(out)
+                            imgc = centered(img)
+                            outc = extreme_filter(max, imgc, se)
+                            @test outc == centered(out)
+                        end
                     end
                 end
             end
