@@ -12,7 +12,7 @@ on_CI = haskey(ENV, "GITHUB_ACTIONS")
 cameraman = Gray{N0f8}.(testimage("cameraman"))
 blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
 
-tst_sizes = on_CI ? (64, ) : (256, 512)
+tst_sizes = on_CI ? (64,) : (256, 512)
 tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
@@ -27,10 +27,14 @@ let grp = SUITE["extreme_filter"]
             grp[T]["$sz×$sz"] = BenchmarkGroup()
             se = strel_diamond((3, 3))
             grp[T]["$sz×$sz"]["r1_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = strel_box((3, 3))
+            grp[T]["$sz×$sz"]["r1_box"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = centered(collect(se))
             grp[T]["$sz×$sz"]["r1_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = strel_diamond((11, 11))
             grp[T]["$sz×$sz"]["r5_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = strel_box((11, 11))
+            grp[T]["$sz×$sz"]["r5_box"] = @benchmarkable extreme_filter(max, $tst_img, $se)
             se = centered(collect(se))
             grp[T]["$sz×$sz"]["r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
         end
