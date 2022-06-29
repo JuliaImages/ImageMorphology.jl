@@ -3,14 +3,34 @@ module ImageMorphology
 using ImageCore
 using ImageCore: GenericGrayImage, NumberLike
 using ImageCore.MappedArrays: mappedarray, of_eltype
+using OffsetArrays
+using OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
 using Requires
+using LoopVectorization
+
+const _docstring_se = """
+`se` is the structuring element that defines the neighborhood of the image. See
+[`strel`](@ref) for more details. If `se` is not specified, then it will use the
+[`strel_box`](@ref) with an extra keyword `dims` to control the dimensions to filter,
+and half-size `r` to control the diamond size.
+"""
+include("StructuringElements/StructuringElements.jl")
+using .StructuringElements
 
 include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
-include("dilation_and_erosion.jl")
+include("extreme_filter.jl")
+include("ops/dilate.jl")
+include("ops/erode.jl")
+include("ops/closing.jl")
+include("ops/opening.jl")
+include("ops/tophat.jl")
+include("ops/bothat.jl")
+include("ops/mgradient.jl")
+include("ops/mlaplacian.jl")
 include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
@@ -18,21 +38,41 @@ include("maxtree.jl")
 include("geodesy.jl")
 
 include("feature_transform.jl")
+include("utils.jl")
 using .FeatureTransform
 
 include("deprecations.jl")
 
 export
+    # structuring_element.jl
+    centered, # from OffsetArrays
+    strel,
+    strel_chain,
+    strel_product,
+    strel_type,
+    strel_size,
+    strel_diamond,
+    strel_box,
+
+    # operations
     dilate,
     dilate!,
     erode,
     erode!,
+    extreme_filter,
+    extreme_filter!,
     opening,
+    opening!,
     closing,
+    closing!,
     tophat,
+    tophat!,
     bothat,
-    morphogradient,
-    morpholaplace,
+    bothat!,
+    mgradient,
+    mgradient!,
+    mlaplacian,
+    mlaplacian!,
 
     # connected.jl
     label_components,
@@ -40,7 +80,7 @@ export
     component_boxes,
     component_lengths,
     component_indices,
-    component_subscripts,
+    component_subscripts, # deprecated (v0.4)
     component_centroids,
 
     # convexhull.jl
@@ -57,10 +97,21 @@ export
 
     # maxtree.jl
     MaxTree,
-    areas, boundingboxes, diameters,
-    area_opening, area_opening!, area_closing, area_closing!,
-    diameter_opening, diameter_opening!, diameter_closing, diameter_closing!,
-    local_maxima!, local_maxima, local_minima!, local_minima,
+    areas,
+    boundingboxes,
+    diameters,
+    area_opening,
+    area_opening!,
+    area_closing,
+    area_closing!,
+    diameter_opening,
+    diameter_opening!,
+    diameter_closing,
+    diameter_closing!,
+    local_maxima!,
+    local_maxima,
+    local_minima!,
+    local_minima,
 
     #feature_transform.jl
     feature_transform,
@@ -72,15 +123,19 @@ export
     hmaximum,
     hminimum,
     regional_maxima,
-    regional_minima,
-
-    clearborder
+    regional_minima, clearborder
 
 function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
         # morphological operations for ImageMeta
-        dilate(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, dilate!(copy(ImageMetadata.arraydata(img)); kwargs...))
-        erode(img::ImageMetadata.ImageMeta; kwargs...) = ImageMetadata.shareproperties(img, erode!(copy(ImageMetadata.arraydata(img)); kwargs...))
+        function dilate(img::ImageMetadata.ImageMeta; kwargs...)
+            out = dilate!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
+            return ImageMetadata.shareproperties(img, out)
+        end
+        function erode(img::ImageMetadata.ImageMeta; kwargs...)
+            out = erode!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
+            return ImageMetadata.shareproperties(img, out)
+        end
     end
 end
 

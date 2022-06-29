@@ -13,21 +13,20 @@ Parameters:
 function clearborder(img::AbstractArray, width::Integer=1, background::Integer=0)
 
     for i in size(img)
-        if(width > i)
+        if (width > i)
             throw(ArgumentError("Border width must not be greater than size of the image."))
         end
     end
 
-    connectivity = ntuple(i -> 3, ndims(img))
-    labels = label_components(img,trues(connectivity))
+    labels = label_components(img, strel_box(img))
     number = maximum(labels) + 1
 
     dimensions = size(img)
     outerrange = CartesianIndices(map(i -> 1:i, dimensions))
-    innerrange = CartesianIndices(map(i -> 1+width:i-width, dimensions))
+    innerrange = CartesianIndices(map(i -> (1 + width):(i - width), dimensions))
 
     border_labels = Set{Int}()
-    for i in EdgeIterator(outerrange,innerrange)
+    for i in EdgeIterator(outerrange, innerrange)
         push!(border_labels, labels[i])
     end
 
@@ -36,7 +35,7 @@ function clearborder(img::AbstractArray, width::Integer=1, background::Integer=0
         if labels[itr] in border_labels
             new_img[itr] = background
         else
-        	new_img[itr] = img[itr]
+            new_img[itr] = img[itr]
         end
     end
 

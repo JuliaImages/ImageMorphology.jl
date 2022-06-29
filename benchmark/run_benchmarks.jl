@@ -2,5 +2,14 @@
 using BenchmarkCI
 on_CI = haskey(ENV, "GITHUB_ACTIONS")
 
-BenchmarkCI.judge()
-on_CI ? BenchmarkCI.postjudge() : BenchmarkCI.displayjudgement()
+judgement = BenchmarkCI.judge()
+if on_CI
+    BenchmarkCI.postjudge()
+else
+    ciresult = BenchmarkCI.CIResult(; judgement=judgement)
+    output_file = "benchmark_result.md"
+    @info "benchmark finished" output_file
+    open(output_file, "w") do io
+        BenchmarkCI.printcommentmd(io, ciresult)
+    end
+end

@@ -26,13 +26,15 @@ See also: [`distance_transform`](@ref).
 
 # Citation
 
-'A Linear Time Algorithm for Computing Exact Euclidean Distance
-Transforms of Binary Images in Arbitrary Dimensions' [Maurer et al.,
-2003] (DOI: 10.1109/TPAMI.2003.1177156)
+- [1] Maurer, Calvin R., Rensheng Qi, and Vijay Raghavan. "A linear time algorithm for
+  computing exact Euclidean distance transforms of binary images in arbitrary dimensions."
+  _IEEE Transactions on Pattern Analysis and Machine Intelligence_ 25.2 (2003): 265-270.
 """
-function feature_transform(img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N};
-                           weights::Union{Nothing,NTuple{N}}=nothing,
-                           nthreads::Int = length(img) < 1000 ? 1 : Threads.nthreads()) where N
+function feature_transform(
+    img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N};
+    weights::Union{Nothing,NTuple{N}}=nothing,
+    nthreads::Int=length(img) < 1000 ? 1 : Threads.nthreads(),
+) where {N}
     nthreads > 0 || error("the number of threads must be positive, got $nthreads")
     N == 0 && return reshape([CartesianIndex()])
     # Allocate the output
@@ -48,14 +50,14 @@ function feature_transform(img::AbstractArray{<:Union{Bool,AbstractGray{Bool}},N
         # Finish the last dimension (for multithreading, we avoid doing it in computeft!)
         finishft!(F, img, axsimg, CartesianIndex(), weights, tmp)
     else
-        tmps = [typeof(drft)[] for _ = 1:nthreads] # temporary storage (one per thread)
+        tmps = [typeof(drft)[] for _ in 1:nthreads] # temporary storage (one per thread)
         saxs = SplitAxes(axsimg, nthreads - 0.2)   # give main thread less work since it also schedules the others
-        tasks = [Threads.@spawn computeft!(F, img, saxs[i], CartesianIndex(), weights, tmps[i]) for i = 2:nthreads]
+        tasks = [Threads.@spawn computeft!(F, img, saxs[i], CartesianIndex(), weights, tmps[i]) for i in 2:nthreads]
         computeft!(F, img, saxs[1], CartesianIndex(), weights, tmps[1])
         foreach(wait, tasks)
         # Finish the last dimension
-        saxs1 = SplitAxes(axsimg[1:N-1], nthreads - 0.2)
-        tasks = [Threads.@spawn finishft!(F, img, (saxs1[i]..., axsimg[end]), CartesianIndex(), weights, tmps[i]) for i = 2:nthreads]
+        saxs1 = SplitAxes(axsimg[1:(N - 1)], nthreads - 0.2)
+        tasks = [Threads.@spawn finishft!(F, img, (saxs1[i]..., axsimg[end]), CartesianIndex(), weights, tmps[i]) for i in 2:nthreads]
         finishft!(F, img, (saxs1[1]..., axsimg[end]), CartesianIndex(), weights, tmps[1])
         foreach(wait, tasks)
     end
@@ -73,7 +75,7 @@ default value of `nothing` is equivalent to `w=(1,1,...)`.
 
 See also: [`feature_transform`](@ref).
 """
-function distance_transform(F::AbstractArray{CartesianIndex{N},N}, w::Union{Nothing,NTuple{N}}=nothing) where N
+function distance_transform(F::AbstractArray{CartesianIndex{N},N}, w::Union{Nothing,NTuple{N}}=nothing) where {N}
     # To allocate the proper output type, compute the distance for one element
     R = CartesianIndices(axes(F))
     dst = wnorm2(zero(eltype(R)), w)
@@ -85,17 +87,17 @@ function distance_transform(F::AbstractArray{CartesianIndex{N},N}, w::Union{Noth
         D[i] = fi == ∅ ? Inf : sqrt(wnorm2(fi - i, w))
     end
 
-    D
+    return D
 end
 
 # This recursive implementation computes the feature transform, other than for finishing the
 # work along the final axis (axis `N` for an `N` dimensional array).
 # Omission of the final axis makes it easy to implement multithreading.
 # You can finish the final axis with a call to `finishft!` with `jpost = CartesianIndex()`.
-function computeft!(F, img, axsimg, jpost::CartesianIndex{K}, pixelspacing, tmp) where K
+function computeft!(F, img, axsimg, jpost::CartesianIndex{K}, pixelspacing, tmp) where {K}
     # tmp is workspace for voronoift!
     ∅ = nullindex(F)                             # sentinel position
-    if K == ndims(img)-1                           # innermost loop (d=1 case, line 1)
+    if K == ndims(img) - 1                           # innermost loop (d=1 case, line 1)
         # Fig. 2, lines 2-8
         @inbounds @simd for i1 in axes(img, 1)
             F[i1, jpost] = gray(img[i1, jpost]) ? CartesianIndex(i1, jpost) : ∅
@@ -120,7 +122,7 @@ function finishft!(F, img, axsimg, jpost, pixelspacing, tmp)
 end
 
 function voronoift!(F, img, jpre, jpost, pixelspacing, tmp)
-    d = length(jpre)+1   # axis to work along
+    d = length(jpre) + 1   # axis to work along
     ∅ = nullindex(F)
     empty!(tmp)
     for i in axes(img, d)
@@ -132,7 +134,7 @@ function voronoift!(F, img, jpre, jpost, pixelspacing, tmp)
             if length(tmp) < 2
                 push!(tmp, fidist)
             else
-                @inbounds while length(tmp) >= 2 && removeft(tmp[end-1], tmp[end], fidist)
+                @inbounds while length(tmp) >= 2 && removeft(tmp[end - 1], tmp[end], fidist)
                     pop!(tmp)
                 end
                 push!(tmp, fidist)
@@ -146,10 +148,10 @@ function voronoift!(F, img, jpre, jpost, pixelspacing, tmp)
     @inbounds fthis = tmp[l].fi
     for i in axes(img, d)
         xi = CartesianIndex(jpre, i, jpost)
-        d2this = wnorm2(xi-fthis, pixelspacing)
+        d2this = wnorm2(xi - fthis, pixelspacing)
         while l < nS
-            @inbounds fnext = tmp[l+1].fi
-            d2next = wnorm2(xi-fnext, pixelspacing)
+            @inbounds fnext = tmp[l + 1].fi
+            d2next = wnorm2(xi - fnext, pixelspacing)
             if d2this > d2next
                 d2this, fthis = d2next, fnext
                 l += 1
@@ -159,7 +161,7 @@ function voronoift!(F, img, jpre, jpost, pixelspacing, tmp)
         end
         @inbounds F[xi] = fthis
     end
-    F
+    return F
 end
 
 ## Utilities
@@ -183,15 +185,16 @@ tuple with the same number of coordiantes as `fi`.
 function DistRFT(fi::CartesianIndex, w, jpre::CartesianIndex, jpost::CartesianIndex)
     d2pre, ipost, wpost = dist2pre(fi.I, w, jpre.I)
     d2post = wnorm2(CartesianIndex(ipost) - jpost, wpost)
-    @inbounds fid = fi[length(jpre)+1]
-    DistRFT(fi, d2pre + d2post, fid)
+    @inbounds fid = fi[length(jpre) + 1]
+    return DistRFT(fi, d2pre + d2post, fid)
 end
-DistRFT(fi::CartesianIndex, w, jpre::Tuple, jpost::Tuple) =
-    DistRFT(fi, w, CartesianIndex(jpre), CartesianIndex(jpost))
+function DistRFT(fi::CartesianIndex, w, jpre::Tuple, jpost::Tuple)
+    return DistRFT(fi, w, CartesianIndex(jpre), CartesianIndex(jpost))
+end
 
 @inline function removeft(u, v, w)
-    a, b, c = v.d-u.d, w.d-v.d, w.d-u.d
-    c*v.dist2 - b*u.dist2 - a*w.dist2 > a*b*c
+    a, b, c = v.d - u.d, w.d - v.d, w.d - u.d
+    return c * v.dist2 - b * u.dist2 - a * w.dist2 > a * b * c
 end
 
 """
@@ -204,10 +207,10 @@ _truncatet(out, inds::NTuple{N}, j::CartesianIndex{N}) where {N} = Base.front(ou
 @inline _truncatet(out, inds, j) = _truncatet((out..., inds[1]), Base.tail(inds), j)
 
 if VERSION < v"1.1"
-    nullindex(A::AbstractArray{T,N}) where {T,N} = typemin(Int)*one(CartesianIndex{N})
+    nullindex(A::AbstractArray{T,N}) where {T,N} = typemin(Int) * one(CartesianIndex{N})
 else
     # This is the proper implementation
-    nullindex(A::AbstractArray{T,N}) where {T,N} = typemin(Int)*oneunit(CartesianIndex{N})
+    nullindex(A::AbstractArray{T,N}) where {T,N} = typemin(Int) * oneunit(CartesianIndex{N})
 end
 
 """
@@ -216,10 +219,10 @@ end
 Compute `∑ (w[i]*x[i])^2`.  Specifying `nothing` for `w` is equivalent to `w = (1,1,...)`.
 """
 wnorm2(x::CartesianIndex, w) = _wnorm2(0, x.I, w)
-_wnorm2(s, ::Tuple{}, ::Nothing)    = s
+_wnorm2(s, ::Tuple{}, ::Nothing) = s
 _wnorm2(s, ::Tuple{}, ::Tuple{}) = s
 @inline _wnorm2(s, x, w::Nothing) = _wnorm2(s + sqr(x[1]), Base.tail(x), w)
-@inline _wnorm2(s, x, w) = _wnorm2(s + sqr(w[1]*x[1]), Base.tail(x), Base.tail(w))
+@inline _wnorm2(s, x, w) = _wnorm2(s + sqr(w[1] * x[1]), Base.tail(x), Base.tail(w))
 
 """
     dist2pre(x, w, jpre) -> s, xpost, wpost
@@ -230,10 +233,14 @@ element `length(jpre)+1`).
 """
 dist2pre(x::Tuple, w, jpre) = _dist2pre(0, x, w, jpre)
 _dist2pre(s, x, w::Nothing, ::Tuple{}) = s, Base.tail(x), w
-_dist2pre(s, x, w,       ::Tuple{}) = s, Base.tail(x), Base.tail(w)
-@inline _dist2pre(s, x, w::Nothing, jpre) = _dist2pre(s + sqr(x[1]-jpre[1]), Base.tail(x), w, Base.tail(jpre))
-@inline _dist2pre(s, x, w, jpre) = _dist2pre(s + sqr(w[1]*(x[1]-jpre[1])), Base.tail(x), Base.tail(w), Base.tail(jpre))
+_dist2pre(s, x, w, ::Tuple{}) = s, Base.tail(x), Base.tail(w)
+@inline function _dist2pre(s, x, w::Nothing, jpre)
+    return _dist2pre(s + sqr(x[1] - jpre[1]), Base.tail(x), w, Base.tail(jpre))
+end
+@inline function _dist2pre(s, x, w, jpre)
+    return _dist2pre(s + sqr(w[1] * (x[1] - jpre[1])), Base.tail(x), Base.tail(w), Base.tail(jpre))
+end
 
-@inline sqr(x) = x*x
+@inline sqr(x) = x * x
 
 end # module

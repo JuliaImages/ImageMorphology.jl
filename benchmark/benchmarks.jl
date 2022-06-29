@@ -12,10 +12,55 @@ on_CI = haskey(ENV, "GITHUB_ACTIONS")
 cameraman = Gray{N0f8}.(testimage("cameraman"))
 blobs = binarize(Gray.(testimage("blobs")), Otsu()) .> 0.5
 
-tst_sizes = on_CI ? (64, ) : (256, 512)
+tst_sizes = on_CI ? (256,) : (256, 512)
 tst_types = (Gray{N0f8}, Gray{Float32})
 
 const SUITE = BenchmarkGroup()
+
+SUITE["extreme_filter"] = BenchmarkGroup()
+let grp = SUITE["extreme_filter"]
+    for T in [tst_types..., Int]
+        grp[T] = BenchmarkGroup()
+        for sz in tst_sizes
+            tst_img = rand(T, sz, sz)
+
+            grp[T]["$sz×$sz"] = BenchmarkGroup()
+            se = strel_diamond((3, 3))
+            grp[T]["$sz×$sz"]["r1_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = strel_box((3, 3))
+            grp[T]["$sz×$sz"]["r1_box"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r1_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = strel_diamond((11, 11))
+            grp[T]["$sz×$sz"]["r5_diamond"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = strel_box((11, 11))
+            grp[T]["$sz×$sz"]["r5_box"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r5_generic"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+        end
+    end
+end
+let grp = SUITE["extreme_filter"]
+    T = Bool
+    grp[T] = BenchmarkGroup()
+    for sz in tst_sizes
+        grp[T]["$sz×$sz"] = BenchmarkGroup()
+        for (cname, cr) in [("worst", 0.95), ("best", 0.05), ("random", 0.5)]
+            tst_img = fill(zero(T), sz, sz)
+            tst_img[rand(sz, sz) .>= cr] .= true
+
+            se = strel_diamond((3, 3))
+            grp[T]["$sz×$sz"]["r1_diamond_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r1_bool_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+
+            se = strel_diamond((11, 11))
+            grp[T]["$sz×$sz"]["r5_diamond_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+            se = centered(collect(se))
+            grp[T]["$sz×$sz"]["r5_bool_$cname"] = @benchmarkable extreme_filter(max, $tst_img, $se)
+        end
+    end
+end
 
 SUITE["dilatation_and_erosion"] = BenchmarkGroup()
 let grp = SUITE["dilatation_and_erosion"]
@@ -63,16 +108,14 @@ let grp = SUITE["geodesy"]
     for sz in tst_sizes
         tst_img = (imresize((cameraman), (sz, sz)))
         B = similar(tst_img)
-        grp["hmaxima"]["$sz×$sz"] = @benchmarkable hmaxima($B, trues(3,3), Gray{N0f8}.(0.2))
+        grp["hmaxima"]["$sz×$sz"] = @benchmarkable hmaxima($B, trues(3, 3), Gray{N0f8}.(0.2))
     end
     grp["regional_maxima"] = BenchmarkGroup()
     for sz in tst_sizes
         tst_img = (imresize((cameraman), (sz, sz)))
         B = similar(tst_img)
-        grp["regional_maxima"]["$sz×$sz"] = @benchmarkable regional_maxima($B, trues(3,3))
+        grp["regional_maxima"]["$sz×$sz"] = @benchmarkable regional_maxima($B, trues(3, 3))
     end
-    erode_blobs=erode(blobs)
-    grp["underbuild_binary"] = @benchmarkable underbuild($erode_blobs,$blobs,trues(3,3))
+    erode_blobs = erode(blobs)
+    grp["underbuild_binary"] = @benchmarkable underbuild($erode_blobs, $blobs, trues(3, 3))
 end
-
-

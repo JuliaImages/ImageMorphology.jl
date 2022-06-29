@@ -35,22 +35,26 @@ julia> .!(ans)
  0  0  1  1  0  0
 ```
 """
-imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::AbstractArray{Bool}) =
-    _imfill(img, interval, label_components(img,connectivity))
-imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}; dims=coords_spatial(img)) =
-    _imfill(img, interval, label_components(img; dims=dims))
-imfill(img::AbstractArray{Bool}, interval, args...; kwargs...) =
-    imfill(img, (minimum(interval)::Real, maximum(interval)::Real), args...; kwargs...)
+function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, connectivity::AbstractArray{Bool})
+    return _imfill(img, interval, label_components(img, connectivity))
+end
+function imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}; dims=coords_spatial(img))
+    return _imfill(img, interval, label_components(img; dims=dims))
+end
+function imfill(img::AbstractArray{Bool}, interval, args...; kwargs...)
+    return imfill(img, (minimum(interval)::Real, maximum(interval)::Real), args...; kwargs...)
+end
 
 function _imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, labels)
     if interval[1] > interval[2] || interval[1] < 0 || interval[2] < 0
-        throw(DomainError(interval,"Interval must be non-negative and in format (min_range,max_range)"))
+        msg = "Interval must be non-negative and in format (min_range,max_range)"
+        throw(DomainError(interval, msg))
     end
     count_labels = component_lengths(labels)
 
     new_img = similar(img)
     for ind in eachindex(img)
-        if img[ind] == true && interval[1] <= count_labels[labels[ind]+1] <= interval[2]
+        if img[ind] == true && interval[1] <= count_labels[labels[ind]] <= interval[2]
             new_img[ind] = false
         else
             new_img[ind] = img[ind]
@@ -58,4 +62,4 @@ function _imfill(img::AbstractArray{Bool}, interval::Tuple{Real,Real}, labels)
     end
 
     return new_img
- end
+end

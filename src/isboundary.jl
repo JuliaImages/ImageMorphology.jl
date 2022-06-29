@@ -3,27 +3,24 @@
 
 Finds the boundaries that are just within each object, replacing the original image.
 `background` is the scalar value of the background pixels which will not be marked as boundaries.
-Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
+Keyword arguments are passed to `extreme_filter` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
 See out-of-place version, [`isboundary`](@ref), for examples.
 """
-function isboundary!(img::AbstractArray{Bool,N};
-                         background=false,
-                         kwargs...
-                        ) where N
+function isboundary!(img::AbstractArray{Bool,N}; background=false, kwargs...) where {N}
     # Find regions where there is at least one background pixel
     # centered on a foreground pixel
     if background == true
         # background_img = img
         # foreground_img = .!img
-        img .= .!img .& extremefilt!(copy(img), |; kwargs...)
+        img .= .!img .& extreme_filter(|, img; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .= .!img .& mapwindow(any, img, (3,3))
     elseif background == false
         # background_img = .!img
         # foreground_img = img
-        img .&= extremefilt!(.!img, |; kwargs...)
+        img .&= extreme_filter(|, .!img; kwargs...)
         # Alternatively, with ImageFiltering.jl
         # img .&= mapwindow(any, .!img, (3,3))
     else
@@ -31,22 +28,21 @@ function isboundary!(img::AbstractArray{Bool,N};
         # background is neither true or false, use more generic algorithm
         background = Int8(-1) # Any value other than true or false will do
         #allequal(x,y) = ifelse(x == y, x, background)
-        allequal(x,y) = x == y ? x : background
+        allequal(x, y) = x == y ? x : background
         # the entire image is the foreground
-        img .= (extremefilt!(Int8.(img), allequal; kwargs...) .== background)
+        img .= (extreme_filter!(allequal, similar(img, Int8), img; kwargs...) .== background)
     end
     return img
 end
-function isboundary!(img::AbstractArray{T};
-                          background = zero(T),
-                          kwargs...) where T
+function isboundary!(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
     # Find regions where that are not homogeneous (all equal)
     # centered on a foreground pixel
     # background_img = img .== background
     # foreground_img = img .!= background
     #allequal(x,y) = ifelse(x == y, x, background)
-    allequal(x,y) = x == y ? x : background
-    img .= (extremefilt!(copy(img), allequal; kwargs...) .== background) .& (img .!= background)
+    allequal(x, y) = x == y ? x : background
+    m = extreme_filter(allequal, img; kwargs...)
+    img .= (m .== background) .& (img .!= background)
     # Alternatively, with ImageFiltering.jl
     # allequal(x) = all(==(first(x)), @view(x[2:end]))
     # .!mapwindow(allequal, A, (3,3)) .& (A .!= background)
@@ -61,7 +57,7 @@ Finds the boundaries that are just within each object.
 Keyword arguments are passed to `extremefilt!` which include `dims` indicating the dimension(s)
 over which to discover boundaries.
 
-See also its in-place version [`find_boundaries!`](@ref) and the alternative version that finds thick boundaries, [`isboundary_thick`](@ref).
+See also its in-place version [`isboundary!`](@ref) and the alternative version that finds thick boundaries, [`isboundary_thick`](@ref ImageMorphology.isboundary_thick).
 
 # Examples
 
@@ -168,11 +164,8 @@ julia> isboundary(A .!= 0; dims = 2)
  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
 ```
 """
-function isboundary(img::AbstractArray{T};
-                         background = zero(T),
-                         kwargs...
-                        ) where T
-    isboundary!(copy(img); background = background, kwargs...)
+function isboundary(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
+    return isboundary!(copy(img); background=background, kwargs...)
 end
 
 ## Alternate implementations using dilate and erode
@@ -210,15 +203,12 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 =#
 
-# Specific implementation of `isboundary_thick` using dilate and erode similar to scikit-image, uses extremefilt! twice
+# Specific implementation of `isboundary_thick` using dilate and erode similar to scikit-image, uses extreme_filter twice
 function isboundary_thick_dilate_erode(img::AbstractArray; kwargs...)
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L167
     return dilate(img; kwargs...) .!= erode(img; kwargs...)
 end
-function isboundary_dilate_erode(img::AbstractArray{T};
-                                      background = zero(T),
-                                      kwargs...
-                                     ) where T
+function isboundary_dilate_erode(img::AbstractArray{T}; background=zero(T), kwargs...) where {T}
     # https://github.com/scikit-image/scikit-image/blob/d44ceda6241cb23a22dc8abf09a05090ed14da7f/skimage/segmentation/boundaries.py#L165-L170
     thick_boundaries = isboundary_thick_dilate_erode(img; kwargs...)
     foreground_img = img .!= background
@@ -229,7 +219,7 @@ end
 
 Find thick boundaries that are just outside and just inside the objects.
 This is a union of the inner and outer boundaries.
-Keyword `dims` indicates over which dimensions to look for boundaries. This `dims` and additional keywords `kwargs` are passed to [`extremefilt!`](@ref).
+Keyword `dims` indicates over which dimensions to look for boundaries. This `dims` and additional keywords `kwargs` are passed to [`extreme_filter`](@ref).
 
 See also [`isboundary`](@ref) which just yields the inner boundaries.
 
