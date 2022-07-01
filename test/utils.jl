@@ -34,9 +34,9 @@ end
     @test_nowarn ImageMorphology.require_select_function(max, Int)
     @test_nowarn ImageMorphology.require_select_function(min, Gray{N0f8})
 
-    msg = "function `min` is not a well-defined select function on type `ComplexF64`: does `f(x::T, y::T)` work as expected?"
+    msg = "function `min` is not a well-defined select function on type `ComplexF64` and `ComplexF64`: does `f(x::T1, y::T2)` work as expected?"
     @test_throws ArgumentError(msg) ImageMorphology.require_select_function(min, ComplexF64)
     f = (x, y) -> min(x, y)
-    msg = "function `$f` is not a well-defined select function on type `RGB{Float32}`: does `f(x::T, y::T)` work as expected?"
-    @test_throws ArgumentError ImageMorphology.require_select_function(f, RGB{Float32})
+    msg = "function `$f` is not a well-defined select function on type `RGB{Float32}` and `RGB{Float32}`: does `f(x::T1, y::T2)` work as expected?"
+    @test_throws ArgumentError(msg) ImageMorphology.require_select_function(f, RGB{Float32})
 end

@@ -76,7 +76,7 @@
     @testset "multi channel image" begin
         # supporting color image requires some reduced ordering function
         img = rand(RGB, 32, 32)
-        msg = "function `max` is not a well-defined select function on type `RGB{Float64}`: does `f(x::T, y::T)` work as expected?"
+        msg = "function `max` is not a well-defined select function on type `RGB{Float64}` and `RGB{Float64}`: does `f(x::T1, y::T2)` work as expected?"
         @test_throws ArgumentError(msg) extreme_filter(max, img)
 
         # the test functions below don't make much sense in practice, but it's good to test them
