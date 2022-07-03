@@ -77,6 +77,16 @@ let grp = SUITE["dilatation_and_erosion"]
     end
 end
 
+SUITE["mreconstruct"] = BenchmarkGroup()
+let grp = SUITE["mreconstruct"]
+    @assert eltype(blobs) == Bool
+    erode_blobs = erode(blobs)
+    grp["Bool"] = @benchmarkable mreconstruct(dilate, $erode_blobs, $blobs)
+    for T in tst_types
+        grp["$T"] = @benchmarkable mreconstruct(dilate, $(T.(erode_blobs)), $(T.(blobs)))
+    end
+end
+
 SUITE["connected"] = BenchmarkGroup()
 let grp = SUITE["connected"]
     grp["label_components"] = @benchmarkable label_components($blobs)
