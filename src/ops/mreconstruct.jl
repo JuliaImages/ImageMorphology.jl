@@ -37,7 +37,7 @@ julia> mask = [9 0 0 0 0; 0 8 7 1 0; 0 9 0 4 0; 0 0 0 4 0; 0 0 6 5 6; 0 0 9 8 9]
  0  0  6  5  6
  0  0  9  8  9
 
-julia> mreconstruct(dilate, marker, mask)
+julia> mreconstruct(dilate, marker, mask) # equivalent to underbuild(marker, mask)
 6×5 Matrix{$Int}:
  8  0  0  0  0
  0  8  7  1  0
@@ -49,7 +49,9 @@ julia> mreconstruct(dilate, marker, mask)
 
 # See also
 
-The inplace version of this function is [`mreconstruct!`](@ref).
+The inplace version of this function is [`mreconstruct!`](@ref). There are also aliases
+[`underbuild`](@ref) for reconstruction by dilation and [`overbuild`](@ref) for
+reconstruction by erosion.
 
 # References
 
