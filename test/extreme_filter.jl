@@ -100,7 +100,7 @@
             # ensure the optimized implementation work equivalently to the generic fallback implementation
             for T in Any[Bool, Int, N0f8, Gray{N0f8}, Gray{Float64}, Float64]
                 for N in (1, 2, 3)
-                    sz = ntuple(_ -> 32, N)
+                    sz = N == 3 ? (32, 32, 5) : ntuple(_ -> 32, N)
                     img = T == Int ? rand(1:10, sz...) : rand(T, sz...)
                     for r in (1, 3)
                         dims_list = ntuple(i -> ntuple(identity, i), N)

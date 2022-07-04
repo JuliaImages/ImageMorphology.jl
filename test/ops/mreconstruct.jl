@@ -103,7 +103,7 @@ end
         # extensive numeric test against different types
         for T in Any[Bool, Int, N0f8, Gray{N0f8}, Gray{Float64}, Float64]
             for N in (1, 2, 3)
-                sz = ntuple(_ -> 64, N)
+                sz = N == 3 ? (32, 32, 5) : ntuple(_ -> 32, N)
                 mask = T == Int ? rand(1:10, sz...) : rand(T, sz...)
                 dims_list = ntuple(i -> ntuple(identity, i), N)
                 for dims in dims_list
