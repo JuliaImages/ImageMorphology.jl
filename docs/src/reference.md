@@ -54,6 +54,17 @@ mlaplacian
 mlaplacian!
 ```
 
+## Geodesic operations
+
+```@docs
+mreconstruct
+mreconstruct!
+underbuild
+underbuild!
+overbuild
+overbuild!
+```
+
 ## Components and segmentation
 
 ```@docs
