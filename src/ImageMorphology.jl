@@ -1,5 +1,6 @@
 module ImageMorphology
 
+using DataStructures: Queue, enqueue!, dequeue!
 using ImageCore
 using ImageCore: GenericGrayImage
 using OffsetArrays
@@ -30,6 +31,9 @@ include("ops/tophat.jl")
 include("ops/bothat.jl")
 include("ops/mgradient.jl")
 include("ops/mlaplacian.jl")
+include("ops/mreconstruct.jl")
+include("ops/underbuild.jl")
+include("ops/overbuild.jl")
 include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
@@ -71,6 +75,12 @@ export
     mgradient!,
     mlaplacian,
     mlaplacian!,
+    mreconstruct,
+    mreconstruct!,
+    underbuild,
+    underbuild!,
+    overbuild,
+    overbuild!,
 
     # connected.jl
     label_components,

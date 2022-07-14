@@ -61,3 +61,10 @@ Structuring element is the key concept in morphology. If you're not familiar wit
 | [`tophat`](@ref) and [`tophat!`](@ref)                 | extract white details     | [`tophat` operation](@ref op_tophat)   |
 | [`mgradient`](@ref) and [`mgradient!`](@ref)           | morphological gradient    | [`mgradient` operation](@ref op_mgradient)|
 | [`mlaplacian`](@ref) and [`mlaplacian!`](@ref)             | morpholigical laplacian   | [`mlaplacian` operation](@ref op_mlaplacian) |
+
+### Geodesic operations
+
+| name                       | summary | examples |
+| :--------------------------| :------ | ---- |
+| [`underbuild`](@ref)       | morphological reconstruction by dilation, see also [`mreconstruct`](@ref) | [`underbuild` operation](@ref op_underbuild) and [`mreconstruct` operation](@ref op_mreconstruct)
+| [`underbuild`](@ref)       | morphological reconstruction by erosion, see also [`mreconstruct`](@ref) | [`overbuild` operation](@ref op_overbuild) and [`mreconstruct` operation](@ref op_mreconstruct)

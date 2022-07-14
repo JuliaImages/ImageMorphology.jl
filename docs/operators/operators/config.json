@@ -8,6 +8,9 @@
         "tophat.jl",
         "bothat.jl",
         "mgradient.jl",
-        "mlaplacian.jl"
+        "mlaplacian.jl",
+        "mreconstruct.jl",
+        "underbuild.jl",
+        "overbuild.jl"
     ]
 }
