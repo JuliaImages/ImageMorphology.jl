@@ -138,7 +138,7 @@ Base.@propagate_inbounds function find_root!(sets::DisjointMinSets, m::Integer)
 end
 
 # an unsafe variant of the above
-function find_root_unsafe!(sets::DisjointMinSets, m::Int)
+function find_root_unsafe!(sets::DisjointMinSets, m::Integer)
     @inbounds p = sets.parents[m]
     @inbounds if sets.parents[p] != p
         sets.parents[m] = p = find_root_unsafe!(sets, p)
