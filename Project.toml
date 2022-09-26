@@ -1,6 +1,6 @@
 name = "ImageMorphology"
 uuid = "787d08f9-d448-5407-9aad-5290dd7ab264"
-version = "0.4.2"
+version = "0.4.3"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
