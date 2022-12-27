@@ -2,7 +2,7 @@ module ImageMorphology
 
 using DataStructures: Queue, enqueue!, dequeue!
 using ImageCore
-using ImageCore: GenericGrayImage
+using ImageCore: GenericGrayImage, MappedArrays, FixedPointNumbers
 using OffsetArrays
 using OffsetArrays: centered
 using LinearAlgebra
@@ -23,6 +23,7 @@ include("convexhull.jl")
 include("connected.jl")
 include("clearborder.jl")
 include("extreme_filter.jl")
+include("extremum.jl")
 include("ops/dilate.jl")
 include("ops/erode.jl")
 include("ops/closing.jl")
@@ -125,6 +126,7 @@ export
     #feature_transform.jl
     feature_transform,
     distance_transform,
+    clearborder,
 
     #leveling
     low_leveling,
@@ -132,7 +134,16 @@ export
     high_leveling,
     high_leveling!,
     leveling,
-    leveling!, clearborder
+    leveling!,
+    #extremum
+    hmaxima,
+    hmaxima!,
+    hminima,
+    hminima!,
+    regional_maxima,
+    regional_maxima!,
+    regional_minima,
+    regional_minima!
 
 function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
