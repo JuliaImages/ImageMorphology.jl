@@ -38,6 +38,7 @@ include("isboundary.jl")
 include("thinning.jl")
 include("imfill.jl")
 include("maxtree.jl")
+include("leveling.jl")
 
 include("feature_transform.jl")
 include("utils.jl")
@@ -124,7 +125,14 @@ export
     #feature_transform.jl
     feature_transform,
     distance_transform,
-    clearborder
+
+    #leveling
+    low_leveling,
+    low_leveling!,
+    high_leveling,
+    high_leveling!,
+    leveling,
+    leveling!, clearborder
 
 function __init__()
     @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin

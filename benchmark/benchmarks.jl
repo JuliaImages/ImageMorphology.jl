@@ -5,6 +5,7 @@ using ImageCore
 using ImageMorphology
 using ImageBinarization
 using ImageTransformations
+using ImageFiltering
 using TestImages
 
 on_CI = haskey(ENV, "GITHUB_ACTIONS")
@@ -110,4 +111,11 @@ end
 SUITE["feature_transform"] = BenchmarkGroup()
 let grp = SUITE["feature_transform"]
     grp["feature_transform"] = @benchmarkable feature_transform($blobs)
+end
+SUITE["leveling"] = BenchmarkGroup()
+let grp = SUITE["leveling"]
+    gaus = Gray{N0f8}.(imfilter(cameraman, Kernel.gaussian(5)))
+    grp["low_leveling"] = @benchmarkable low_leveling(cameraman, $gaus)
+    grp["high_leveling"] = @benchmarkable high_leveling(cameraman, $gaus)
+    grp["leveling"] = @benchmarkable leveling(cameraman, $gaus)
 end
