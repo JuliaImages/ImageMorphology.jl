@@ -1,3 +1,5 @@
+using Base.Checked
+
 #=
     maybe_floattype(T)
 
@@ -47,3 +49,11 @@ function _is_select_function_trial(f, ::Type{T1}, ::Type{T2}) where {T1,T2}
         return false
     end
 end
+
+saturating_add(x::T, y::T) where {T<:FixedPoint} =
+    T(x.i + ifelse(x.i < 0, max(y.i, typemin(x.i) - x.i), min(y.i, typemax(x.i) - x.i)), 0)
+saturating_add(x::T, y::T) where {T<:FixedPoint{<:Unsigned}} = T(x.i + min(~x.i, y.i), 0)
+
+saturating_sub(x::T, y::T) where {T<:FixedPoint} =
+    T(x.i - ifelse(x.i < 0, min(y.i, x.i - typemin(x.i)), max(y.i, x.i - typemax(x.i))), 0)
+saturating_sub(x::T, y::T) where {T<:FixedPoint{<:Unsigned}} = T(x.i - min(x.i, y.i), 0)

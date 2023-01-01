@@ -40,3 +40,9 @@ end
     msg = "function `$f` is not a well-defined select function on type `RGB{Float32}` and `RGB{Float32}`: does `f(x::T1, y::T2)` work as expected?"
     @test_throws ArgumentError(msg) ImageMorphology.require_select_function(f, RGB{Float32})
 end
+
+@testset "staturated" begin
+    # unsigned
+    @test ImageMorphology.saturating_add(N0f8(0.6), N0f8(0.6)) == N0f8(1.0)
+    @test ImageMorphology.saturating_sub(N0f8(0.2), N0f8(0.6)) == N0f8(0.0)
+end
