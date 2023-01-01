@@ -109,7 +109,7 @@ end
     @test eltype(out) == Bool
     @test out == ref_img
 
-    out = regional_maxima(reinterpret(N0f8, img), strel_box((3, 3)))
+    out = regional_maxima(reinterpret(N0f8, img), strel_diamond((3, 3)))
     @test eltype(out) == Bool
     @test out == ref_img
 end
@@ -138,7 +138,7 @@ end
     @test eltype(out) == Bool
     @test out == ref_img
 
-    out = regional_minima(reinterpret(N0f8, img), strel_box((3, 3)))
+    out = regional_minima(reinterpret(N0f8, img), strel_diamond((3, 3)))
     @test eltype(out) == Bool
     @test out == ref_img
 end
