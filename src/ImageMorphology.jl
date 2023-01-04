@@ -92,6 +92,10 @@ export
     component_indices,
     component_subscripts, # deprecated (v0.4)
     component_centroids,
+    label_flatzones,
+    label_flatzones!,
+    label_lambdaflatzones,
+    label_lambdaflatzones!,
 
     # convexhull.jl
     convexhull,

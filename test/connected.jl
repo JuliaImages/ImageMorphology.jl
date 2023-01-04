@@ -184,3 +184,68 @@
     end
 
 end
+
+@testset "Label flat zones" begin
+    A = ([
+        1 1 8
+        7 8 8
+        7 4 5])
+
+    expected = ([
+        1 1 3
+        2 3 3
+        2 4 5])
+
+    @test label_flatzones(A, strel_diamond((3, 3))) == expected
+
+    A = ([
+        1 8 8
+        7 8 8
+        7 4 5])
+
+    expected = ([
+        1 3 3
+        2 3 3
+        2 4 5])
+
+    @test label_flatzones(A) == expected
+
+    out = similar(A, Int)
+    out = label_flatzones!(out, A)
+    @test out == expected
+
+    msg = "the input structuring element is not for 1 dimensional array, instead it is for 2 dimensional array"
+    @test_throws DimensionMismatch(msg) label_flatzones(rand(10), strel_box((3, 3)))
+
+    se = strel_diamond((7, 7))
+    msg = "structuring element with half-size larger than 1 is invalid"
+    @test_throws DimensionMismatch(msg) label_flatzones(rand(10, 10), se)
+end
+
+@testset "Label lambda flat zones" begin
+    A = ([
+        1 1 8
+        7 8 8
+        7 4 5])
+    expected = ([
+        1 1 2
+        2 2 2
+        2 3 3])
+
+    @test label_lambdaflatzones(A, 1, strel_diamond((3, 3))) == expected
+
+    A = ([
+        1 8 8
+        7 6 8
+        7 4 5])
+
+    expected = ([
+        1 2 2
+        2 2 2
+        2 2 2])
+    @test label_lambdaflatzones(A, 1) == expected
+
+    out = similar(A, Int)
+    out = label_lambdaflatzones!(out, A, 1)
+    @test out == expected
+end

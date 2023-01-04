@@ -422,3 +422,126 @@ function component_subscripts(img::AbstractArray{Int})
     end
     return n
 end
+
+"""
+    label_flatzones(img; [dims])
+    label_flatzones(img; se)
+
+Find the flat zones in image 'img'. Flat zones are defined as
+connected (respect to se) voxels that have the same value.
+
+The `dims` keyword is used to specify the dimension to process by constructing the box shape
+structuring element [`strel_box(img; dims)`](@ref strel_box). For generic structuring
+element, the half-size is expected to be either `0` or `1` along each dimension.
+
+The output `labeled image` is an integer array.
+"""
+function label_flatzones(img; dims=coords_spatial(img))
+    return label_flatzones(img, strel_box(img, dims))
+end
+
+function label_flatzones(img, se)
+    return label_flatzones!(similar(img, Int), img, se)
+end
+
+function label_flatzones!(out, img; dims=coords_spatial(img))
+    return label_flatzones!(out, img, strel_box(img, dims))
+end
+
+function label_flatzones!(out, img, se)
+    return _generic_naive_labeling!(out, img, se)
+end
+
+"""
+    label_lambdaflatzones(img; [dims])
+    label_lambdaflatzones(img; se)
+
+Find the lambda flat zones in image 'img'. Lambda Flat zones are defined as
+connected (respect to se) voxels that have diff(value)<lambda.
+
+The `dims` keyword is used to specify the dimension to process by constructing the box shape
+structuring element [`strel_box(img; dims)`](@ref strel_box). For generic structuring
+element, the half-size is expected to be either `0` or `1` along each dimension.
+
+The output `labeled image` is an integer array.
+"""
+
+function label_lambdaflatzones(img, lambda; dims=coords_spatial(img))
+    return label_lambdaflatzones(img, lambda, strel_box(img, dims))
+end
+
+function label_lambdaflatzones(img, lambda, se)
+    return label_lambdaflatzones!(similar(img, Int), img, lambda, se)
+end
+
+function label_lambdaflatzones!(out, img, lambda; dims=coords_spatial(img))
+    return label_lambdaflatzones!(out, img, lambda, strel_box(img, dims))
+end
+
+function label_lambdaflatzones!(out, img, lambda, se)
+    return _generic_naive_labeling!(out, img, se, (x) -> true, (x, y) -> abs(x - y) <= lambda)
+end
+
+function _generic_naive_labeling!(out, img, se, can_be_labelled=(x) -> true, is_connected=(x, y) -> x == y)
+    N = ndims(img)
+
+    axes(out) == axes(img) || throw(DimensionMismatch("images should have the same axes"))
+
+    se_size = strel_size(se)
+    if length(se_size) != N
+        msg = "the input structuring element is not for $N dimensional array, instead it is for $(length(se_size)) dimensional array"
+        throw(DimensionMismatch(msg))
+    end
+    if !all(x -> in(x, (1, 3)), strel_size(se))
+        msg = "structuring element with half-size larger than 1 is invalid"
+        throw(DimensionMismatch(msg))
+    end
+    se = strel(CartesianIndex, se)
+
+    fill!(out, 0)
+    visited = similar(Array{Bool}, axes(img))
+    fill!(visited, false)
+
+    propagationfront = Queue{CartesianIndex{N}}() #Use queue to store propagation front
+
+    R = CartesianIndices(axes(img))
+    curr_label = 1
+    for i in R
+        # compute the "connected" zones of the image
+        @inbounds if !visited[i] #candidate point aka not visited yet, start "connected" zones
+            # mark point as visited
+            @inbounds visited[i] = true
+            @inbounds out[i] = curr_label
+            enqueue!(propagationfront, i)
+            while !isempty(propagationfront)
+                #get indice from propagationfront
+                idx_front = dequeue!(propagationfront)
+                # get value at current point
+                @inbounds centervalue = img[idx_front]
+                if can_be_labelled(centervalue) # eg could be specialize for no background
+                    #examine neighborhood points
+                    for Δi in se # examine neighborhoods
+                        ii = idx_front + Δi
+                        if checkbounds(Bool, R, ii) #check that we are in the image
+                            @inbounds nl_value = img[ii]
+                            # is this pixel is connected ?
+                            if is_connected(nl_value, centervalue)
+                                # yes, propagate the "connected" zones to this pixel
+                                @inbounds if !visited[ii]
+                                    enqueue!(propagationfront, ii)
+                                    # mark it as visited
+                                    visited[ii] = true
+                                    #propagate label
+                                    out[ii] = curr_label
+                                end
+                            end
+                        end
+                    end #for all neighborValue
+                end
+            end # propagation front empty
+            curr_label += 1 #increment label
+            curr_label >= typemax(Int) && error("labels exhausted")
+        end # test we can visit current point
+    end # loop along idx image
+    return out
+end
