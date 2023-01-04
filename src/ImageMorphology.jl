@@ -24,6 +24,7 @@ include("connected.jl")
 include("clearborder.jl")
 include("extreme_filter.jl")
 include("extremum.jl")
+include("filholes.jl")
 include("ops/dilate.jl")
 include("ops/erode.jl")
 include("ops/closing.jl")
@@ -130,7 +131,13 @@ export
     #feature_transform.jl
     feature_transform,
     distance_transform,
+
+    #clearborder
     clearborder,
+
+    #fillhole
+    fillhole,
+    fillhole!,
 
     #leveling
     low_leveling,
@@ -139,6 +146,7 @@ export
     high_leveling!,
     leveling,
     leveling!,
+
     #extremum
     hmaxima,
     hmaxima!,
