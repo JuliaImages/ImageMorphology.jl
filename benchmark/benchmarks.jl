@@ -1,5 +1,5 @@
-Usage:
-    julia benchmark/run_benchmarks.jl
+# Usage:
+#     julia benchmark/run_benchmarks.jl
 using BenchmarkTools
 using ImageCore
 using ImageMorphology

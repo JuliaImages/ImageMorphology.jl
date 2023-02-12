@@ -26,12 +26,83 @@
 
     # in place
     out = similar(img)
-    out = fillhole!(out, img)
+    fillhole!(out, img)
     @test out == expected
 
     # in place diamond
     out = similar(img)
-    out = fillhole!(out, img, strel_diamond((3, 3)))
+    fillhole!(out, img, strel_diamond((3, 3)))
+    @test out == expected
+
+    # more holes
+    #binary
+    img = Bool[
+        0 0 0 0 0 1 1 0
+        0 1 1 1 0 0 0 0
+        0 1 0 1 0 0 0 0
+        0 1 1 1 0 0 0 0
+        0 0 0 1 1 1 0 0
+        1 0 0 1 0 1 0 0
+        1 0 0 1 1 1 0 0
+        1 0 0 0 0 0 0 0
+    ]
+
+    expected = Bool[
+        0 0 0 0 0 1 1 0
+        0 1 1 1 0 0 0 0
+        0 1 1 1 0 0 0 0
+        0 1 1 1 0 0 0 0
+        0 0 0 1 1 1 0 0
+        1 0 0 1 1 1 0 0
+        1 0 0 1 1 1 0 0
+        1 0 0 0 0 0 0 0
+    ]
+
+    out = fillhole(img)
+    @test eltype(out) == Bool
+    @test out == expected
+
+    # in place
+    out = similar(img)
+    fillhole!(out, img)
+    @test out == expected
+
+
+    # "holes" touching the borders
+    # by definitions we can't say anything in this case
+    # because we have no acess to the underlying image domain
+    # so like other framework, leave these holes not filled
+
+    #binary
+    img = Bool[
+        0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 1 1
+        0 0 0 0 0 0 1 0
+        0 0 0 0 0 0 1 0
+        1 1 1 1 0 0 1 1
+        1 0 0 1 0 0 0 0
+        1 1 1 1 0 0 0 0
+        1 0 0 0 0 0 0 0
+    ]
+
+    expected = Bool[
+        0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 1 1
+        0 0 0 0 0 0 1 0
+        0 0 0 0 0 0 1 0
+        1 1 1 1 0 0 1 1
+        1 1 1 1 0 0 0 0
+        1 1 1 1 0 0 0 0
+        1 0 0 0 0 0 0 0
+    ]
+
+    out = fillhole(img)
+    @test eltype(out) == Bool
+    @test out == expected
+
+    # in place
+    out = similar(img)
+    fillhole!(out, img)
     @test out == expected
 
     #gray
