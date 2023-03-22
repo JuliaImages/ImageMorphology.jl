@@ -69,7 +69,6 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero
     sizehint!(sets.parents, floor(Int, sqrt(length(A))))
     # Define a function to compute indices for periodic boundary conditions
     periodic_index(i, Δi, sz) = mod1.(i .+ Δi .- 1, sz) .+ 1
-    # Loop through all indices of A
     @inbounds for i in CartesianIndices(A)
         val = A[i]
         val == bkg && continue
@@ -78,7 +77,7 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero
             ii = i + Δi
             # If periodic, compute the periodic index
             if periodic
-                ii = CartesianIndex(periodic_index(i, Δi, size(A)[k]) for k in 1:ndims(A))
+                ii = CartesianIndex(collect(periodic_index(i, Δi, size(A)[k]) for k in 1:ndims(A)))
             end
             checkbounds(Bool, A, ii) || continue
             if A[ii] == val
