@@ -1,6 +1,6 @@
 """
-    label = label_components(A; [dims=coords_spatial(A)], [r=1], [bkg])
-    label = label_components(A, se; [bkg])
+    label = label_components(A; [dims=coords_spatial(A)], [r=1], [bkg], [periodic])
+    label = label_components(A, se; [bkg], [periodic])
 
 Find and label the connected components of array `A` where the connectivity is defined by
 structuring element `se`. Each component is assigned a unique integer value as its label
@@ -59,7 +59,7 @@ function label_components!(out, A; dims=coords_spatial(A), r=1, kwargs...)
     return label_components!(out, A, strel_diamond(A, dims; r); kwargs...)
 end
 
-function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero(eltype(A))) where {T<:Integer}
+function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero(eltype(A)), periodic=false) where {T<:Integer}
     axes(out) == axes(A) || throw_dmm(axes(out), axes(A))
     se = _maybe_build_symmetric_strel(se) # compat patch
     is_symmetric(se) || throw(ArgumentError("Non-symmetric structuring element is not supported yet"))
@@ -67,12 +67,19 @@ function label_components!(out::AbstractArray{T}, A::AbstractArray, se; bkg=zero
     fill!(out, zero(T))
     sets = DisjointMinSets{T}()
     sizehint!(sets.parents, floor(Int, sqrt(length(A))))
+    # Define a function to compute indices for periodic boundary conditions
+    periodic_index(i, Δi, sz) = mod1.(i .+ Δi .- 1, sz) .+ 1
+    # Loop through all indices of A
     @inbounds for i in CartesianIndices(A)
         val = A[i]
         val == bkg && continue
         label = typemax(T)    # sentinel value
         for Δi in upper_se
             ii = i + Δi
+            # If periodic, compute the periodic index
+            if periodic
+                ii = CartesianIndex(periodic_index(i, Δi, size(A)[k]) for k in 1:ndims(A))
+            end
             checkbounds(Bool, A, ii) || continue
             if A[ii] == val
                 newlabel = out[ii]
