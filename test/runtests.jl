@@ -37,6 +37,7 @@ include("testutils.jl")
     include("feature_transform.jl")
     include("leveling.jl")
     include("clearborder.jl")
+    include("fillholes.jl")
     @info "Beginning deprecation tests, warnings are expected"
     include("deprecations.jl")
 end

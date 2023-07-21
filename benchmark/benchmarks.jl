@@ -91,8 +91,8 @@ end
 SUITE["connected"] = BenchmarkGroup()
 let grp = SUITE["connected"]
     grp["label_components"] = @benchmarkable label_components($blobs)
-    grp["label_flatzones"] = @benchmarkable label_flatzones($cameraman, trues(3,3))
-    grp["label_lambdaflatzones"] = @benchmarkable label_lambdaflatzones($cameraman, trues(3,3),Gray{N0f8}(1.0/255.0))
+    grp["label_flatzones"] = @benchmarkable label_flatzones($cameraman, trues(3, 3))
+    grp["label_lambdaflatzones"] = @benchmarkable label_lambdaflatzones($cameraman, trues(3, 3), Gray{N0f8}(1.0 / 255.0))
 end
 
 SUITE["Maxtree"] = BenchmarkGroup()
@@ -135,4 +135,14 @@ let grp = SUITE["extremum"]
         tst_img = reinterpret(N0f8, imresize((cameraman), (sz, sz)))
         grp["regional_maxima"]["$sz×$sz"] = @benchmarkable regional_maxima($tst_img)
     end
+end
+
+SUITE["clearborder"] = BenchmarkGroup()
+let grp = SUITE["clearborder"]
+    grp["clearborder"] = @benchmarkable clearborder($blobs)
+end
+
+SUITE["fillhole"] = BenchmarkGroup()
+let grp = SUITE["fillhole"]
+    grp["fillhole"] = @benchmarkable fillhole($blobs)
 end
