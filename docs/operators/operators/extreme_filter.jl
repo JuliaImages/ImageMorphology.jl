@@ -28,7 +28,7 @@ Random.seed!(1234); #hide
 # extreme_filter(f, A, se)
 # ```
 #
-# For each pixel `p` in A, a select function `f(x, y)` will be applied iteratively to the
+# For each pixel `p` in A, a select function `f(x, y)` will be applied iteratively to
 # its neighborhood. The neighborhood is defined by the structuring element `se`. In plain
 # Julia codes, this is as simple as:
 #
