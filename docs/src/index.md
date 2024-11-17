@@ -60,7 +60,7 @@ Structuring element is the key concept in morphology. If you're not familiar wit
 | [`bothat`](@ref) and [`bothat!`](@ref)                 | extract black details     | [`bothat` operation](@ref op_bothat)   |
 | [`tophat`](@ref) and [`tophat!`](@ref)                 | extract white details     | [`tophat` operation](@ref op_tophat)   |
 | [`mgradient`](@ref) and [`mgradient!`](@ref)           | morphological gradient    | [`mgradient` operation](@ref op_mgradient)|
-| [`mlaplacian`](@ref) and [`mlaplacian!`](@ref)             | morpholigical laplacian   | [`mlaplacian` operation](@ref op_mlaplacian) |
+| [`mlaplacian`](@ref) and [`mlaplacian!`](@ref)         | morphological laplacian   | [`mlaplacian` operation](@ref op_mlaplacian) |
 
 ### Geodesic operations
 
