@@ -33,10 +33,11 @@ julia> ref_img = UInt8[
     ]
 julia> @test eltype(out) == N0f8
 julia> @test out == reinterpret(N0f8, ref_img)
+```
     
 # See also
 
-The inplace version of this function is [`hmaxima!`](@ref).
+The inplace version of this function is `hmaxima!`.
 
 # References
 
@@ -100,7 +101,7 @@ julia> @test out == reinterpret(N0f8, ref_img)
 
 # See also
 
-The inplace version of this function is [`hminima!`](@ref).
+The inplace version of this function is `hminima!`.
 
 # References
 
@@ -146,7 +147,7 @@ This implementation is faster than maxtree local_maxima approach if maxtree not 
 
 # See also
 
-The inplace version of this function is [`regional_maxima!`](@ref).
+The inplace version of this function is `regional_maxima!`.
 
 # References
 
@@ -194,7 +195,7 @@ This implementation is faster than maxtree local_minima approach if maxtree not 
 
 # See also
 
-The inplace version of this function is [`regional_minima!`](@ref).
+The inplace version of this function is `regional_minima!`.
 
 # References
 
