@@ -15,7 +15,7 @@ structuring element [`strel_box(marker; dims)`](@ref strel_box). For generic str
 element, the half-size is expected to be either `0` or `1` along each dimension.
 
 # See also
- [`high_leveling!`](@ref),[`leveling`](@ref),
+ [`high_leveling`](@ref),[`leveling`](@ref),
  [`underbuild`](@ref),[`overbuild`](@ref)
  
 # References
@@ -107,7 +107,7 @@ structuring element [`strel_box(marker; dims)`](@ref strel_box). For generic str
 element, the half-size is expected to be either `0` or `1` along each dimension.
 
 # See also
- [`low_leveling!`](@ref),[`leveling`](@ref),
+ [`low_leveling`](@ref),[`leveling`](@ref),
  [`underbuild`](@ref),[`overbuild`](@ref)
  
 # References
@@ -194,7 +194,7 @@ A function g is a leveling of a function f if and only if it is both an upper an
 This algorithm modify g (a copy of the marker) to become a leveling of f (the ref)
 
  # See also
- [`low_leveling!`](@ref),[`high_leveling`](@ref),
+ [`low_leveling](@ref),[`high_leveling`](@ref),
  [`underbuild`](@ref),[`overbuild`](@ref)
  
  # References

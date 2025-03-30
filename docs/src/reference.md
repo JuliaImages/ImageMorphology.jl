@@ -19,6 +19,10 @@ ImageMorphology.StructuringElements.strel_ndims
 ImageMorphology.StructuringElements.strel_split
 OffsetArrays.centered
 OffsetArrays.center
+OffsetArrays.OffsetVector
+OffsetArrays.OffsetMatrix
+OffsetArrays.OffsetArray
+OffsetArrays.Origin
 
 ImageMorphology.StructuringElements.is_symmetric
 
@@ -74,6 +78,9 @@ component_boxes
 component_lengths
 component_indices
 component_centroids
+component_subscripts
+label_flatzones
+imfill
 ```
 
 ## Max tree
@@ -105,6 +112,30 @@ ImageMorphology.filter_components!
 feature_transform
 distance_transform
 clearborder
+```
+
+## Regional extrema
+
+```@docs
+hmaxima
+hminima
+regional_maxima
+regional_minima
+```
+
+## Thinning
+
+```@docs
+GuoAlgo
+thinning
+```
+
+## Leveling
+
+```@docs
+leveling
+high_leveling
+low_leveling
 ```
 
 ## Misc

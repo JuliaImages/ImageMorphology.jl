@@ -18,9 +18,10 @@ pages = Any[
 
 makedocs(;
     modules=[ImageMorphology, OffsetArrays],
-    format=Documenter.HTML(; prettyurls, assets),
+    format=Documenter.HTML(; prettyurls, assets, size_threshold=300_000_000),  # mreconstruct has a GIF
     sitename="ImageMorphology",
     pages,
+	checkdocs=:exports,
     doctest=false
 )
 operators_cb()
