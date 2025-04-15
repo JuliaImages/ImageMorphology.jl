@@ -18,7 +18,7 @@ pages = Any[
 
 makedocs(;
     modules=[ImageMorphology, OffsetArrays],
-    format=Documenter.HTML(; prettyurls, assets, size_threshold=300_000_000),  # mreconstruct has a GIF
+    format=Documenter.HTML(; prettyurls, assets, size_threshold=1_000_000),
     sitename="ImageMorphology",
     pages,
 	checkdocs=:exports,
