@@ -11,7 +11,7 @@ assets = Any[demo_assets]
 
 pages = Any[
     "index.md",
-    "Concepts" => Any["structuring_element.md"],
+    "structuring_element.md",
     operators,
     "reference.md"
 ]
