@@ -12,7 +12,7 @@ using ImageMorphology
 using TestImages
 using ImageBase
 using ImageShow
-using IndirectArrays #hide
+using IndirectArrays, FileIO #hide
 
 img = Gray.(testimage("blob"))
 nothing #hide
@@ -77,7 +77,12 @@ end #hide
 outs = my_reconstruct_outs(marker, mask) #hide
 orders = Dict(x => i for (i, x) in enumerate(sort(mapreduce(unique, union, outs)))) #hide
 colormap = ImageCore.Colors.distinguishable_colors(length(orders)) #hide
-gif = ImageShow.gif([mosaic(frame, with_color(frame, orders, colormap); nrow=1) for frame in outs]; fps=5) #hide
+f = scaleminmax(RGB, 0, 1) #hide
+save("assets/mreconstruct.gif",  #hide
+     f.(cat([mosaic(frame, with_color(frame, orders, colormap); nrow=1) #hide
+             for frame in (@view outs[1:1:end])]..., dims=3)); #hide
+     fps=5) #hide
+# ![alternative text](assets/mreconstruct.gif)
 
 # This is how reconstruction happends and why it is called so -- it reconstructs the
 # `marker` image with a reference image `mask`, this helps us investigate certain properties

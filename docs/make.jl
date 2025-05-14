@@ -11,14 +11,14 @@ assets = Any[demo_assets]
 
 pages = Any[
     "index.md",
-    "Concepts" => Any["structuring_element.md"],
+    "structuring_element.md",
     operators,
     "reference.md"
 ]
 
 makedocs(;
     modules=[ImageMorphology, OffsetArrays],
-    format=Documenter.HTML(; prettyurls, assets, size_threshold=300_000_000),  # mreconstruct has a GIF
+    format=Documenter.HTML(; prettyurls, assets, size_threshold=1_000_000),
     sitename="ImageMorphology",
     pages,
 	checkdocs=:exports,
