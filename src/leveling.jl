@@ -1,6 +1,6 @@
 import Base.isless
 import Base.isgreater
-import DataStructures.PriorityQueue, DataStructures.dequeue_pair!
+import DataStructures.PriorityQueue
 
 """
     low_leveling(op, marker, mask; [dims])
@@ -73,7 +73,7 @@ function _low_leveling!(out::AbstractArray{T,N}, ref::AbstractArray{T,N}, marker
     end
     # Loop until all pixel have been examined 
     while !isempty(pq)
-        curr_idx, _ = dequeue_pair!(pq)
+        curr_idx, _ = popfirst!(pq)
         for Δi in se # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
@@ -166,7 +166,7 @@ function _high_leveling!(out::AbstractArray{T,N}, ref::AbstractArray{T,N}, marke
     end
     # Loop until all pixel have been examined 
     while !isempty(pq)
-        curr_idx, _ = dequeue_pair!(pq)
+        curr_idx, _ = popfirst!(pq)
         for Δi in se # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
