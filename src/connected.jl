@@ -512,10 +512,10 @@ function _generic_naive_labeling!(out, img, se, can_be_labelled=(x) -> true, is_
             # mark point as visited
             @inbounds visited[i] = true
             @inbounds out[i] = curr_label
-            enqueue!(propagationfront, i)
+            push!(propagationfront, i)
             while !isempty(propagationfront)
                 #get indice from propagationfront
-                idx_front = dequeue!(propagationfront)
+                idx_front = popfirst!(propagationfront)
                 # get value at current point
                 @inbounds centervalue = img[idx_front]
                 if can_be_labelled(centervalue) # eg could be specialize for no background
@@ -528,7 +528,7 @@ function _generic_naive_labeling!(out, img, se, can_be_labelled=(x) -> true, is_
                             if is_connected(nl_value, centervalue)
                                 # yes, propagate the "connected" zones to this pixel
                                 @inbounds if !visited[ii]
-                                    enqueue!(propagationfront, ii)
+                                    push!(propagationfront, ii)
                                     # mark it as visited
                                     visited[ii] = true
                                     #propagate label

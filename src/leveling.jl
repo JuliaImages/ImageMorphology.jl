@@ -1,6 +1,6 @@
 import Base.isless
 import Base.isgreater
-import DataStructures.PriorityQueue, DataStructures.enqueue!, DataStructures.dequeue_pair!
+import DataStructures.PriorityQueue, DataStructures.dequeue_pair!
 
 """
     low_leveling(op, marker, mask; [dims])
@@ -66,7 +66,7 @@ function _low_leveling!(out::AbstractArray{T,N}, ref::AbstractArray{T,N}, marker
             end
             if @inbounds current_max != out[i]
                 out[i] = min(ref[i], current_max)
-                enqueue!(pq, i, out[i])
+                push!(pq, i, out[i])
             end
             # else posponed to the end
         end
@@ -159,7 +159,7 @@ function _high_leveling!(out::AbstractArray{T,N}, ref::AbstractArray{T,N}, marke
             end
             if @inbounds current_min != out[i]
                 out[i] = max(ref[i], current_min)
-                enqueue!(pq, i, out[i])
+                push!(pq, i, out[i])
             end
             # else posponed to the end
         end
