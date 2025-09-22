@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Reference · ImageMorphology</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.044/juliamono.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ImageMorphology</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">ImageMorphology.jl</a></li><li><span class="tocitem">Concepts</span><ul><li><a class="tocitem" href="../structuring_element/">Structuring element</a></li></ul></li><li class="is-active"><a class="tocitem" href>Reference</a><ul class="internal"><li><a class="tocitem" href="#Interface-overview"><span>Interface overview</span></a></li><li><a class="tocitem" href="#reference_se"><span>Structuring element</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Reference</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Reference</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/master/docs/src/reference.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Reference"><a class="docs-heading-anchor" href="#Reference">Reference</a><a id="Reference-1"></a><a class="docs-heading-anchor-permalink" href="#Reference" title="Permalink"></a></h1><h2 id="Interface-overview"><a class="docs-heading-anchor" href="#Interface-overview">Interface overview</a><a id="Interface-overview-1"></a><a class="docs-heading-anchor-permalink" href="#Interface-overview" title="Permalink"></a></h2><p>The following tables give an overview of ImageMorphology interfaces</p><p><a href="#reference_se"><strong>Structuring Element (SE)</strong></a></p><table><tr><th style="text-align: left">name</th><th style="text-align: left">summary</th></tr><tr><td style="text-align: left"><a href="#ImageMorphology.strel"><code>strel</code></a></td><td style="text-align: left">convert between different SE representations</td></tr><tr><td style="text-align: left"><a href="#ImageMorphology.strel_type"><code>strel_type</code></a></td><td style="text-align: left">infer the SE type</td></tr><tr><td style="text-align: left"><a href="#ImageMorphology.strel_size"><code>strel_size</code></a></td><td style="text-align: left">get the minimal block size that contains the SE</td></tr><tr><td style="text-align: left"><a href="#ImageMorphology.strel_box"><code>strel_box</code></a></td><td style="text-align: left">construct a box-shaped SE, e.g., C8, C26 connectivity</td></tr><tr><td style="text-align: left"><a href="#ImageMorphology.strel_diamond"><code>strel_diamond</code></a></td><td style="text-align: left">construct a diamond-shaped SE, e.g., C4, C6 connectivity</td></tr><tr><td style="text-align: left"><a href="#OffsetArrays.centered"><code>OffsetArrays.centered</code></a></td><td style="text-align: left">shift the array center to <code>(0, 0, ..., 0)</code></td></tr></table><h2 id="reference_se"><a class="docs-heading-anchor" href="#reference_se">Structuring element</a><a id="reference_se-1"></a><a class="docs-heading-anchor-permalink" href="#reference_se" title="Permalink"></a></h2><p>Structuring element is the key concept in morphology. If you&#39;re not familiar with this, please read <a href="../structuring_element/#concept_se">concept: structuring element</a> first.</p><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel" href="#ImageMorphology.strel"><code>ImageMorphology.strel</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel([T], X::AbstractArray)</code></pre><p>Convert structuring element (SE) <code>X</code> to appropriate presentation format with element type <code>T</code>. This is a useful tool to generate SE that most ImageMorphology functions understand.</p><p>ImageMorphology currently supports two commonly used representations:</p><ul><li><code>T=CartesianIndex</code>: offsets to its center point. The output type is <code>Vector{CartesianIndex{N}}</code>.</li><li><code>T=Bool</code>: connectivity mask where <code>true</code> indicates connected to its center point. The output type is <code>BitArray{N}</code>.</li></ul><pre><code class="language-julia-repl hljs">julia&gt; se_mask = centered(Bool[1 1 0; 1 1 0; 0 0 0]) # connectivity mask
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  0
+ 1  1  0
+ 0  0  0
+
+julia&gt; se_offsets = strel(CartesianIndex, se_mask) # displacement offsets to its center point
+3-element Vector{CartesianIndex{2}}:
+ CartesianIndex(-1, -1)
+ CartesianIndex(0, -1)
+ CartesianIndex(-1, 0)
+
+julia&gt; se = strel(Bool, se_offsets)
+3×3 OffsetArray(::BitMatrix, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  0
+ 1  1  0
+ 0  0  0</code></pre><p>See also <a href="#ImageMorphology.strel_diamond"><code>strel_diamond</code></a> and <a href="#ImageMorphology.strel_box"><code>strel_box</code></a> for SE constructors for two special cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L285-L320">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel_box" href="#ImageMorphology.strel_box"><code>ImageMorphology.strel_box</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_box(A; [r])
+strel_box(size; [r=size .÷ 2])</code></pre><p>Construct the N-dimensional structuring element (SE) with all elements in the local window connected. If image <code>A</code> is provided, then <code>size=(3, 3, ...)</code> is the default value for <code>size</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; img = rand(64, 64);
+
+julia&gt; se = strel_box(img)
+3×3 ImageMorphology.SEBoxArray{2, UnitRange{Int64}} with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; se = strel_box((5,5); r=(1,2))
+5×5 ImageMorphology.SEBoxArray{2, UnitRange{Int64}} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 0  0  0  0  0</code></pre><div class="admonition is-info"><header class="admonition-header">specialization and performance</header><div class="admonition-body"><p>The box shape <code>SEBox</code> is a special type for which many morphology algorithms may provide efficient implementations. For this reason, if one tries to collect an <code>SEBoxArray</code> into other array types (e.g. <code>Array{Bool}</code> via <code>collect</code>), then a significant performance drop is very likely to occur.</p></div></div><p>See also <a href="#ImageMorphology.strel"><code>strel</code></a> and <a href="#ImageMorphology.strel_box"><code>strel_box</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L393-L425">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel_diamond" href="#ImageMorphology.strel_diamond"><code>ImageMorphology.strel_diamond</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_diamond(A, [dims]; [r])
+strel_diamond(size, [dims]; [r])</code></pre><p>Construct the N-dimensional structuring element (SE) for a diamond shape.</p><p>If image <code>A</code> is provided, then <code>size=(3, 3, ...)</code> and <code>(1, 2, ..., N)</code> are the default values for <code>size</code> and <code>dims</code>. The diamond half-size <code>r::Int</code> will be <code>maximum(size)÷2</code> if not specified.</p><pre><code class="language-julia-repl hljs">julia&gt; img = rand(64, 64);
+
+julia&gt; se = strel_diamond(img) # default size for image input is (3, 3)
+3×3 ImageMorphology.SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; se = strel_diamond((5,5))
+5×5 ImageMorphology.SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -2:2×-2:2:
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 1  1  1  1  1
+ 0  1  1  1  0
+ 0  0  1  0  0
+
+julia&gt; se = strel_diamond(img, (1,)) # mask along dimension 1
+3×1 ImageMorphology.SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -1:1×0:0:
+ 1
+ 1
+ 1
+
+julia&gt; se = strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
+3×3 ImageMorphology.SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -1:1×-1:1:
+ 0  1  0
+ 0  1  0
+ 0  1  0</code></pre><div class="admonition is-info"><header class="admonition-header">specialization and performance</header><div class="admonition-body"><p>The diamond shape <code>SEDiamond</code> is a special type for which many morphology algorithms may provide much more efficient implementations. For this reason, if one tries to collect an <code>SEDiamondArray</code> into other array types (e.g. <code>Array{Bool}</code> via <code>collect</code>), then a significant performance drop is very likely to occur.</p></div></div><p>See also <a href="#ImageMorphology.strel"><code>strel</code></a> and <a href="#ImageMorphology.strel_box"><code>strel_box</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L335-L382">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel_type" href="#ImageMorphology.strel_type"><code>ImageMorphology.strel_type</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_type(x)</code></pre><p>Infer the structuring element type for <code>x</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L209-L213">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel_size" href="#ImageMorphology.strel_size"><code>ImageMorphology.strel_size</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_size(x)</code></pre><p>Calculate the minimal block size that contains the structuring element. The result will be a tuple of odd integers.</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel_diamond((5, 5); r=1)
+5×5 ImageMorphology.SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia&gt; strel_size(se) # is not (5, 5)
+(3, 3)
+
+julia&gt; strel(Bool, strel(CartesianIndex, se)) # because it only checks the minimal enclosing block
+3×3 OffsetArray(::BitMatrix, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; se = [CartesianIndex(1, 1), CartesianIndex(-2, -2)];
+
+julia&gt; strel_size(se) # is not (4, 4)
+(5, 5)
+
+julia&gt; strel(Bool, se) # because the connectivity mask has to be odd size
+5×5 OffsetArray(::BitMatrix, -2:2, -2:2) with eltype Bool with indices -2:2×-2:2:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  0  1  0
+ 0  0  0  0  0
+
+julia&gt; se = strel_diamond((5, 5), (1, ); r=1)
+5×5 ImageMorphology.SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia&gt; strel_size(se)
+(3, 1)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L222-L270">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.strel_ndims" href="#ImageMorphology.strel_ndims"><code>ImageMorphology.strel_ndims</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_ndims(x)::Int</code></pre><p>Infer the dimension of the structuring element <code>x</code></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L277-L281">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="OffsetArrays.centered" href="#OffsetArrays.centered"><code>OffsetArrays.centered</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">centered(A, cp=center(A)) -&gt; Ao</code></pre><p>Shift the center coordinate/point <code>cp</code> of array <code>A</code> to <code>(0, 0, ..., 0)</code>. Internally, this is equivalent to <code>OffsetArray(A, .-cp)</code>.</p><div class="admonition is-compat"><header class="admonition-header">OffsetArrays 1.9</header><div class="admonition-body"><p>This method requires at least OffsetArrays 1.9.</p></div></div><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:9), 3, 3)
+3×3 Matrix{Int64}:
+ 1  4  7
+ 2  5  8
+ 3  6  9
+
+julia&gt; Ao = OffsetArrays.centered(A); # axes (-1:1, -1:1)
+
+julia&gt; Ao[0, 0]
+5
+
+julia&gt; Ao = OffsetArray(A, OffsetArrays.Origin(0)); # axes (0:2, 0:2)
+
+julia&gt; Aoo = OffsetArrays.centered(Ao); # axes (-1:1, -1:1)
+
+julia&gt; Aoo[0, 0]
+5</code></pre><p>Users are allowed to pass <code>cp</code> to change how &quot;center point&quot; is interpreted, but the meaning of the output array should be reinterpreted as well. For instance, if <code>cp = map(last, axes(A))</code> then this function no longer shifts the center point but instead the bottom-right point to <code>(0, 0, ..., 0)</code>. A commonly usage of <code>cp</code> is to change the rounding behavior when the array is of even size at some dimension:</p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:4), 2, 2) # Ideally the center should be (1.5, 1.5) but OffsetArrays only support integer offsets
+2×2 Matrix{Int64}:
+ 1  3
+ 2  4
+
+julia&gt; OffsetArrays.centered(A, OffsetArrays.center(A, RoundUp)) # set (2, 2) as the center point
+2×2 OffsetArray(::Matrix{Int64}, -1:0, -1:0) with eltype Int64 with indices -1:0×-1:0:
+ 1  3
+ 2  4
+
+julia&gt; OffsetArrays.centered(A, OffsetArrays.center(A, RoundDown)) # set (1, 1) as the center point
+2×2 OffsetArray(::Matrix{Int64}, 0:1, 0:1) with eltype Int64 with indices 0:1×0:1:
+ 1  3
+ 2  4</code></pre><p>See also <a href="#OffsetArrays.center"><code>center</code></a>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="OffsetArrays.center" href="#OffsetArrays.center"><code>OffsetArrays.center</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">center(A, [r::RoundingMode=RoundDown])::Dims</code></pre><p>Return the center coordinate of given array <code>A</code>. If <code>size(A, k)</code> is even, a rounding procedure will be applied with mode <code>r</code>.</p><div class="admonition is-compat"><header class="admonition-header">OffsetArrays 1.9</header><div class="admonition-body"><p>This method requires at least OffsetArrays 1.9.</p></div></div><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:9), 3, 3)
+3×3 Matrix{Int64}:
+ 1  4  7
+ 2  5  8
+ 3  6  9
+
+julia&gt; c = OffsetArrays.center(A)
+(2, 2)
+
+julia&gt; A[c...]
+5
+
+julia&gt; Ao = OffsetArray(A, -2, -2); # axes (-1:1, -1:1)
+
+julia&gt; c = OffsetArrays.center(Ao)
+(0, 0)
+
+julia&gt; Ao[c...]
+5</code></pre><p>To shift the center coordinate of the given array to <code>(0, 0, ...)</code>, you can use <a href="#OffsetArrays.centered"><code>centered</code></a>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEMask" href="#ImageMorphology.SEMask"><code>ImageMorphology.SEMask</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEMask{N}()</code></pre><p>A (holy) trait type for representing structuring element as connectivity mask. This connectivity mask SE is a bool array where <code>true</code> indicates that pixel position is connected to the center point.</p><pre><code class="language-julia-repl hljs">julia&gt; se = centered(Bool[0 1 0; 1 1 1; 0 1 0]) # commonly known as C4 connectivity
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+ImageMorphology.SEMask{2}()</code></pre><p>See also <a href="#ImageMorphology.SEOffset"><code>SEOffset</code></a> for the displacement offset representation. More details can be found on he documentation page <a href="../structuring_element/#concept_se">Structuring Element</a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L6-L27">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEOffset" href="#ImageMorphology.SEOffset"><code>ImageMorphology.SEOffset</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEOffset{N}()</code></pre><p>A (holy) trait type for representing structuring element as displacement offsets. This displacement offsets SE is an array of <code>CartesianIndex</code> where each element stores the displacement offset from the center point.</p><pre><code class="language-julia-repl hljs">julia&gt; se = [CartesianIndex(-1, 0), CartesianIndex(0, -1), CartesianIndex(1, 0), CartesianIndex(0, 1)]
+4-element Vector{CartesianIndex{2}}:
+ CartesianIndex(-1, 0)
+ CartesianIndex(0, -1)
+ CartesianIndex(1, 0)
+ CartesianIndex(0, 1)
+
+julia&gt; strel_type(se)
+ImageMorphology.SEOffset{2}()</code></pre><p>See also <a href="#ImageMorphology.SEMask"><code>SEMask</code></a> for the connectivity mask representation. More details can be found on he documentation page <a href="../structuring_element/#concept_se">Structuring Element</a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L30-L51">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEDiamond" href="#ImageMorphology.SEDiamond"><code>ImageMorphology.SEDiamond</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEDiamond{N}(axes, [dims]; [r])</code></pre><p>A (holy) trait type for the N-dimensional diamond shape structuring element. This is a special case of <a href="#ImageMorphology.SEMask"><code>SEMask</code></a> that ImageMorphology algorithms might provide optimized implementation.</p><p>It is recommended to use <a href="#ImageMorphology.strel_diamond"><code>strel_diamond</code></a> and <a href="#ImageMorphology.strel_type"><code>strel_type</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; using OffsetArrays: centered
+
+julia&gt; se = strel_diamond((3, 3)) # C4 connectivity
+3×3 ImageMorphology.SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+ImageMorphology.SEDiamond{2, 2, UnitRange{Int64}}((-1:1, -1:1), (1, 2), 1)
+
+julia&gt; se = centered(collect(se)) # converted to normal centered array
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+ImageMorphology.SEMask{2}()</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L54-L84">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEBox" href="#ImageMorphology.SEBox"><code>ImageMorphology.SEBox</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEBox{N}(axes; [r])</code></pre><p>The N-dimensional structuring element with all elements connected. This is a special case of <a href="#ImageMorphology.SEMask"><code>SEMask</code></a> that ImageMorphology algorithms might provide optimized implementation.</p><p>It is recommended to use <a href="#ImageMorphology.strel_box"><code>strel_box</code></a> and <a href="#ImageMorphology.strel_type"><code>strel_type</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; using OffsetArrays: centered
+
+julia&gt; se = strel_box((3, 3)) # C8 connectivity
+3×3 ImageMorphology.SEBoxArray{2, UnitRange{Int64}} with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; strel_type(se)
+ImageMorphology.SEBox{2, UnitRange{Int64}}((-1:1, -1:1), (1, 1))
+
+julia&gt; se = centered(collect(se)) # converted to normal centered array
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; strel_type(se)
+ImageMorphology.SEMask{2}()</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L105-L135">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEDiamondArray" href="#ImageMorphology.SEDiamondArray"><code>ImageMorphology.SEDiamondArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEDiamondArray(se::SEDiamond)</code></pre><p>The instantiated array object of <a href="#ImageMorphology.SEDiamond"><code>SEDiamond</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L152-L156">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.SEBoxArray" href="#ImageMorphology.SEBoxArray"><code>ImageMorphology.SEBoxArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEBoxArray(se::SEBox)</code></pre><p>The instantiated array object of <a href="#ImageMorphology.SEBox"><code>SEBox</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/fc08339aad03928b2467f95f4239e8f992c4a6b7/src/structuring_element.jl#L180-L184">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../structuring_element/">« Structuring element</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.17 on <span class="colophon-date" title="Thursday 12 May 2022 08:12">Thursday 12 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

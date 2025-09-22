@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Morphology Operators · ImageMorphology</title><meta name="title" content="Morphology Operators · ImageMorphology"/><meta property="og:title" content="Morphology Operators · ImageMorphology"/><meta property="twitter:title" content="Morphology Operators · ImageMorphology"/><meta name="description" content="Documentation for ImageMorphology."/><meta property="og:description" content="Documentation for ImageMorphology."/><meta property="twitter:description" content="Documentation for ImageMorphology."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../democards/listtheme.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ImageMorphology</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">ImageMorphology.jl</a></li><li><a class="tocitem" href="../structuring_element/">Structuring element</a></li><li class="is-active"><a class="tocitem" href>Morphology Operators</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Operators"><span>Operators</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Morphology Operators</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Morphology Operators</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaImages/ImageMorphology.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/master/docs/operators/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="op_index"><a class="docs-heading-anchor" href="#op_index">Morphology Operators</a><a id="op_index-1"></a><a class="docs-heading-anchor-permalink" href="#op_index" title="Permalink"></a></h1><p>This page describes the interfaces for the basic morphology operators that you can use to build your own pipeline. To easily visualize the effect of different operators, the &quot;blobs&quot; image is used to build the cover image.</p><pre><code class="language-julia hljs">using TestImages, ImageBase
+restrict(testimage(&quot;blobs&quot;))</code></pre><img src="index-84293f27.png" alt="Example block output"/><div class="admonition is-info" id="color-image-is-not-supported-e1925fe3bf41a61d"><header class="admonition-header">color image is not supported<a class="admonition-anchor" href="#color-image-is-not-supported-e1925fe3bf41a61d" title="Permalink"></a></header><div class="admonition-body"><p>Unless explicitly used, most operations in this package don&#39;t support color images. This is because many morphological operation is based on pixel value comparisons <code>min</code>, <code>max</code>, <code>&gt;</code> and <code>&lt;</code> – they are not well-defined for <code>RGB</code> type.</p></div></div><div class="admonition is-info" id="work-in-progress-edd95f9ae7845d83"><header class="admonition-header">🚧 work in progress<a class="admonition-anchor" href="#work-in-progress-edd95f9ae7845d83" title="Permalink"></a></header><div class="admonition-body"><p>This page contains only a subset of exported functions. The missing ones will be added in the future. You might need to check the heavy <a href="../reference/#reference_index">reference</a> page to find out what you need. Contributions are welcome!</p></div></div><h1 id="Operators"><a class="docs-heading-anchor" href="#Operators">Operators</a><a id="Operators-1"></a><a class="docs-heading-anchor-permalink" href="#Operators" title="Permalink"></a></h1><div class="list-card-section"><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/extreme_filter/#op_extreme_filter"><img src="covers/extreme_filter.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/extreme_filter/#op_extreme_filter"><code>extreme_filter</code></a></p></div>
+    <div class="list-card-description"><p>The <code>extreme_filter</code> function is the core operation in ImageMorphology. Many other morphological operations such as <code>dilate</code> and <code>erode</code> are direct usages of it. The cover image shows a pixel jitter using random select function.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/dilate/#op_dilate"><img src="covers/dilate.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/dilate/#op_dilate"><code>dilate</code></a></p></div>
+    <div class="list-card-description"><p>The dilation operator <code>dilate</code> is essentially a max filter. This is a basic term in mathematical morphology – many operations are built on top of <code>dilate</code> and the <code>erode</code> operator.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/erode/#op_erode"><img src="covers/erode.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/erode/#op_erode"><code>erode</code></a></p></div>
+    <div class="list-card-description"><p>The dilation operator <code>erode</code> is essentially a min filter. This is a basic term in mathematical morphology – many operations are built on top of <code>erode</code> and the <code>dilate</code> operator.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/opening/#op_opening"><img src="covers/opening.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/opening/#op_opening"><code>opening</code></a></p></div>
+    <div class="list-card-description"><p><code>opening</code> operator is defined as <code>dilate(erode(img))</code>. Intuitively, opening operation fills the white holes in the image.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/closing/#op_closing"><img src="covers/closing.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/closing/#op_closing"><code>closing</code></a></p></div>
+    <div class="list-card-description"><p><code>closing</code> operator is defined as <code>dilate(erode(img))</code>. Intuitively, closing operation fills the black holes in the image.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/tophat/#op_tophat"><img src="covers/tophat.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/tophat/#op_tophat"><code>tophat</code></a></p></div>
+    <div class="list-card-description"><p>The (white) tophat operator is defined as <code>img - opening(img)</code>. Intuitively, this filter can be used to extract small white elements and details from an image.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/bothat/#op_bothat"><img src="covers/bothat.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/bothat/#op_bothat"><code>bothat</code></a></p></div>
+    <div class="list-card-description"><p>The (black) tophat operator, also known as bottom hat, is defined as <code>closing(img) - img</code>. Intuitively, this filter can be used to extract small black elements and details from an image.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/mgradient/#op_mgradient"><img src="covers/mgradient.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/mgradient/#op_mgradient"><code>mgradient</code></a></p></div>
+    <div class="list-card-description"><p>There are three commonly used morphological gradient definitions: the beucher gradident <code>dilate(img) - erode(img)</code>, the external half-gradient <code>dilate(img) - img</code>, and the internal half-gradident <code>img - erode(img)</code>.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/mlaplacian/#op_mlaplacian"><img src="covers/mlaplacian.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/mlaplacian/#op_mlaplacian"><code>mlaplacian</code></a></p></div>
+    <div class="list-card-description"><p>Laplacian operator is defined as the difference between external gradient and internal gradient – <code>mgradient(img; mode=:external) - mgradient(img; mode=:internal)</code>.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/mreconstruct/#op_mreconstruct"><img src="covers/mreconstruct.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/mreconstruct/#op_mreconstruct"><code>mreconstruct</code></a></p></div>
+    <div class="list-card-description"><p>The morphological reconstruction operator is to repeatedly apply particular operator until the stability, i.e,. output unchanged. The most widely used ones are reconstruction by dilation and reconstruction by erosion.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/underbuild/#op_underbuild"><img src="covers/underbuild.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/underbuild/#op_underbuild"><code>underbuild</code></a></p></div>
+    <div class="list-card-description"><p><code>underbuild</code> is reconstruction by dilation, it is an alias for <code>mreconstruct</code> when <code>op=dilate</code>.</p>    </div>
+  </td>
+</tbody></table>
+</div><div class="list-card">
+<table>
+  <td valign="bottom"><div class="list-card-cover"><p><a href="operators/overbuild/#op_overbuild"><img src="covers/overbuild.png" alt="list-card-cover-image"/></a></p>  </div></td>
+  <td><div class="list-card-text"><p><a href="operators/overbuild/#op_overbuild"><code>overbuild</code></a></p></div>
+    <div class="list-card-description"><p><code>overbuild</code> is reconstruction by erosion, it is an alias for <code>mreconstruct</code> when <code>op=erode</code>.</p>    </div>
+  </td>
+</tbody></table>
+</div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../structuring_element/">« Structuring element</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 22 September 2025 16:44">Monday 22 September 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
