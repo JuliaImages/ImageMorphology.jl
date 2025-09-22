@@ -1,6 +1,6 @@
 module ImageMorphology
 
-using DataStructures: Queue, enqueue!, dequeue!
+using DataStructures: Queue
 using ImageCore
 using ImageCore: GenericGrayImage, MappedArrays, FixedPointNumbers
 using OffsetArrays

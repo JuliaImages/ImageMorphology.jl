@@ -86,8 +86,8 @@ end
 _prepare_reconstruct_ops(::op) where {op} = error("operation `$(op.instance)` is not supported for `mreconstruct`")
 _prepare_reconstruct_ops(::typeof(dilate)) = (max, min)
 _prepare_reconstruct_ops(::typeof(erode)) = (min, max)
-@inline _should_enqueue(::typeof(max)) = <
-@inline _should_enqueue(::typeof(min)) = >
+@inline _should_push(::typeof(max)) = <
+@inline _should_push(::typeof(min)) = >
 
 # Single-CPU version, references are [1] and section 6.2 of [2]
 function _mreconstruct!((select_se, select_marker), out, marker, mask, se)
@@ -135,7 +135,7 @@ function _mreconstruct!((select_se, select_marker), out, marker, mask, se)
         @inbounds out[i] = select_marker(curr_val, mask[i])
     end
     # backward scan
-    should_enqueue = _should_enqueue(select_se)
+    should_push = _should_push(select_se)
     for i in reverse(R)
         @inbounds curr_val = out[i]
         for Δi in lower_se # examine neighborhoods
@@ -148,21 +148,21 @@ function _mreconstruct!((select_se, select_marker), out, marker, mask, se)
         for Δi in lower_se # examine neighborhoods
             ii = i + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if should_enqueue(out[ii], out[i]) && should_enqueue(out[ii], mask[ii])
-                    enqueue!(queue, i)
+                @inbounds if should_push(out[ii], out[i]) && should_push(out[ii], mask[ii])
+                    push!(queue, i)
                 end
             end
         end
     end
     # Loop until all pixel have been examined
     while !isempty(queue)
-        curr_idx = dequeue!(queue)
+        curr_idx = popfirst!(queue)
         for Δi in se # examine neighborhoods
             ii = curr_idx + Δi
             if checkbounds(Bool, R, ii) #check that we are in the image
-                @inbounds if should_enqueue(out[ii], out[curr_idx]) && mask[ii] != out[ii]
+                @inbounds if should_push(out[ii], out[curr_idx]) && mask[ii] != out[ii]
                     out[ii] = select_marker(out[curr_idx], mask[ii])
-                    enqueue!(queue, ii)
+                    push!(queue, ii)
                 end
             end
         end
