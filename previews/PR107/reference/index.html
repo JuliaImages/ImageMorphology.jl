@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Reference · ImageMorphology</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../democards/listtheme.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ImageMorphology</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">ImageMorphology.jl</a></li><li><span class="tocitem">Concepts</span><ul><li><a class="tocitem" href="../structuring_element/">Structuring element</a></li></ul></li><li><a class="tocitem" href="../operators/">Morphology Operators</a></li><li class="is-active"><a class="tocitem" href>Reference</a><ul class="internal"><li><a class="tocitem" href="#reference_se"><span>Structuring element</span></a></li><li><a class="tocitem" href="#reference_ops"><span>Morphological operations</span></a></li><li><a class="tocitem" href="#Geodesic-operations"><span>Geodesic operations</span></a></li><li><a class="tocitem" href="#Components-and-segmentation"><span>Components and segmentation</span></a></li><li><a class="tocitem" href="#Max-tree"><span>Max tree</span></a></li><li><a class="tocitem" href="#Feature-transform"><span>Feature transform</span></a></li><li><a class="tocitem" href="#Misc"><span>Misc</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Reference</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Reference</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/master/docs/src/reference.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="reference_index"><a class="docs-heading-anchor" href="#reference_index">Reference</a><a id="reference_index-1"></a><a class="docs-heading-anchor-permalink" href="#reference_index" title="Permalink"></a></h1><h2 id="reference_se"><a class="docs-heading-anchor" href="#reference_se">Structuring element</a><a id="reference_se-1"></a><a class="docs-heading-anchor-permalink" href="#reference_se" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel" href="#ImageMorphology.StructuringElements.strel"><code>ImageMorphology.StructuringElements.strel</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel([T], X::AbstractArray)</code></pre><p>Convert structuring element (SE) <code>X</code> to appropriate presentation format with element type <code>T</code>. This is a useful tool to generate SE that most ImageMorphology functions understand.</p><p>ImageMorphology currently supports two commonly used representations:</p><ul><li><code>T=CartesianIndex</code>: offsets to its center point. The output type is <code>Vector{CartesianIndex{N}}</code>.</li><li><code>T=Bool</code>: connectivity mask where <code>true</code> indicates connected to its center point. The output type is <code>BitArray{N}</code>.</li></ul><pre><code class="language-julia-repl hljs">julia&gt; se_mask = centered(Bool[1 1 0; 1 1 0; 0 0 0]) # connectivity mask
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  0
+ 1  1  0
+ 0  0  0
+
+julia&gt; se_offsets = strel(CartesianIndex, se_mask) # displacement offsets to its center point
+3-element Vector{CartesianIndex{2}}:
+ CartesianIndex(-1, -1)
+ CartesianIndex(0, -1)
+ CartesianIndex(-1, 0)
+
+julia&gt; se = strel(Bool, se_offsets)
+3×3 OffsetArray(::BitMatrix, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  0
+ 1  1  0
+ 0  0  0</code></pre><p>See also <a href="#ImageMorphology.StructuringElements.strel_diamond"><code>strel_diamond</code></a> and <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> for SE constructors for two special cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel.jl#L1-L36">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_chain" href="#ImageMorphology.StructuringElements.strel_chain"><code>ImageMorphology.StructuringElements.strel_chain</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_chain(A, B, ...)
+strel_chain(As)</code></pre><p>For structuring elements of the same dimensions, chain them together to build a bigger one.</p><p>The output dimension is the same as the inputs dimensions. See also <a href="#ImageMorphology.StructuringElements.strel_product"><code>strel_product</code></a> that cartesian producting each SE.</p><div class="admonition is-info"><header class="admonition-header">structuring element decomposition</header><div class="admonition-body"><p>For some morphological operations <code>f</code> such as dilation and erosion, if <code>se</code> can be decomposed into smaller ones <code>se1, se2, ..., seN</code>, then <code>f(img, se)</code> is equivalent to <code>f(...f(f(img, se1), se2), ..., seN)</code>. Because applying <code>f</code> to smaller SEs is more efficient than to the original big one, this trick is used widely in image morphology.</p></div></div><pre><code class="language-julia-repl hljs">julia&gt; img = rand(512, 512);
+
+julia&gt; se1, se2 = [centered(rand(Bool, 3, 3)) for _ in 1:2];
+
+julia&gt; se = strel_chain(se1, se2);
+
+julia&gt; out_se = dilate(img, se);
+
+julia&gt; out_pipe = dilate(dilate(img, se1), se2);
+
+julia&gt; out_se[2:end-1, 2:end-1] == out_pipe[2:end-1, 2:end-1] # except for the boundary
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_chain.jl#L28-L57">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_product" href="#ImageMorphology.StructuringElements.strel_product"><code>ImageMorphology.StructuringElements.strel_product</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_product(A, B, ...)
+strel_product(se_list)</code></pre><p>Cartesian product of multiple structuring elements; the output dimension <code>ndims(out) == sum(ndims, se_list)</code>.</p><p>See also <a href="#ImageMorphology.StructuringElements.strel_chain"><code>strel_chain</code></a> that chains SEs in the same dimension.</p><pre><code class="language-julia-repl hljs">julia&gt; strel_product(strel_diamond((5, 5)), centered(Bool[1, 1, 1]))
+5×5×3 SEChainArray{3, OffsetArrays.OffsetArray{Bool, 3, BitArray{3}}} with indices -2:2×-2:2×-1:1:
+[:, :, -1] =
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 1  1  1  1  1
+ 0  1  1  1  0
+ 0  0  1  0  0
+
+[:, :, 0] =
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 1  1  1  1  1
+ 0  1  1  1  0
+ 0  0  1  0  0
+
+[:, :, 1] =
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 1  1  1  1  1
+ 0  1  1  1  0
+ 0  0  1  0  0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_chain.jl#L100-L133">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_box" href="#ImageMorphology.StructuringElements.strel_box"><code>ImageMorphology.StructuringElements.strel_box</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_box(A; r=1)
+strel_box(size; r=size .÷ 2)</code></pre><p>Construct the N-dimensional structuring element (SE) with all elements in the local window connected.</p><p>If image <code>A</code> is provided, then the SE size will be <code>(2r+1, 2r+1, ...)</code> with default half-size <code>r=1</code>. If <code>size</code> is provided, the default <code>r</code> will be <code>size .÷ 2</code>. The default <code>dims</code> will be all dimensions, that is, <code>(1, 2, ..., length(size))</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; img = rand(64, 64);
+
+julia&gt; strel_box(img)
+3×3 SEBoxArray{2, UnitRange{Int64}} with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; strel_box(img; r=2)
+5×5 SEBoxArray{2, UnitRange{Int64}} with indices -2:2×-2:2:
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+
+julia&gt; strel_box((5,5); r=(1,2))
+5×5 SEBoxArray{2, UnitRange{Int64}} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 0  0  0  0  0</code></pre><div class="admonition is-info"><header class="admonition-header">specialization and performance</header><div class="admonition-body"><p>The box shape <code>SEBox</code> is a special type for which many morphology algorithms may provide efficient implementations. For this reason, if one tries to collect an <code>SEBoxArray</code> into other array types (e.g. <code>Array{Bool}</code> via <code>collect</code>), then a significant performance drop is very likely to occur.</p></div></div><p>See also <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> and <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_box.jl#L70-L114">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_diamond" href="#ImageMorphology.StructuringElements.strel_diamond"><code>ImageMorphology.StructuringElements.strel_diamond</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_diamond(A::AbstractArray, [dims]; r=1)
+strel_diamond(size, [dims]; [r])</code></pre><p>Construct the N-dimensional structuring element (SE) for a diamond shape.</p><p>If image <code>A</code> is provided, then the SE size will be <code>(2r+1, 2r+1, ...)</code> with default half-size <code>r=1</code>. If <code>size</code> is provided, the default <code>r</code> will be <code>maximum(size)÷2</code>. The default <code>dims</code> will be all dimensions, that is, <code>(1, 2, ..., length(size))</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; img = rand(64, 64);
+
+julia&gt; strel_diamond(img) # default size for image input is (3, 3)
+3×3 SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_diamond(img; r=2) # equivalent to `strel_diamond((5,5))`
+5×5 SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -2:2×-2:2:
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 1  1  1  1  1
+ 0  1  1  1  0
+ 0  0  1  0  0
+
+julia&gt; strel_diamond(img, (1,)) # mask along dimension 1
+3×1 SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -1:1×0:0:
+ 1
+ 1
+ 1
+
+julia&gt; strel_diamond((3,3), (1,)) # 3×3 mask along dimension 1
+3×3 SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -1:1×-1:1:
+ 0  1  0
+ 0  1  0
+ 0  1  0</code></pre><div class="admonition is-info"><header class="admonition-header">specialization and performance</header><div class="admonition-body"><p>The diamond shape <code>SEDiamond</code> is a special type for which many morphology algorithms may provide much more efficient implementations. For this reason, if one tries to collect an <code>SEDiamondArray</code> into other array types (e.g. <code>Array{Bool}</code> via <code>collect</code>), then a significant performance drop is very likely to occur.</p></div></div><p>See also <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> and <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_diamond.jl#L90-L137">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_type" href="#ImageMorphology.StructuringElements.strel_type"><code>ImageMorphology.StructuringElements.strel_type</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_type(x)</code></pre><p>Infer the structuring element type for <code>x</code>.</p><div class="admonition is-info"><header class="admonition-header">developer note</header><div class="admonition-body"><p>This function is used to dispatch special SE types, e.g., <a href="#ImageMorphology.StructuringElements.SEBoxArray"><code>SEBoxArray</code></a>, to optimized implementation of particular morphology filter. In this sense it is required for custom SE array types to define this method.</p></div></div></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel.jl#L87-L96">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_size" href="#ImageMorphology.StructuringElements.strel_size"><code>ImageMorphology.StructuringElements.strel_size</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_size(x)</code></pre><p>Calculate the minimal block size that contains the structuring element. The result will be a tuple of odd integers.</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel_diamond((5, 5); r=1)
+5×5 SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  1  1  1  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia&gt; strel_size(se) # is not (5, 5)
+(3, 3)
+
+julia&gt; strel(Bool, strel(CartesianIndex, se)) # because it only checks the minimal enclosing block
+3×3 OffsetArray(::BitMatrix, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; se = [CartesianIndex(1, 1), CartesianIndex(-2, -2)];
+
+julia&gt; strel_size(se) # is not (4, 4)
+(5, 5)
+
+julia&gt; strel(Bool, se) # because the connectivity mask has to be odd size
+5×5 OffsetArray(::BitMatrix, -2:2, -2:2) with eltype Bool with indices -2:2×-2:2:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  0  1  0
+ 0  0  0  0  0
+
+julia&gt; se = strel_diamond((5, 5), (1, ); r=1)
+5×5 SEDiamondArray{2, 1, UnitRange{Int64}, 1} with indices -2:2×-2:2:
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+
+julia&gt; strel_size(se)
+(3, 1)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel.jl#L103-L151">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_ndims" href="#ImageMorphology.StructuringElements.strel_ndims"><code>ImageMorphology.StructuringElements.strel_ndims</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">strel_ndims(x)::Int</code></pre><p>Infer the dimension of the structuring element <code>x</code></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel.jl#L154-L158">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.strel_split" href="#ImageMorphology.StructuringElements.strel_split"><code>ImageMorphology.StructuringElements.strel_split</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">upper, lower = strel_split([T], se)</code></pre><p>Split a symmetric structuring element into its upper and lower half parts based on its center point.</p><p>For each element <code>o</code> in <code>strel(CartesianIndex, upper)</code>, its negative <code>-o</code> is an element of <code>strel(CartesianIndex, lower)</code>. This function is not the inverse of <a href="#ImageMorphology.StructuringElements.strel_chain"><code>strel_chain</code></a>.</p><p>The splited non-symmetric SE parts will be represented as array of <code>T</code>, where <code>T</code> is either a <code>Bool</code> or <code>CartesianIndex</code>. By default, <code>T = eltype(se)</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel_diamond((3, 3))
+3×3 SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; upper, lower = strel_split(se);
+
+julia&gt; upper
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  0
+ 0  0  0
+
+julia&gt; lower
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  0  0
+ 0  1  1
+ 0  1  0</code></pre><p>If the <code>se</code> is represented as displacement offset array, then the splited result will also be displacement offset array:</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel(CartesianIndex, se)
+4-element Vector{CartesianIndex{2}}:
+ CartesianIndex(0, -1)
+ CartesianIndex(-1, 0)
+ CartesianIndex(1, 0)
+ CartesianIndex(0, 1)
+
+julia&gt; upper, lower = strel_split(se);
+
+julia&gt; upper
+2-element Vector{CartesianIndex{2}}:
+ CartesianIndex(0, -1)
+ CartesianIndex(-1, 0)
+
+julia&gt; lower
+2-element Vector{CartesianIndex{2}}:
+ CartesianIndex(1, 0)
+ CartesianIndex(0, 1)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/utils.jl#L1-L58">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="OffsetArrays.centered" href="#OffsetArrays.centered"><code>OffsetArrays.centered</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">centered(A, cp=center(A)) -&gt; Ao</code></pre><p>Shift the center coordinate/point <code>cp</code> of array <code>A</code> to <code>(0, 0, ..., 0)</code>. Internally, this is equivalent to <code>OffsetArray(A, .-cp)</code>.</p><div class="admonition is-compat"><header class="admonition-header">OffsetArrays 1.9</header><div class="admonition-body"><p>This method requires at least OffsetArrays 1.9.</p></div></div><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:9), 3, 3)
+3×3 Matrix{Int64}:
+ 1  4  7
+ 2  5  8
+ 3  6  9
+
+julia&gt; Ao = OffsetArrays.centered(A); # axes (-1:1, -1:1)
+
+julia&gt; Ao[0, 0]
+5
+
+julia&gt; Ao = OffsetArray(A, OffsetArrays.Origin(0)); # axes (0:2, 0:2)
+
+julia&gt; Aoo = OffsetArrays.centered(Ao); # axes (-1:1, -1:1)
+
+julia&gt; Aoo[0, 0]
+5</code></pre><p>Users are allowed to pass <code>cp</code> to change how &quot;center point&quot; is interpreted, but the meaning of the output array should be reinterpreted as well. For instance, if <code>cp = map(last, axes(A))</code> then this function no longer shifts the center point but instead the bottom-right point to <code>(0, 0, ..., 0)</code>. A commonly usage of <code>cp</code> is to change the rounding behavior when the array is of even size at some dimension:</p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:4), 2, 2) # Ideally the center should be (1.5, 1.5) but OffsetArrays only support integer offsets
+2×2 Matrix{Int64}:
+ 1  3
+ 2  4
+
+julia&gt; OffsetArrays.centered(A, OffsetArrays.center(A, RoundUp)) # set (2, 2) as the center point
+2×2 OffsetArray(::Matrix{Int64}, -1:0, -1:0) with eltype Int64 with indices -1:0×-1:0:
+ 1  3
+ 2  4
+
+julia&gt; OffsetArrays.centered(A, OffsetArrays.center(A, RoundDown)) # set (1, 1) as the center point
+2×2 OffsetArray(::Matrix{Int64}, 0:1, 0:1) with eltype Int64 with indices 0:1×0:1:
+ 1  3
+ 2  4</code></pre><p>See also <a href="#OffsetArrays.center"><code>center</code></a>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="OffsetArrays.center" href="#OffsetArrays.center"><code>OffsetArrays.center</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">center(A, [r::RoundingMode=RoundDown])::Dims</code></pre><p>Return the center coordinate of given array <code>A</code>. If <code>size(A, k)</code> is even, a rounding procedure will be applied with mode <code>r</code>.</p><div class="admonition is-compat"><header class="admonition-header">OffsetArrays 1.9</header><div class="admonition-body"><p>This method requires at least OffsetArrays 1.9.</p></div></div><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; A = reshape(collect(1:9), 3, 3)
+3×3 Matrix{Int64}:
+ 1  4  7
+ 2  5  8
+ 3  6  9
+
+julia&gt; c = OffsetArrays.center(A)
+(2, 2)
+
+julia&gt; A[c...]
+5
+
+julia&gt; Ao = OffsetArray(A, -2, -2); # axes (-1:1, -1:1)
+
+julia&gt; c = OffsetArrays.center(Ao)
+(0, 0)
+
+julia&gt; Ao[c...]
+5</code></pre><p>To shift the center coordinate of the given array to <code>(0, 0, ...)</code>, you can use <a href="#OffsetArrays.centered"><code>centered</code></a>.</p></div></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.is_symmetric" href="#ImageMorphology.StructuringElements.is_symmetric"><code>ImageMorphology.StructuringElements.is_symmetric</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">is_symmetric(se)</code></pre><p>Check if a given structuring element array <code>se</code> is symmetric with respect to its center pixel.</p><p>More formally, this checks if <code>mask[I] == mask[-I]</code> for any valid <code>I ∈ CartesianIndices(mask)</code> in the connectivity mask represetation <code>mask = strel(Bool, se)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/utils.jl#L74-L82">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEMask" href="#ImageMorphology.StructuringElements.SEMask"><code>ImageMorphology.StructuringElements.SEMask</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEMask{N}()</code></pre><p>A (holy) trait type for representing structuring element as connectivity mask. This connectivity mask SE is a bool array where <code>true</code> indicates that pixel position is connected to the center point.</p><pre><code class="language-julia-repl hljs">julia&gt; se = centered(Bool[0 1 0; 1 1 1; 0 1 0]) # commonly known as C4 connectivity
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+ImageMorphology.StructuringElements.SEMask{2}()</code></pre><p>See also <a href="#ImageMorphology.StructuringElements.SEOffset"><code>SEOffset</code></a> for the displacement offset representation. More details can be found on he documentation page <a href="../structuring_element/#concept_se">Structuring Element</a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/StructuringElements.jl#L22-L43">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEOffset" href="#ImageMorphology.StructuringElements.SEOffset"><code>ImageMorphology.StructuringElements.SEOffset</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEOffset{N}()</code></pre><p>A (holy) trait type for representing structuring element as displacement offsets. This displacement offsets SE is an array of <code>CartesianIndex</code> where each element stores the displacement offset from the center point.</p><pre><code class="language-julia-repl hljs">julia&gt; se = [CartesianIndex(-1, 0), CartesianIndex(0, -1), CartesianIndex(1, 0), CartesianIndex(0, 1)]
+4-element Vector{CartesianIndex{2}}:
+ CartesianIndex(-1, 0)
+ CartesianIndex(0, -1)
+ CartesianIndex(1, 0)
+ CartesianIndex(0, 1)
+
+julia&gt; strel_type(se)
+ImageMorphology.StructuringElements.SEOffset{2}()</code></pre><p>See also <a href="#ImageMorphology.StructuringElements.SEMask"><code>SEMask</code></a> for the connectivity mask representation. More details can be found on he documentation page <a href="../structuring_element/#concept_se">Structuring Element</a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/StructuringElements.jl#L46-L67">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEDiamond" href="#ImageMorphology.StructuringElements.SEDiamond"><code>ImageMorphology.StructuringElements.SEDiamond</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEDiamond{N}(axes, [dims]; [r])</code></pre><p>A (holy) trait type for the N-dimensional diamond shape structuring element. This is a special case of <a href="#ImageMorphology.StructuringElements.SEMask"><code>SEMask</code></a> that ImageMorphology algorithms might provide optimized implementation.</p><p>It is recommended to use <a href="#ImageMorphology.StructuringElements.strel_diamond"><code>strel_diamond</code></a> and <a href="#ImageMorphology.StructuringElements.strel_type"><code>strel_type</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel_diamond((3, 3)) # C4 connectivity
+3×3 SEDiamondArray{2, 2, UnitRange{Int64}, 0} with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+SEDiamond{2, 2, UnitRange{Int64}}((-1:1, -1:1), (1, 2), 1)
+
+julia&gt; se = centered(collect(se)) # converted to normal centered array
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 0  1  0
+ 1  1  1
+ 0  1  0
+
+julia&gt; strel_type(se)
+SEMask{2}()</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_diamond.jl#L1-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEBox" href="#ImageMorphology.StructuringElements.SEBox"><code>ImageMorphology.StructuringElements.SEBox</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEBox{N}(axes; [r])</code></pre><p>The N-dimensional structuring element with all elements connected. This is a special case of <a href="#ImageMorphology.StructuringElements.SEMask"><code>SEMask</code></a> that ImageMorphology algorithms might provide optimized implementation.</p><p>It is recommended to use <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> and <a href="#ImageMorphology.StructuringElements.strel_type"><code>strel_type</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; se = strel_box((3, 3)) # C8 connectivity
+3×3 SEBoxArray{2, UnitRange{Int64}} with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; strel_type(se)
+SEBox{2, UnitRange{Int64}}((-1:1, -1:1), (1, 1))
+
+julia&gt; se = centered(collect(se)) # converted to normal centered array
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  1
+ 1  1  1
+ 1  1  1
+
+julia&gt; strel_type(se)
+SEMask{2}()</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_box.jl#L1-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEDiamondArray" href="#ImageMorphology.StructuringElements.SEDiamondArray"><code>ImageMorphology.StructuringElements.SEDiamondArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEDiamondArray(se::SEDiamond)</code></pre><p>The instantiated array object of <a href="#ImageMorphology.StructuringElements.SEDiamond"><code>SEDiamond</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_diamond.jl#L51-L55">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.StructuringElements.SEBoxArray" href="#ImageMorphology.StructuringElements.SEBoxArray"><code>ImageMorphology.StructuringElements.SEBoxArray</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SEBoxArray(se::SEBox)</code></pre><p>The instantiated array object of <a href="#ImageMorphology.StructuringElements.SEBox"><code>SEBox</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/StructuringElements/strel_box.jl#L45-L49">source</a></section></article><h2 id="reference_ops"><a class="docs-heading-anchor" href="#reference_ops">Morphological operations</a><a id="reference_ops-1"></a><a class="docs-heading-anchor-permalink" href="#reference_ops" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.extreme_filter" href="#ImageMorphology.extreme_filter"><code>ImageMorphology.extreme_filter</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">extreme_filter(f, A; r=1, [dims]) -&gt; out
+extreme_filter(f, A, Ω) -&gt; out</code></pre><p>Filter the array <code>A</code> using select function <code>f(x, y)</code> for each Ω-neighborhood. The name &quot;extreme&quot; comes from the fact that typical select function <code>f</code> choice is <code>min</code> and <code>max</code>.</p><p>For each pixel <code>p</code> in <code>A</code>, the select function <code>f</code> is applied to its Ω-neighborhood iteratively in a <code>f(...(f(f(A[p], A[p+Ω[1]]), A[p+Ω[2]]), ...)</code> manner. For instance, in the 1-dimensional case, <code>out[p] = f(f(A[p], A[p-1]), A[p+1])</code> for each <code>p</code> is the default behavior.</p><p>The Ω-neighborhood is defined by the <code>dims</code> or <code>Ω</code> argument. The <code>r</code> and <code>dims</code> keywords specifies the box shape neighborhood <code>Ω</code> using <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a>. The <code>Ω</code> is also known as structuring element (SE), it can be either displacement offsets or bool array mask, please refer to <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; M = [4 6 5 3 4; 8 6 9 4 8; 7 8 4 9 6; 6 2 2 1 7; 1 6 5 2 6]
+5×5 Matrix{Int64}:
+ 4  6  5  3  4
+ 8  6  9  4  8
+ 7  8  4  9  6
+ 6  2  2  1  7
+ 1  6  5  2  6
+
+julia&gt; extreme_filter(max, M) # max-filter using 4 direct neighbors along both dimensions
+5×5 Matrix{Int64}:
+ 8  9  9  9  8
+ 8  9  9  9  9
+ 8  9  9  9  9
+ 8  8  9  9  9
+ 6  6  6  7  7
+
+julia&gt; extreme_filter(max, M; dims=1) # max-filter along the first dimension (column)
+5×5 Matrix{Int64}:
+ 8  6  9  4  8
+ 8  8  9  9  8
+ 8  8  9  9  8
+ 7  8  5  9  7
+ 6  6  5  2  7</code></pre><p><code>Ω</code> can be either an <code>AbstractArray{Bool}</code> mask array with <code>true</code> element indicating connectivity, or a <code>AbstractArray{&lt;:CartesianIndex}</code> array with each element indicating the displacement offset to its center element.</p><pre><code class="language-julia-repl hljs">julia&gt; Ω_mask = centered(Bool[1 1 0; 1 1 0; 1 0 0]) # custom neighborhood in mask format
+3×3 OffsetArray(::Matrix{Bool}, -1:1, -1:1) with eltype Bool with indices -1:1×-1:1:
+ 1  1  0
+ 1  1  0
+ 1  0  0
+
+julia&gt; out = extreme_filter(max, M, Ω_mask)
+5×5 Matrix{Int64}:
+ 4  8  6  9  4
+ 8  8  9  9  9
+ 8  8  9  9  9
+ 7  8  8  9  9
+ 6  6  6  5  7
+
+julia&gt; Ω_offsets = strel(CartesianIndex, Ω_mask) # custom neighborhood as displacement offset
+4-element Vector{CartesianIndex{2}}:
+ CartesianIndex(-1, -1)
+ CartesianIndex(0, -1)
+ CartesianIndex(1, -1)
+ CartesianIndex(-1, 0)
+
+julia&gt; out == extreme_filter(max, M, Ω_offsets) # both versions work equivalently
+true</code></pre><p>See also the in-place version <a href="#ImageMorphology.extreme_filter!"><code>extreme_filter!</code></a>. Another function in ImageFiltering package <code>ImageFiltering.mapwindow</code> provides similar functionality.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/extreme_filter.jl#L3-L80">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.extreme_filter!" href="#ImageMorphology.extreme_filter!"><code>ImageMorphology.extreme_filter!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">extreme_filter!(f, out, A; [r], [dims])
+extreme_filter!(f, out, A, Ω)</code></pre><p>The in-place version of <a href="#ImageMorphology.extreme_filter"><code>extreme_filter</code></a> where <code>out</code> is the output array that gets modified.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/extreme_filter.jl#L84-L90">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.dilate" href="#ImageMorphology.dilate"><code>ImageMorphology.dilate</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">dilate(img; dims=coords_spatial(img), r=1)
+dilate(img, se)</code></pre><p>Perform a max-filter over the neighborhood of <code>img</code>, specified by structuring element <code>se</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(5, 5); img[3, [2, 4]] .= true; img
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 0  1  0  1  0
+ 0  0  0  0  0
+ 0  0  0  0  0
+
+julia&gt; dilate(img)
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 0  0  0  0  0
+
+julia&gt; dilate(img; dims=1)
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 0  1  0  1  0
+ 0  1  0  1  0
+ 0  1  0  1  0
+ 0  0  0  0  0
+
+julia&gt; dilate(img, strel_diamond(img)) # use diamond shape SE
+5×5 BitMatrix:
+ 0  0  0  0  0
+ 0  1  0  1  0
+ 1  1  1  1  1
+ 0  1  0  1  0
+ 0  0  0  0  0</code></pre><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.dilate!"><code>dilate!</code></a> is the in-place version of this function</li><li><a href="#ImageMorphology.erode"><code>erode</code></a> is the dual operator of <code>dilate</code> in the sense that <code>complement.(dilate(img)) == erode(complement.(img))</code>.</li></ul><div class="admonition is-info"><header class="admonition-header">symmetricity</header><div class="admonition-body"><p>If <code>se</code> is symmetric with repsect to origin, i.e., <code>se[b] == se[-b]</code> for any <code>b</code>, then dilation becomes the Minkowski sum: A⊕B={a+b|a∈A, b∈B}.</p></div></div></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/dilate.jl#L1-L55">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.dilate!" href="#ImageMorphology.dilate!"><code>ImageMorphology.dilate!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">dilate!(out, img; [dims], [r])
+dilate!(out, img, se)</code></pre><p>The in-place version of <a href="#ImageMorphology.dilate"><code>dilate</code></a> with input image <code>img</code> and output image <code>out</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/dilate.jl#L59-L64">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.erode" href="#ImageMorphology.erode"><code>ImageMorphology.erode</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">out = erode(img; dims=coords_spatial(img), r=1)
+out = erode(img, se)</code></pre><p>Perform a min-filter over the neighborhood of <code>img</code>, specified by structuring element <code>se</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = trues(5, 5); img[3, [2, 4]] .= false; img
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 1  1  1  1  1
+ 1  0  1  0  1
+ 1  1  1  1  1
+ 1  1  1  1  1
+
+julia&gt; erode(img)
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 1  1  1  1  1
+
+julia&gt; erode(img; dims=1)
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 1  0  1  0  1
+ 1  0  1  0  1
+ 1  0  1  0  1
+ 1  1  1  1  1
+
+julia&gt; erode(img, strel_diamond(img)) # use diamond shape SE
+5×5 BitMatrix:
+ 1  1  1  1  1
+ 1  0  1  0  1
+ 0  0  0  0  0
+ 1  0  1  0  1
+ 1  1  1  1  1</code></pre><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.erode!"><code>erode!</code></a> is the in-place version of this function</li><li><a href="#ImageMorphology.dilate"><code>dilate</code></a> is the dual operator of <code>erode</code> in the sense that <code>complement.(dilate(img)) == erode(complement.(img))</code>.</li></ul><div class="admonition is-info"><header class="admonition-header">symmetricity</header><div class="admonition-body"><p>If <code>se</code> is symmetric with repsect to origin, i.e., <code>se[b] == se[-b]</code> for any <code>b</code>, then erosion becomes the Minkowski difference: A⊖B={a-b|a∈A, b∈B}.</p></div></div></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/erode.jl#L1-L54">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.erode!" href="#ImageMorphology.erode!"><code>ImageMorphology.erode!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">erode!(out, img; [dims], [r])
+erode!(out, img, se)</code></pre><p>The in-place version of <a href="#ImageMorphology.erode"><code>erode</code></a> with input image <code>img</code> and output image <code>out</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/erode.jl#L58-L63">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.opening" href="#ImageMorphology.opening"><code>ImageMorphology.opening</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">opening(img; dims=coords_spatial(img), r=1)
+opening(img, se)</code></pre><p>Perform the morphological opening on <code>img</code>. The opening operation is defined as erosion followed by a dilation: <code>dilate(erode(img, se), se)</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = trues(7,7); img[2, 2] = false; img[3:5, 3:5] .= false; img[4, 4] = true; img
+7×7 BitMatrix:
+ 1  1  1  1  1  1  1
+ 1  0  1  1  1  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  1  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  1  1  1  1  1
+ 1  1  1  1  1  1  1
+
+julia&gt; opening(img)
+7×7 BitMatrix:
+ 0  0  1  1  1  1  1
+ 0  0  1  1  1  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  1  1  1  1  1
+ 1  1  1  1  1  1  1
+
+julia&gt; opening(img, strel_diamond(img)) # use diamond shape SE
+7×7 BitMatrix:
+ 1  1  1  1  1  1  1
+ 1  0  1  1  1  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  0  0  0  1  1
+ 1  1  1  1  1  1  1
+ 1  1  1  1  1  1  1</code></pre><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.opening!"><code>opening!</code></a> is the in-place version of this function.</li><li><a href="#ImageMorphology.closing"><code>closing</code></a> is the dual operator of <code>opening</code> in the sense that <code>complement.(opening(img)) == closing(complement.(img))</code>.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/opening.jl#L1-L49">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.opening!" href="#ImageMorphology.opening!"><code>ImageMorphology.opening!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">opening!(out, img, buffer; [dims], [r])
+opening!(out, img, se, buffer)</code></pre><p>The in-place version of <a href="#ImageMorphology.opening"><code>opening</code></a> with input image <code>img</code> and output image <code>out</code>. The intermediate erosion result is stored in <code>buffer</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/opening.jl#L53-L59">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.closing" href="#ImageMorphology.closing"><code>ImageMorphology.closing</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">closing(img; dims=coords_spatial(img), r=1)
+closing(img, se)</code></pre><p>Perform the morphological closing on <code>img</code>. The closing operation is defined as dilation followed by an erosion: <code>erode(dilate(img, se), se)</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(7,7); img[2, 2] = true; img[3:5, 3:5] .= true; img[4, 4] = false; img
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  1  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  0  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; closing(img)
+7×7 BitMatrix:
+ 1  1  0  0  0  0  0
+ 1  1  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; closing(img, strel_diamond(img)) # # use diamond shape SE
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  1  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0</code></pre><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.opening!"><code>opening!</code></a> is the in-place version of this function.</li><li><a href="#ImageMorphology.closing"><code>closing</code></a> is the dual operator of <code>opening</code> in the sense that <code>complement.(opening(img)) == closing(complement.(img))</code>.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/closing.jl#L1-L49">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.closing!" href="#ImageMorphology.closing!"><code>ImageMorphology.closing!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">closing!(out, img, buffer; [dims], [r])
+closing!(out, img, se, buffer)</code></pre><p>The in-place version of <a href="#ImageMorphology.closing"><code>closing</code></a> with input image <code>img</code> and output image <code>out</code>. The intermediate dilation result is stored in <code>buffer</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/closing.jl#L53-L59">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.tophat" href="#ImageMorphology.tophat"><code>ImageMorphology.tophat</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">tophat(img; dims=coords_spatial(img), r=1)
+tophat(img, se)</code></pre><p>Performs morphological top-hat transform for given image, i.e., <code>img - opening(img, se)</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p>This <em>white</em> top-hat transform can be used to extract small white elements and details from an image. To extract black details, the <em>black</em> top-hat transform, also known as bottom-hat transform, <a href="#ImageMorphology.bothat"><code>bothat</code></a> can be used.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(5, 5); img[1, 1] = true; img[3:5, 3:5] .= true; img
+5×5 BitMatrix:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  1  1  1
+ 0  0  1  1  1
+ 0  0  1  1  1
+
+julia&gt; Int.(tophat(img))
+5×5 Matrix{Int64}:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 0  0  0  0  0
+ 0  0  0  0  0
+
+julia&gt; Int.(tophat(img, strel_diamond(img))) # use diamond shape SE
+5×5 Matrix{Int64}:
+ 1  0  0  0  0
+ 0  0  0  0  0
+ 0  0  1  0  0
+ 0  0  0  0  0
+ 0  0  0  0  0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/tophat.jl#L1-L40">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.tophat!" href="#ImageMorphology.tophat!"><code>ImageMorphology.tophat!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">tophat!(out, img, buffer; [dims], [r])
+tophat!(out, img, se, buffer)</code></pre><p>The in-place version of <a href="#ImageMorphology.tophat"><code>tophat</code></a> with input image <code>img</code> and output image <code>out</code>. The intermediate erosion result is stored in <code>buffer</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/tophat.jl#L44-L50">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.bothat" href="#ImageMorphology.bothat"><code>ImageMorphology.bothat</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">bothat(img; dims=coords_spatial(img), r=1)
+bothat(img, se)</code></pre><p>Performs morphological bottom-hat transform for given image, i.e., <code>closing(img, se) - img</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p>This bottom-hat transform, also known as <em>black</em> top-hat transform, can be used to extract small black elements and details from an image. To extract white details, the <em>white</em> top-hat transform <a href="#ImageMorphology.tophat"><code>tophat</code></a> can be used.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(7, 7); img[3:5, 3:5] .= true; img[4, 6] = true; img[4, 4] = false; img
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  0  1  1  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(bothat(img))
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  1  0  0  1
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(bothat(img, strel_diamond(img))) # use diamond shape SE
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  1  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0</code></pre><p>See also <a href="#ImageMorphology.bothat!"><code>bothat!</code></a> for the in-place version.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/bothat.jl#L1-L48">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.bothat!" href="#ImageMorphology.bothat!"><code>ImageMorphology.bothat!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">bothat!(out, img, buffer; [dims], [r])
+bothat!(out, img, se, buffer)</code></pre><p>The in-place version of <a href="#ImageMorphology.bothat"><code>bothat</code></a> with input image <code>img</code> and output image <code>out</code>. The intermediate dilation result is stored in <code>buffer</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/bothat.jl#L52-L58">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mgradient" href="#ImageMorphology.mgradient"><code>ImageMorphology.mgradient</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mgradient(img; mode=:beucher, dims=coords_spatial(img), r=1)
+mgradient(img, se; mode=:beucher)</code></pre><p>Calculate morphological gradient of the image using given mode.</p><p>There are three widely used modes[1]:</p><ul><li><code>:beucher</code>: the default mode. It calculates the arithmetic difference between the dilation and the erosion – <code>dilate(img, se) - erode(img, se)</code>.</li><li><code>:internal</code>: also known as <em>half-gradient by erosion</em>. It calculates the arithmetic difference between the original image and its erosion – <code>img - erode(img, se)</code>.</li><li><code>:external</code>: also known as <em>half-gradient by dilation</em>. It calculates the arithmetic difference between dilation and the original image – <code>dilate(img, se) - se</code>.</li></ul><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(7, 7); img[3:5, 3:5] .= true; img
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(mgradient(img)) # default mode :beucher always creates a two-pixel wide boundary
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  1  1  1  1  1  0
+ 0  1  1  1  1  1  0
+ 0  1  1  0  1  1  0
+ 0  1  1  1  1  1  0
+ 0  1  1  1  1  1  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(mgradient(img; mode=:internal)) # half-gradient -- the boundary is internal to original image
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  0  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(mgradient(img; mode=:external)) # half-gradient -- the boundary is external to original image
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  1  1  1  1  1  0
+ 0  1  0  0  0  1  0
+ 0  1  0  0  0  1  0
+ 0  1  0  0  0  1  0
+ 0  1  1  1  1  1  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(mgradient(img, strel_diamond(img))) # use diamond shape SE
+7×7 Matrix{Int64}:
+ 0  0  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  1  1  1  1  1  0
+ 0  1  1  0  1  1  0
+ 0  1  1  1  1  1  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0</code></pre><p>The beucher operator is a self-complementary operator in the sense that <code>mgradient(img, se; mode=:beucher) == mgradient(complement.(img), se; mode=:beucher)</code>. When <code>r&gt;1</code>, it is usually called <em>thick gradient</em>. If a line segment is used as <code>se</code>, then the gradient becomes the <em>directional gradient</em>.</p><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.mgradient!"><code>mgradient!</code></a> is the in-place version of this function.</li><li><a href="#ImageMorphology.mlaplacian"><code>mlaplacian</code></a> for the laplacian operator.</li><li><code>ImageBase.FiniteDiff</code> also provides a few finite difference operators, including <code>fdiff</code>, <code>fgradient</code>, etc.</li></ul><p><strong>References</strong></p><ul><li>[1] Rivest, Jean-Francois, Pierre Soille, and Serge Beucher. &quot;Morphological gradients.&quot; Journal of Electronic Imaging 2.4 (1993): 326-336.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mgradient.jl#L1-L88">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mgradient!" href="#ImageMorphology.mgradient!"><code>ImageMorphology.mgradient!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mgradient!(out, img, buffer; [dims], [r], [mode])
+mgradient!(out, img, se, buffer; [mode])</code></pre><p>The in-place version of <a href="#ImageMorphology.mgradient"><code>mgradient</code></a> with input image <code>img</code> and output image <code>out</code>.</p><p>The <code>buffer</code> array is required for <code>:beucher</code> mode. For <code>:internal</code> and <code>:external</code> modes, <code>buffer</code> is not needed and can be <code>nothing</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mgradient.jl#L98-L106">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mlaplacian" href="#ImageMorphology.mlaplacian"><code>ImageMorphology.mlaplacian</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mlaplacian(img; dims=coords_spatial(img), r=1)
+mlaplacian(img, se)</code></pre><p>Calculate morphological laplacian of the image.</p><p>The morphological lapalacian operator is defined as <code>∇⁺A - ∇⁻A</code> where <code>∇⁺A</code> is the external gradient <code>A - erode(A, se)</code> and <code>∇⁻A</code> is the internal gradient <code>dilate(A, se) - A</code>. Thus is <code>dilate(A, se) + erode(A, se) - 2A</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; img = falses(7, 7); img[3:5, 3:5] .= true; img[4, 4] = false; img
+7×7 BitMatrix:
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+ 0  0  1  1  1  0  0
+ 0  0  1  0  1  0  0
+ 0  0  1  1  1  0  0
+ 0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0
+
+julia&gt; Int.(mlaplacian(img))
+7×7 Matrix{Int64}:
+ 0  0   0   0   0  0  0
+ 0  1   1   1   1  1  0
+ 0  1  -1  -1  -1  1  0
+ 0  1  -1   1  -1  1  0
+ 0  1  -1  -1  -1  1  0
+ 0  1   1   1   1  1  0
+ 0  0   0   0   0  0  0
+
+julia&gt; Int.(mlaplacian(img, strel_diamond(img))) # use diamond shape SE
+7×7 Matrix{Int64}:
+ 0  0   0   0   0  0  0
+ 0  0   1   1   1  0  0
+ 0  1  -1  -1  -1  1  0
+ 0  1  -1   1  -1  1  0
+ 0  1  -1  -1  -1  1  0
+ 0  0   1   1   1  0  0
+ 0  0   0   0   0  0  0</code></pre><p><strong>See also</strong></p><ul><li><a href="#ImageMorphology.mlaplacian!"><code>mlaplacian!</code></a> is the in-place version of this function.</li><li><a href="#ImageMorphology.mgradient"><code>mgradient</code></a> for the gradient operator.</li><li><code>ImageBase.FiniteDiff</code> also provides a few finite difference operators, including <code>fdiff</code>, <code>fgradient</code>, etc.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mlaplacian.jl#L1-L55">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mlaplacian!" href="#ImageMorphology.mlaplacian!"><code>ImageMorphology.mlaplacian!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mlaplacian!(out, img, buffer; [dims], [r])
+mlaplacian!(out, img, se, buffer)</code></pre><p>The in-place version of <a href="#ImageMorphology.mlaplacian"><code>mlaplacian</code></a> with input image <code>img</code> and output image <code>out</code>. The intermediate erosion result is stored in <code>buffer</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mlaplacian.jl#L65-L71">source</a></section></article><h2 id="Geodesic-operations"><a class="docs-heading-anchor" href="#Geodesic-operations">Geodesic operations</a><a id="Geodesic-operations-1"></a><a class="docs-heading-anchor-permalink" href="#Geodesic-operations" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mreconstruct" href="#ImageMorphology.mreconstruct"><code>ImageMorphology.mreconstruct</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mreconstruct(op, marker, mask; [dims])
+mreconstruct(op, marker, mask, se)</code></pre><p>Morphological reconstruction of <code>marker</code> image by operation <code>op</code>.</p><p>The <code>op</code> argument is either <code>erode</code> or <code>dilate</code>, indicating reconstruction by erosion or by dilation. The <code>mask</code> argument has the same shape as <code>marker</code> and is used to restrict the output value range.</p><p>The <code>dims</code> keyword is used to specify the dimension to process by constructing the box shape structuring element <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box(marker; dims)</code></a>. For generic structuring element, the half-size is expected to be either <code>0</code> or <code>1</code> along each dimension.</p><p>By definition, the reconstruction is done by applying <code>marker = select.(op(marker; dims), mask)</code> repeatly until reaching stability. For dilation <code>op, select = dilate, min</code> and for erosion <code>op, select = erode, max</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; marker = [0 0 0 0 0; 0 9 0 0 0; 0 0 0 0 0; 0 0 0 5 0; 0 0 0 0 0; 0 9 0 0 0]
+6×5 Matrix{Int64}:
+ 0  0  0  0  0
+ 0  9  0  0  0
+ 0  0  0  0  0
+ 0  0  0  5  0
+ 0  0  0  0  0
+ 0  9  0  0  0
+
+julia&gt; mask = [9 0 0 0 0; 0 8 7 1 0; 0 9 0 4 0; 0 0 0 4 0; 0 0 6 5 6; 0 0 9 8 9]
+6×5 Matrix{Int64}:
+ 9  0  0  0  0
+ 0  8  7  1  0
+ 0  9  0  4  0
+ 0  0  0  4  0
+ 0  0  6  5  6
+ 0  0  9  8  9
+
+julia&gt; mreconstruct(dilate, marker, mask) # equivalent to underbuild(marker, mask)
+6×5 Matrix{Int64}:
+ 8  0  0  0  0
+ 0  8  7  1  0
+ 0  8  0  4  0
+ 0  0  0  4  0
+ 0  0  4  4  4
+ 0  0  4  4  4</code></pre><p><strong>See also</strong></p><p>The inplace version of this function is <a href="#ImageMorphology.mreconstruct!"><code>mreconstruct!</code></a>. There are also aliases <a href="#ImageMorphology.underbuild"><code>underbuild</code></a> for reconstruction by dilation and <a href="#ImageMorphology.overbuild"><code>overbuild</code></a> for reconstruction by erosion.</p><p><strong>References</strong></p><ul><li>[1] L. Vincent, “Morphological grayscale reconstruction in image analysis: applications and efficient algorithms,” IEEE Trans. on Image Process., vol. 2, no. 2, pp. 176–201, Apr. 1993, doi: 10.1109/83.217222.</li><li>[2] P. Soille, Morphological Image Analysis. Berlin, Heidelberg: Springer Berlin Heidelberg, 2004. doi: 10.1007/978-3-662-05088-0.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mreconstruct.jl#L1-L63">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.mreconstruct!" href="#ImageMorphology.mreconstruct!"><code>ImageMorphology.mreconstruct!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">mreconstruct!(op, out, marker, mask; [dims])</code></pre><p>The in-place version of morphological reconstruction <a href="#ImageMorphology.mreconstruct"><code>mreconstruct</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/mreconstruct.jl#L74-L78">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.underbuild" href="#ImageMorphology.underbuild"><code>ImageMorphology.underbuild</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">underbuild(marker, mask; [dims])
+underbuild(marker, mask, se)</code></pre><p>Reconstruction by dilation. This is an alias for <a href="#ImageMorphology.mreconstruct"><code>mreconstruct</code></a> with <code>op=dilate</code>.</p><p>See also the in-place version <a href="#ImageMorphology.underbuild!"><code>underbuild!</code></a>, and the dual operator <a href="#ImageMorphology.overbuild"><code>overbuild</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/underbuild.jl#L1-L10">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.underbuild!" href="#ImageMorphology.underbuild!"><code>ImageMorphology.underbuild!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">underbuild!(out, marker, mask; [dims])
+underbuild!(out, marker, mask, se)</code></pre><p>The in-place version of <a href="#ImageMorphology.underbuild"><code>underbuild</code></a> with output image <code>out</code> being modified in place.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/underbuild.jl#L13-L19">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.overbuild" href="#ImageMorphology.overbuild"><code>ImageMorphology.overbuild</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">overbuild(marker, mask; [dims])
+overbuild(marker, mask, se)</code></pre><p>Reconstruction by erosion. This is an alias for <a href="#ImageMorphology.mreconstruct"><code>mreconstruct</code></a> with <code>op=erode</code>.</p><p>See also the in-place version <a href="#ImageMorphology.overbuild!"><code>overbuild!</code></a>, and the dual operator <a href="#ImageMorphology.underbuild"><code>underbuild</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/overbuild.jl#L1-L10">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.overbuild!" href="#ImageMorphology.overbuild!"><code>ImageMorphology.overbuild!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">overbuild!(out, marker, mask; [dims])
+overbuild!(out, marker, mask, se)</code></pre><p>The in-place version of <a href="#ImageMorphology.overbuild"><code>overbuild</code></a> with output image <code>out</code> being modified in place.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/ops/overbuild.jl#L13-L18">source</a></section></article><h2 id="Components-and-segmentation"><a class="docs-heading-anchor" href="#Components-and-segmentation">Components and segmentation</a><a id="Components-and-segmentation-1"></a><a class="docs-heading-anchor-permalink" href="#Components-and-segmentation" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.label_components" href="#ImageMorphology.label_components"><code>ImageMorphology.label_components</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">label = label_components(A; [dims=coords_spatial(A)], [r=1], [bkg])
+label = label_components(A, se; [bkg])</code></pre><p>Find and label the connected components of array <code>A</code> where the connectivity is defined by structuring element <code>se</code>. Each component is assigned a unique integer value as its label with <code>0</code> representing the background defined by <code>bkg</code>.</p><p><code>se</code> is the structuring element that defines the neighborhood of the image. See <a href="#ImageMorphology.StructuringElements.strel"><code>strel</code></a> for more details. If <code>se</code> is not specified, then it will use the <a href="#ImageMorphology.StructuringElements.strel_box"><code>strel_box</code></a> with an extra keyword <code>dims</code> to control the dimensions to filter, and half-size <code>r</code> to control the diamond size.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; A = [false true false true  false;
+            true false false  true  true]
+2×5 Matrix{Bool}:
+ 0  1  0  1  0
+ 1  0  0  1  1
+
+julia&gt; label_components(A) # default diamond shape C4 connectivity
+2×5 Matrix{Int64}:
+ 0  2  0  3  0
+ 1  0  0  3  3
+
+julia&gt; label_components(A; dims=2) # only the rows are considered
+2×5 Matrix{Int64}:
+ 0  2  0  3  0
+ 1  0  0  4  4
+
+julia&gt; label_components(A, strel_box((3, 3))) # box shape C8 connectivity
+2×5 Matrix{Int64}:
+ 0  1  0  2  0
+ 1  0  0  2  2</code></pre><p>The in-place version is <a href="#ImageMorphology.label_components!"><code>label_components!</code></a>. See also <a href="#ImageMorphology.component_boxes"><code>component_boxes</code></a>, <a href="#ImageMorphology.component_lengths"><code>component_lengths</code></a>, <a href="#ImageMorphology.component_indices"><code>component_indices</code></a>, <a href="#ImageMorphology.component_centroids"><code>component_centroids</code></a> for basic properties of the labeled components.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L1-L39">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.label_components!" href="#ImageMorphology.label_components!"><code>ImageMorphology.label_components!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">label_components!(out, A; [dims], [r] [bkg])
+label_components!(out, A, se; [bkg])</code></pre><p>The in-place version of <a href="#ImageMorphology.label_components"><code>label_components</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L43-L48">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.component_boxes" href="#ImageMorphology.component_boxes"><code>ImageMorphology.component_boxes</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">boxes = component_boxes(labeled_array)</code></pre><p>Calculates the minimal bounding boxes for each label including the background label. The labels can be computed by <a href="#ImageMorphology.label_components"><code>label_components</code></a>.</p><p>Each bounding box is represented as a <code>CartesianIndices</code>. <code>boxes</code> is shifted to 0-based indexing vector so that background region is <code>boxes[0]</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{Int64}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia&gt; label = label_components(A) # four disjoint components
+5×5 Matrix{Int64}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia&gt; boxes = component_boxes(label) # get bounding boxes of all regions
+5-element OffsetArray(::Vector{CartesianIndices{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}}}, 0:4) with eltype CartesianIndices{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}} with indices 0:4:
+ CartesianIndices((2:5, 2:4))
+ CartesianIndices((1:1, 1:5))
+ CartesianIndices((2:5, 1:3))
+ CartesianIndices((3:5, 3:5))
+ CartesianIndices((2:3, 4:5))
+
+julia&gt; A[boxes[1]] # crop the image region with label 1
+1×5 Matrix{Int64}:
+ 2  2  2  2  2
+
+julia&gt; A[boxes[4]] # crop the image region with label 4
+2×2 Matrix{Int64}:
+ 0  1
+ 1  1</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L181-L224">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.component_lengths" href="#ImageMorphology.component_lengths"><code>ImageMorphology.component_lengths</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">counts = component_lengths(labeled_array)</code></pre><p>Count the number of each labels in the input labeled array. <code>counts</code> is shifted to 0-based indexing vector so that the number of background pixels is <code>counts[0]</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{Int64}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia&gt; label = label_components(A) # four disjoint components
+5×5 Matrix{Int64}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia&gt; component_lengths(label)
+5-element OffsetArray(::Vector{Int64}, 0:4) with eltype Int64 with indices 0:4:
+ 3
+ 5
+ 7
+ 7
+ 3</code></pre><p>For gray images, labels can be computed by <a href="#ImageMorphology.label_components"><code>label_components</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L251-L284">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.component_indices" href="#ImageMorphology.component_indices"><code>ImageMorphology.component_indices</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">indices = component_indices([T], labeled_array)</code></pre><p>Get the indices of each label in the input labeled array. <code>indices</code> is shifted to 0-based indexing vector so that the indices of background pixels is <code>indices[0]</code>.</p><p>The optional type <code>T</code> can be either <code>Int</code>/<code>IndexLinear()</code> or <code>CartesianIndex</code>/<code>IndexCartesian()</code> that is used to specify the type of the indices. The default choice is <code>IndexStyle(labeled_array)</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{Int64}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia&gt; label = label_components(A) # four disjoint components
+5×5 Matrix{Int64}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia&gt; indices = component_indices(label)
+5-element OffsetArray(::Vector{Vector{Int64}}, 0:4) with eltype Vector{Int64} with indices 0:4:
+ [8, 10, 17]
+ [1, 6, 11, 16, 21]
+ [2, 3, 4, 5, 7, 9, 12]
+ [13, 14, 15, 19, 20, 24, 25]
+ [18, 22, 23]
+
+julia&gt; indices = component_indices(CartesianIndex, label)
+5-element OffsetArray(::Vector{Vector{CartesianIndex{2}}}, 0:4) with eltype Vector{CartesianIndex{2}} with indices 0:4:
+ [CartesianIndex(3, 2), CartesianIndex(5, 2), CartesianIndex(2, 4)]
+ [CartesianIndex(1, 1), CartesianIndex(1, 2), CartesianIndex(1, 3), CartesianIndex(1, 4), CartesianIndex(1, 5)]
+ [CartesianIndex(2, 1), CartesianIndex(3, 1), CartesianIndex(4, 1), CartesianIndex(5, 1), CartesianIndex(2, 2), CartesianIndex(4, 2), CartesianIndex(2, 3)]
+ [CartesianIndex(3, 3), CartesianIndex(4, 3), CartesianIndex(5, 3), CartesianIndex(4, 4), CartesianIndex(5, 4), CartesianIndex(4, 5), CartesianIndex(5, 5)]
+ [CartesianIndex(3, 4), CartesianIndex(2, 5), CartesianIndex(3, 5)]</code></pre><p>For gray images, labels can be computed by <a href="#ImageMorphology.label_components"><code>label_components</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L297-L342">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.component_centroids" href="#ImageMorphology.component_centroids"><code>ImageMorphology.component_centroids</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">centroids = component_centroids(labeled_array)</code></pre><p>Compute the centroid of each label in the input labeled array. <code>centroids</code> is shifted to 0-based indexing vector so that the centroid of background pixels is <code>centroids[0]</code>.</p><p>The centroid of a finite set <code>X</code>, also known as geometric center, is calculated using <code>sum(X)/length(X)</code>. For label <code>i</code>, all (Cartesian) indices of pixels with label <code>i</code> are used to build the set <code>X</code></p><pre><code class="language-julia-repl hljs">julia&gt; A = [2 2 2 2 2; 1 1 1 0 1; 1 0 2 1 1; 1 1 2 2 2; 1 0 2 2 2]
+5×5 Matrix{Int64}:
+ 2  2  2  2  2
+ 1  1  1  0  1
+ 1  0  2  1  1
+ 1  1  2  2  2
+ 1  0  2  2  2
+
+julia&gt; label = label_components(A) # four disjoint components
+5×5 Matrix{Int64}:
+ 1  1  1  1  1
+ 2  2  2  0  4
+ 2  0  3  4  4
+ 2  2  3  3  3
+ 2  0  3  3  3
+
+julia&gt; component_centroids(label)
+5-element OffsetArray(::Vector{Tuple{Float64, Float64}}, 0:4) with eltype Tuple{Float64, Float64} with indices 0:4:
+ (3.3333333333333335, 2.6666666666666665)
+ (1.0, 3.0)
+ (3.142857142857143, 1.5714285714285714)
+ (4.285714285714286, 3.857142857142857)
+ (2.6666666666666665, 4.666666666666667)</code></pre><p>For gray images, labels can be computed by <a href="#ImageMorphology.label_components"><code>label_components</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/connected.jl#L361-L398">source</a></section></article><h2 id="Max-tree"><a class="docs-heading-anchor" href="#Max-tree">Max tree</a><a id="Max-tree-1"></a><a class="docs-heading-anchor-permalink" href="#Max-tree" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.MaxTree" href="#ImageMorphology.MaxTree"><code>ImageMorphology.MaxTree</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Max-tree morphological representation of an image.</p><p><strong>Details</strong></p><p>Let&#39;s consider a <em>thresholding</em> operation,</p><pre><code class="language-julia hljs">    mask = [val ≥ threshold for val in image]</code></pre><p>One can identify the connected components (the sets of neighboring true values) in <code>mask</code>. When <em>image thresholding</em> is sequentially applied for all possible thresholds, it generates a collection of connected components that could be organized into a hierarchical structure called <em>component tree</em>. Consider 1D &quot;image&quot; with values 1, 2 and 3:</p><pre><code class="nohighlight hljs">       2233233312223322</code></pre><p>The connected components would be</p><pre><code class="nohighlight hljs">    1: AAAAAAAAAAAAAAAA
+    2: BBBBBBBB.CCCCCCC
+    3: ..DD.EEE....FF..</code></pre><p>Here, the letters are the labels of the resulting connected components, and <code>.</code> specifies that the pixel value is below the threshold. In this example, the corresponding <em>component tree</em> is:</p><pre><code class="nohighlight hljs">      A
+     ⭩ ⭨
+    B   C
+   ⭩ ⭨   ⭨
+  D   E   F</code></pre><p>A <em>max-tree</em> is an efficient representation of the <em>component tree</em>. A connected component <span>$C$</span> at threshold level <span>$t$</span> is represented by the single <em>reference pixel</em> <span>$r$</span> from this level (<code>image[r] == t</code>), which is the parent to all other pixels of <span>$C$</span> and also to the <em>reference pixels</em> of the connected components at higher thresholds, which are the children of <span>$C$</span>. In our example, the reference pixels (denoted by the letter of the corresponding component) would be:</p><pre><code class="nohighlight hljs">    1: ........A.......
+    2: B........C......
+    3: ..D..E......F...</code></pre><p>I.e.</p><table><tr><th style="text-align: right">Comp</th><th style="text-align: right">Ref.Pixel</th></tr><tr><td style="text-align: right"><em>A</em></td><td style="text-align: right">9</td></tr><tr><td style="text-align: right"><em>B</em></td><td style="text-align: right">1</td></tr><tr><td style="text-align: right"><em>C</em></td><td style="text-align: right">10</td></tr><tr><td style="text-align: right"><em>D</em></td><td style="text-align: right">3</td></tr><tr><td style="text-align: right"><em>E</em></td><td style="text-align: right">6</td></tr><tr><td style="text-align: right"><em>F</em></td><td style="text-align: right">13</td></tr></table><p>So the whole max-tree could be encoded as a vector of indices of parent pixels:</p><pre><code class="nohighlight hljs">9  1  1  3  1  1  6  6  9  9 10 10 10 13 10 10</code></pre><p>The <em>max-tree</em> is the basis for many morphological operators, namely connected operators. Unlike morphological openings and closings, these operators do not require a fixed structuring element, but rather act with a flexible structuring element that meets a certain criterion.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.area_opening"><code>area_opening</code></a>, <a href="#ImageMorphology.area_closing"><code>area_closing</code></a>, <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a>, <a href="#ImageMorphology.diameter_closing"><code>diameter_closing</code></a>.</p><p><strong>References</strong></p><ol><li>Salembier, P., Oliveras, A., &amp; Garrido, L. (1998). <em>Antiextensive Connected Operators for Image and Sequence Processing</em>. IEEE Transactions on Image Processing, 7(4), 555-570.<blockquote><p>https://doi.org/10.1109/83.663500</p></blockquote></li><li>Berger, C., Geraud, T., Levillain, R., Widynski, N., Baillard, A., Bertin, E. (2007). <em>Effective Component Tree Computation with Application to Pattern Recognition in Astronomical Imaging</em>. In International Conference on Image Processing (ICIP), 41-44.<blockquote><p>https://doi.org/10.1109/ICIP.2007.4379949</p></blockquote></li><li>Najman, L., &amp; Couprie, M. (2006). <em>Building the component tree in quasi-linear time</em>. IEEE Transactions on Image Processing, 15(11), 3531-3539.<blockquote><p>https://doi.org/10.1109/TIP.2006.877518</p></blockquote></li><li>Carlinet, E., &amp; Geraud, T. (2014). <em>A Comparative Review of Component Tree Computation Algorithms</em>. IEEE Transactions on Image Processing, 23(9), 3885-3895.<blockquote><p>https://doi.org/10.1109/TIP.2014.2336551</p></blockquote></li></ol></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L1-L80">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.areas" href="#ImageMorphology.areas"><code>ImageMorphology.areas</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">areas(maxtree::MaxTree) -&gt; Array{Int}</code></pre><p>Computes the areas of all <code>maxtree</code> components.</p><p><strong>Returns</strong></p><p>The array of the same shape as the original image. The <code>i</code>-th element is the area (in pixels) of the component that is represented by the reference pixel with index <code>i</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.diameters"><code>diameters</code></a>, <a href="#ImageMorphology.area_opening"><code>area_opening</code></a>, <a href="#ImageMorphology.area_closing"><code>area_closing</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L282-L294">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.boundingboxes" href="#ImageMorphology.boundingboxes"><code>ImageMorphology.boundingboxes</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">boundingboxes(maxtree::MaxTree) -&gt; Array{NTuple{2, CartesianIndex}}</code></pre><p>Computes the minimal bounding boxes of all <code>maxtree</code> components.</p><p><strong>Returns</strong></p><p>The array of the same shape as the original image. The <code>i</code>-th element is the tuple of the minimal and maximal cartesian indices for the bounding box of the component that is represented by the reference pixel with index <code>i</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.diameters"><code>diameters</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L305-L317">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.diameters" href="#ImageMorphology.diameters"><code>ImageMorphology.diameters</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">diameters(maxtree::MaxTree) -&gt; Array{Int}</code></pre><p>Computes the &quot;diameters&quot; of all <code>maxtree</code> components.</p><p>&quot;Diameter&quot; of the <em>max-tree</em> connected component is the length of the widest side of the component&#39;s bounding box.</p><p><strong>Returns</strong></p><p>The array of the same shape as the original image. The <code>i</code>-th element is the &quot;diameter&quot; of the component that is represented by the reference pixel with index <code>i</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.boundingboxes"><code>boundingboxes</code></a>, <a href="#ImageMorphology.areas"><code>areas</code></a>, <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a>, <a href="#ImageMorphology.diameter_closing"><code>diameter_closing</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L329-L345">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.area_opening" href="#ImageMorphology.area_opening"><code>ImageMorphology.area_opening</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">area_opening(image, [maxtree]; min_area=64, connectivity=1) -&gt; Array</code></pre><p>Performs an <em>area opening</em> of the <code>image</code>.</p><p><em>Area opening</em> replaces all bright components of an image that have a surface smaller than <code>min_area</code> with the darker value taken from their first ancestral component (in <em>max-tree</em> representation of <code>image</code>) that has the area no smaller than <code>min_area</code>.</p><p><strong>Details</strong></p><p>Area opening is similar to morphological opening (see <a href="#ImageMorphology.opening"><code>opening</code></a>), but instead of using a fixed structuring element (e.g. disk) it employs small (less than <code>min_area</code>) components of the <em>max-tree</em>. Consequently, the <code>area_opening</code> with <code>min_area = 1</code> is the identity transformation.</p><p>In the binary case, area opening is equivalent to <code>remove_small_objects</code>; this operator is thus extended to gray-level images.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>min_area::Number=64</code>: the smallest size (in pixels) of the image component to keep intact</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An array of the same type and shape as the <code>image</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.area_opening!"><code>area_opening!</code></a>, <a href="#ImageMorphology.area_closing"><code>area_closing</code></a>, <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a>, <a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.opening"><code>opening</code></a></p><p><strong>References</strong></p><ol><li>Vincent, L. (1993). <em>Grayscale area openings and closings, their efficient implementation and applications</em>, Proc. of EURASIP Workshop on Mathematical Morphology and its Applications to Signal Processing, Barcelona, Spain, 22-27</li><li>Soille, P. (2003). Chapter 6 <em>Geodesic Metrics</em> of <em>Morphological Image Analysis: Principles and Applications</em>, 2nd edition, Springer.<blockquote><p>https://doi.org/10.1007/978-3-662-05088-0</p></blockquote></li><li>Salembier, P., Oliveras, A., &amp; Garrido, L. (1998). <em>Antiextensive Connected Operators for Image and Sequence Processing</em>. IEEE Transactions on Image Processing, 7(4), 555-570.<blockquote><p>https://doi.org/10.1109/83.663500</p></blockquote></li><li>Najman, L., &amp; Couprie, M. (2006). <em>Building the component tree in quasi-linear time</em>. IEEE Transactions on Image Processing, 15(11), 3531-3539.<blockquote><p>https://doi.org/10.1109/TIP.2006.877518</p></blockquote></li><li>Carlinet, E., &amp; Geraud, T. (2014). <em>A Comparative Review of Component Tree Computation Algorithms</em>. IEEE Transactions on Image Processing, 23(9), 3885-3895.<blockquote><p>https://doi.org/10.1109/TIP.2014.2336551</p></blockquote></li></ol><p><strong>Examples</strong></p><p>Creating a test image <code>f</code> (quadratic function with a maximum in the center and 4 additional local maxima):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 12;
+
+julia&gt; f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
+julia&gt; f[10:11, 10:12] .= 100; f[11, 11] = 100;
+
+julia&gt; f_aopen = area_opening(f, min_area=8, connectivity=1);</code></pre><p>The peaks with a surface smaller than 8 are removed.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L442-L505">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.area_opening!" href="#ImageMorphology.area_opening!"><code>ImageMorphology.area_opening!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">area_opening!(output, image, [maxtree];
+              min_area=64, connectivity=1) -&gt; output</code></pre><p>Performs in-place <em>area opening</em> of the <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.area_opening"><code>area_opening</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L428-L434">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.area_closing" href="#ImageMorphology.area_closing"><code>ImageMorphology.area_closing</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">area_closing(image, [maxtree]; min_area=64, connectivity=1) -&gt; Array</code></pre><p>Performs an <em>area closing</em> of the <code>image</code>.</p><p><em>Area closing</em> replaces all dark components of an image that have a surface smaller than <code>min_area</code> with the brighter value taken from their first ancestral component (in <em>max-tree</em> representation of <code>image</code>) that has the area no smaller than <code>min_area</code>.</p><p><strong>Details</strong></p><p><em>Area closing</em> is the dual operation to <em>area opening</em> (see <a href="#ImageMorphology.area_opening"><code>area_opening</code></a>). It is similar to morphological closings (see <a href="#ImageMorphology.closing"><code>closing</code></a>), but instead of using a fixed structuring element (e.g. disk) it employs small (less than <code>min_area</code>) components of the <em>max-tree</em>. Consequently, the <code>area_closing</code> with <code>min_area = 1</code> is the identity transformation.</p><p>In the binary case, area closing is equivalent to <code>remove_small_holes</code>; this operator is thus extended to gray-level images.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>min_area::Number=64</code>: the smallest size (in pixels) of the image component to keep intact</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An array of the same type and shape as the <code>image</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.area_closing!"><code>area_closing!</code></a>, <a href="#ImageMorphology.area_opening"><code>area_opening</code></a>, <a href="#ImageMorphology.diameter_closing"><code>diameter_closing</code></a>, <a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.closing"><code>closing</code></a></p><p><strong>References</strong></p><ol><li>Vincent, L. (1993). <em>Grayscale area openings and closings, their efficient implementation and applications</em>, Proc. of EURASIP Workshop on Mathematical Morphology and its Applications to Signal Processing, Barcelona, Spain, 22-27</li><li>Soille, P. (2003). Chapter 6 <em>Geodesic Metrics</em> of <em>Morphological Image Analysis: Principles and Applications</em>, 2nd edition, Springer.<blockquote><p>https://doi.org/10.1007/978-3-662-05088-0</p></blockquote></li><li>Salembier, P., Oliveras, A., &amp; Garrido, L. (1998). <em>Antiextensive Connected Operators for Image and Sequence Processing</em>. IEEE Transactions on Image Processing, 7(4), 555-570.<blockquote><p>https://doi.org/10.1109/83.663500</p></blockquote></li><li>Najman, L., &amp; Couprie, M. (2006). <em>Building the component tree in quasi-linear time</em>. IEEE Transactions on Image Processing, 15(11), 3531-3539.<blockquote><p>https://doi.org/10.1109/TIP.2006.877518</p></blockquote></li><li>Carlinet, E., &amp; Geraud, T. (2014). <em>A Comparative Review of Component Tree Computation Algorithms</em>. IEEE Transactions on Image Processing, 23(9), 3885-3895.<blockquote><p>https://doi.org/10.1109/TIP.2014.2336551</p></blockquote></li></ol><p><strong>Examples</strong></p><p>Creating a test image <code>f</code> (quadratic function with a minimum in the center and 4 additional local minima):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 12;
+
+julia&gt; f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
+julia&gt; f[10:11, 10:12] .= 100; f[11, 11] = 100;
+
+julia&gt; f_aclose = area_closing(f, min_area=8, connectivity=1);</code></pre><p>All small minima are removed, and the remaining minima have at least a size of 8.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L594-L659">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.area_closing!" href="#ImageMorphology.area_closing!"><code>ImageMorphology.area_closing!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">area_closing!(output, image, [maxtree];
+              min_area=64, connectivity=1) -&gt; output</code></pre><p>Performs in-place <em>area closing</em> of the <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.area_closing"><code>area_closing</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L580-L586">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.diameter_opening" href="#ImageMorphology.diameter_opening"><code>ImageMorphology.diameter_opening</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">diameter_opening(image, [maxtree]; min_diameter=8, connectivity=1) -&gt; Array</code></pre><p>Performs a <em>diameter opening</em> of the <code>image</code>.</p><p><em>Diameter opening</em> replaces all bright structures of an image that have the diameter (the widest dimension of their bounding box) smaller than <code>min_diameter</code> with the darker value taken from their first ancestral component (in <em>max-tree</em> representation of <code>image</code>) that has the diameter no smaller than <code>min_diameter</code>.</p><p>The operator is also called <em>Bounding Box Opening</em>. In practice, the result is similar to a <em>morphological opening</em>, but long and thin structures are not removed.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>min_diameter::Number=8</code>: the minimal length (in pixels) of the widest dimension of the bounding box of the image component to keep intact</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An array of the same type and shape as the <code>image</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.diameter_opening!"><code>diameter_opening!</code></a>, <a href="#ImageMorphology.diameter_closing"><code>diameter_closing</code></a>, <a href="#ImageMorphology.area_opening"><code>area_opening</code></a>, <a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.opening"><code>opening</code></a></p><p><strong>References</strong></p><ol><li>Walter, T., &amp; Klein, J.-C. (2002). <em>Automatic Detection of Microaneurysms in Color Fundus Images of the Human Retina by Means of the Bounding Box Closing</em>. In A. Colosimo, P. Sirabella, A. Giuliani (Eds.), <em>Medical Data Analysis. Lecture Notes in Computer Science</em>, vol 2526, 210-220. Springer Berlin Heidelberg.<blockquote><p>https://doi.org/10.1007/3-540-36104-9_23</p></blockquote></li><li>Carlinet, E., &amp; Geraud, T. (2014). <em>A Comparative Review of Component Tree Computation Algorithms</em>. IEEE Transactions on Image Processing, 23(9), 3885-3895.<blockquote><p>https://doi.org/10.1109/TIP.2014.2336551</p></blockquote></li></ol><p><strong>Examples</strong></p><p>Creating a test image <code>f</code> (quadratic function with a maximum in the center and 4 additional local maxima):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 12;
+
+julia&gt; f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
+julia&gt; f[10:11, 10:12] .= 100; f[11, 11] = 100;
+
+julia&gt; f_dopen = diameter_opening(f, min_diameter=3, connectivity=1);</code></pre><p>The peaks with a maximal diameter of 2 or less are removed. For the remaining peaks the widest side of the bounding box is at least 3.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L522-L577">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.diameter_opening!" href="#ImageMorphology.diameter_opening!"><code>ImageMorphology.diameter_opening!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">diameter_opening!(output, image, [maxtree];
+                  min_diameter=8, connectivity=1) -&gt; output</code></pre><p>Performs in-place <em>diameter opening</em> of the <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L508-L514">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.diameter_closing" href="#ImageMorphology.diameter_closing"><code>ImageMorphology.diameter_closing</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">diameter_closing(image, [maxtree]; min_diameter=8, connectivity=1) -&gt; Array</code></pre><p>Performs a <em>diameter closing</em> of the <code>image</code>.</p><p><em>Diameter closing</em> replaces all dark structures of an image that have the diameter (the widest dimension of their bounding box) smaller than <code>min_diameter</code> with the brighter value taken from their first ancestral component (in <em>max-tree</em> representation of <code>image</code>) that has the diameter no smaller than <code>min_diameter</code>.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>min_diameter::Number=8</code>: the minimal length (in pixels) of the widest dimension of the bounding box of the image component to keep intact</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An array of the same type and shape as the <code>image</code>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.diameter_closing!"><code>diameter_closing!</code></a>, <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a>, <a href="#ImageMorphology.area_closing"><code>area_closing</code></a>, <a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.closing"><code>closing</code></a></p><p><strong>References</strong></p><ol><li>Walter, T., &amp; Klein, J.-C. (2002). <em>Automatic Detection of Microaneurysms in Color Fundus Images of the Human Retina by Means of the Bounding Box Closing</em>. In A. Colosimo, P. Sirabella, A. Giuliani (Eds.), <em>Medical Data Analysis. Lecture Notes in Computer Science</em>, vol 2526, 210-220. Springer Berlin Heidelberg.<blockquote><p>https://doi.org/10.1007/3-540-36104-9_23</p></blockquote></li><li>Carlinet, E., &amp; Geraud, T. (2014). <em>A Comparative Review of Component Tree Computation Algorithms</em>. IEEE Transactions on Image Processing, 23(9), 3885-3895.<blockquote><p>https://doi.org/10.1109/TIP.2014.2336551</p></blockquote></li></ol><p><strong>Examples</strong></p><p>Creating a test image <code>f</code> (quadratic function with a minimum in the center and 4 additional local minima):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 12;
+
+julia&gt; f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:4, 2:6] .= 40; f[3:5, 10:12] .= 60; f[10:12, 3:5] .= 80;
+
+julia&gt; f[10:11, 10:12] .= 100; f[11, 11] = 100;
+
+julia&gt; f_dclose = diameter_closing(f, min_diameter=3, connectivity=1);</code></pre><p>All small minima with a diameter of 2 or less are removed. For the remaining minima the widest bounding box side is at least 3.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L676-L727">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.diameter_closing!" href="#ImageMorphology.diameter_closing!"><code>ImageMorphology.diameter_closing!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">diameter_closing!(output, image, [maxtree];
+                  min_diameter=8, connectivity=1) -&gt; output</code></pre><p>Performs in-place <em>diameter closing</em> of the <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.diameter_closing"><code>diameter_closing</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L662-L668">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.local_maxima!" href="#ImageMorphology.local_maxima!"><code>ImageMorphology.local_maxima!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">local_maxima!(output, image, [maxtree]; connectivity=1) -&gt; output</code></pre><p>Detects the local maxima of <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.local_maxima"><code>local_maxima</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L771-L776">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.local_maxima" href="#ImageMorphology.local_maxima"><code>ImageMorphology.local_maxima</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">local_maxima(image, [maxtree]; connectivity=1) -&gt; Array</code></pre><p>Determines and labels all <em>local maxima</em> of the <code>image</code>.</p><p><strong>Details</strong></p><p>The <em>local maximum</em> is defined as the connected set of pixels that have the same value, which is greater than the values of all pixels in direct neighborhood of the set.</p><p>Technically, the implementation is based on the <em>max-tree</em> representation of an image. It&#39;s beneficial if the max-tree is already computed, otherwise <code>ImageFiltering.findlocalmaxima</code> would be more efficient.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An integer array of the same shape as the <code>image</code>. Pixels that are not local maxima have 0 value. Pixels of the same local maximum share the same positive value (the local maximum id).</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.local_maxima!"><code>local_maxima!</code></a>, <a href="#ImageMorphology.local_minima"><code>local_minima</code></a>, <code>ImageFiltering.findlocalmaxima</code></p><p><strong>Examples</strong></p><p>Create <code>f</code> (quadratic function with a maximum in the center and 4 additional constant maxima):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 10;
+
+julia&gt; f = [20 - 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
+
+julia&gt; f_maxima = local_maxima(f); # Get all local maxima of `f`</code></pre><p>The resulting image contains the 4 labeled local maxima.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L784-L828">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.local_minima!" href="#ImageMorphology.local_minima!"><code>ImageMorphology.local_minima!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">local_minima!(output, image, [maxtree]; connectivity=1) -&gt; output</code></pre><p>Detects the local minima of <code>image</code> and stores the result in <code>output</code>. See <a href="#ImageMorphology.local_minima"><code>local_minima</code></a> for the detailed description of the method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L831-L836">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.local_minima" href="#ImageMorphology.local_minima"><code>ImageMorphology.local_minima</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">local_minima(image, [maxtree]; connectivity=1) -&gt; Array</code></pre><p>Determines and labels all <em>local minima</em> of the <code>image</code>.</p><p><strong>Details</strong></p><p>The <em>local minimum</em> is defined as the connected set of pixels that have the same value, which is less than the values of all pixels in direct neighborhood of the set.</p><p>Technically, the implementation is based on the <em>max-tree</em> representation of an image. It&#39;s beneficial if the max-tree is already computed, otherwise <code>ImageFiltering.findlocalminima</code> would be more efficient.</p><p><strong>Arguments</strong></p><ul><li><code>image::GenericGrayImage</code>: the <span>$N$</span>-dimensional input image</li><li><code>connectivity::Integer=1</code>: the neighborhood connectivity. The maximum number of orthogonal steps to reach a neighbor of the pixel. In 2D, it is 1 for a 4-neighborhood and 2 for a 8-neighborhood.</li><li><code>maxtree::MaxTree</code>: optional pre-built <em>max-tree</em>. Note that <code>maxtree</code> and <code>connectivity</code> optional parameters are mutually exclusive.</li></ul><p><strong>Returns</strong></p><p>An integer array of the same shape as the <code>image</code>. Pixels that are not local minima have 0 value. Pixels of the same local minimum share the same positive value (the local minimum id).</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a>, <a href="#ImageMorphology.local_minima!"><code>local_minima!</code></a>, <a href="#ImageMorphology.local_maxima"><code>local_maxima</code></a>, <code>ImageFiltering.findlocalminima</code></p><p><strong>Examples</strong></p><p>Create <code>f</code> (quadratic function with a minimum in the center and 4 additional constant minimum):</p><pre><code class="language-julia-repl hljs">julia&gt; w = 10;
+
+julia&gt; f = [180 + 0.2*((x - w/2)^2 + (y-w/2)^2) for x in 0:w, y in 0:w];
+
+julia&gt; f[3:5, 3:5] .= 40; f[3:5, 8:10] .= 60; f[8:10, 3:5] .= 80; f[8:10, 8:10] .= 100;
+
+julia&gt; f_minima = local_minima(f); # Calculate all local minima of `f`</code></pre><p>The resulting image contains the labeled local minima.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L844-L888">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.rebuild!" href="#ImageMorphology.rebuild!"><code>ImageMorphology.rebuild!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">rebuild!(maxtree::MaxTree, image::GenericGrayImage,
+         neighbors::AbstractVector{CartesianIndex}) -&gt; maxtree</code></pre><p>Rebuilds the <code>maxtree</code> for the <code>image</code> using <code>neighbors</code> as the pixel connectivity specification.</p><p><strong>Details</strong></p><p>The pixels in the connected components generated by the method should be connected to each other by a path through neighboring pixels. The pixels <span>$p_1$</span> and <span>$p_2$</span> are neighbors, if <code>neighbors</code> array contains <span>$d$</span>, such that <span>$p_2 = p_1 + d$</span>.</p><p><strong>See also</strong></p><p><a href="#ImageMorphology.MaxTree"><code>MaxTree</code></a></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L186-L201">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.filter_components!" href="#ImageMorphology.filter_components!"><code>ImageMorphology.filter_components!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">filter_components!(output::GenericGrayImage, image::GenericGrayImage,
+                   maxtree::MaxTree, attrs::AbstractVector,
+                   min_attr, all_below_min) -&gt; output</code></pre><p>Filters the connected components of the <code>image</code> and stores the result in <code>output</code>.</p><p>The <span>$output$</span> is the copy of the <span>$image$</span> exluding the connected components, whose attribute value is below <code>min_attr</code>. That is, the pixels of the exluded component are reset to the value of the reference pixel of its first valid ancestor (the connected component with the attribute value greater or equal to <code>min_attr</code>).</p><p><strong>Arguments</strong></p><ul><li><code>maxtree::MaxTree</code>: pre-built max-tree representation of the <code>image</code></li><li><code>attrs::AbstractVector</code>: <code>attrs[i]</code> is the attribute value for the <span>$i$</span>-th  component of the tree (<span>$i$</span> being the linear index of its <em>reference pixel</em>)</li><li><code>all_below_min</code>: the value to fill the <code>output</code> if all attributes of all components (including the root one) are below <code>min_attr</code></li></ul><p><strong>Details</strong></p><p>This function is the basis for <a href="#ImageMorphology.area_opening"><code>area_opening</code></a>, <a href="#ImageMorphology.diameter_opening"><code>diameter_opening</code></a> and similar transformations. E.g. for <a href="#ImageMorphology.area_opening"><code>area_opening</code></a> the attribute is the area of the components. In this case, the max-tree components of the <code>output</code> have area no smaller than <code>min_attr</code> pixels.</p><p>The method assumes that the attribute values are monotone with respect to the components hieararchy, i.e. <span>$attrs[i] &lt;= attrs[maxtree.parentindices[i]]$</span> for each <code>i</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/maxtree.jl#L349-L379">source</a></section></article><h2 id="Feature-transform"><a class="docs-heading-anchor" href="#Feature-transform">Feature transform</a><a id="Feature-transform-1"></a><a class="docs-heading-anchor-permalink" href="#Feature-transform" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.FeatureTransform.feature_transform" href="#ImageMorphology.FeatureTransform.feature_transform"><code>ImageMorphology.FeatureTransform.feature_transform</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">feature_transform(img::AbstractArray{Bool, N};
+                  weights=nothing, nthreads=Threads.nthreads()) -&gt; F</code></pre><p>Compute the feature transform of a binary image <code>I</code>, finding the closest &quot;feature&quot; (positions where <code>I</code> is <code>true</code>) for each location in <code>I</code>.  Specifically, <code>F[i]</code> is a <code>CartesianIndex</code> encoding the position closest to <code>i</code> for which <code>I[F[i]]</code> is <code>true</code>.  In cases where two or more features in <code>I</code> have the same distance from <code>i</code>, an arbitrary feature is chosen. If <code>I</code> has no <code>true</code> values, then all locations are mapped to an index where each coordinate is <code>typemin(Int)</code>.</p><p>Optionally specify the weight <code>w</code> assigned to each coordinate.  For example, if <code>I</code> corresponds to an image where voxels are anisotropic, <code>w</code> could be the voxel spacing along each coordinate axis. The default value of <code>nothing</code> is equivalent to <code>w=(1,1,...)</code>.</p><p>See also: <a href="#ImageMorphology.FeatureTransform.distance_transform"><code>distance_transform</code></a>.</p><p><strong>Citation</strong></p><ul><li>[1] Maurer, Calvin R., Rensheng Qi, and Vijay Raghavan. &quot;A linear time algorithm for computing exact Euclidean distance transforms of binary images in arbitrary dimensions.&quot; <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 25.2 (2003): 265-270.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/feature_transform.jl#L8-L32">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.FeatureTransform.distance_transform" href="#ImageMorphology.FeatureTransform.distance_transform"><code>ImageMorphology.FeatureTransform.distance_transform</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">distance_transform(F::AbstractArray{CartesianIndex}, [w=nothing]) -&gt; D</code></pre><p>Compute the distance transform of <code>F</code>, where each element <code>F[i]</code> represents a &quot;target&quot; or &quot;feature&quot; location assigned to <code>i</code>. Specifically, <code>D[i]</code> is the distance between <code>i</code> and <code>F[i]</code>. Optionally specify the weight <code>w</code> assigned to each coordinate; the default value of <code>nothing</code> is equivalent to <code>w=(1,1,...)</code>.</p><p>See also: <a href="#ImageMorphology.FeatureTransform.feature_transform"><code>feature_transform</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/feature_transform.jl#L67-L77">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.clearborder" href="#ImageMorphology.clearborder"><code>ImageMorphology.clearborder</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">cleared_img = clearborder(img)
+cleared_img = clearborder(img, width)
+cleared_img = clearborder(img, width, background)</code></pre><p>Returns a copy of the original image after clearing objects connected to the border of the image. Parameters:</p><ul><li>img          = Binary/Grayscale input image</li><li>width        = Width of the border examined (Default value is 1)</li><li>background   = Value to be given to pixels/elements that are cleared (Default value is 0)</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/clearborder.jl#L1-L12">source</a></section></article><h2 id="Misc"><a class="docs-heading-anchor" href="#Misc">Misc</a><a id="Misc-1"></a><a class="docs-heading-anchor-permalink" href="#Misc" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.convexhull" href="#ImageMorphology.convexhull"><code>ImageMorphology.convexhull</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">chull = convexhull(img)</code></pre><p>Computes the convex hull of a binary image and returns the vertices of convex hull as a CartesianIndex array.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/convexhull.jl#L1-L6">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.isboundary" href="#ImageMorphology.isboundary"><code>ImageMorphology.isboundary</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">isboundary(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)</code></pre><p>Finds the boundaries that are just within each object. <code>background</code> is the scalar value of the background pixels which will not be marked as boundaries. Keyword arguments are passed to <code>extremefilt!</code> which include <code>dims</code> indicating the dimension(s) over which to discover boundaries.</p><p>See also its in-place version <a href="#ImageMorphology.isboundary!"><code>isboundary!</code></a> and the alternative version that finds thick boundaries, <a href="#ImageMorphology.isboundary_thick"><code>isboundary_thick</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language- hljs">DocTestSetup = quote
+    import ImageMorphology: isboundary
+end</code></pre><pre><code class="language-julia-repl hljs">julia&gt; A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13:15] .= 3; A[10:12,3:6] .= 9; A
+16×16 Matrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia&gt; isboundary(A)
+16×16 Matrix{Int64}:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia&gt; isboundary(A .!= 0)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia&gt; isboundary(A .!= 0; dims = 1)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+julia&gt; isboundary(A .!= 0; dims = 2)
+16×16 BitMatrix:
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  1  0  0  0  0  0  0  0  1  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+ 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/isboundary.jl#L52-L166">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.isboundary!" href="#ImageMorphology.isboundary!"><code>ImageMorphology.isboundary!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">isboundary!(img::AbstractArray; background = 0, dims = coords_spatial(A), kwargs...)</code></pre><p>Finds the boundaries that are just within each object, replacing the original image. <code>background</code> is the scalar value of the background pixels which will not be marked as boundaries. Keyword arguments are passed to <code>extreme_filter</code> which include <code>dims</code> indicating the dimension(s) over which to discover boundaries.</p><p>See out-of-place version, <a href="#ImageMorphology.isboundary"><code>isboundary</code></a>, for examples.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/isboundary.jl#L1-L10">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="ImageMorphology.isboundary_thick" href="#ImageMorphology.isboundary_thick"><code>ImageMorphology.isboundary_thick</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">isboundary_thick(img::AbstractArray; dims = coords_spatial(img), kwargs...)</code></pre><p>Find thick boundaries that are just outside and just inside the objects. This is a union of the inner and outer boundaries. Keyword <code>dims</code> indicates over which dimensions to look for boundaries. This <code>dims</code> and additional keywords <code>kwargs</code> are passed to <a href="#ImageMorphology.extreme_filter"><code>extreme_filter</code></a>.</p><p>See also <a href="#ImageMorphology.isboundary"><code>isboundary</code></a> which just yields the inner boundaries.</p><p><strong>Examples</strong></p><pre><code class="language- hljs">DocTestSetup = quote
+    import ImageMorphology: isboundary_thick
+end</code></pre><p>```jldoctest julia&gt; A = zeros(Int64, 16, 16); A[4:8, 4:8] .= 5; A[4:8, 9:12] .= 6; A[10:12,13:15] .= 3; A[10:12,3:6] .= 9; A 16×16 Matrix{Int64}:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0  0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0  0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0  0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0  0  0  0  5  5  5  5  5  6  6  6  6  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0  0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0  0  0  9  9  9  9  0  0  0  0  0  0  3  3  3  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</p><p>julia&gt; isboundary_thick(A) 16×16 BitMatrix:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0  0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0  0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0  0  0  1  1  0  0  0  1  1  0  0  1  1  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1  0  1  1  0  0  1  1  0  0  0  0  1  1  0  1  1  0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1  0  1  1  1  1  1  1  0  0  0  0  1  1  1  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</p><p>julia&gt; isboundary_thick(A) .&amp; (A .!= 0) 16×16 BitMatrix:  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0  0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0  0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0  0  0  0  1  0  0  0  1  1  0  0  1  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0  0  0  1  0  0  1  0  0  0  0  0  0  1  0  1  0  0  0  1  1  1  1  0  0  0  0  0  0  1  1  1  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0</p><p>julia&gt; isboundary_thick(A) == isboundary(A; background = -1) true</p><p>julia&gt; isboundary_thick(A) .&amp; (A .!= 0) == isboundary(A) # inner boundaries true</p><p>julia&gt; isboundary_thick(A .!= 0) .&amp; (A .== 0)  == isboundary(A .== 0) # outer boundaries true  ```</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaImages/ImageMorphology.jl/blob/c5fed29f672c5bef43ad1cfeedd4f425654c8abe/src/isboundary.jl#L217-L301">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../operators/">« Morphology Operators</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.21 on <span class="colophon-date" title="Thursday 14 July 2022 02:29">Thursday 14 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
