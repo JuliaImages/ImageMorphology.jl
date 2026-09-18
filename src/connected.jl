@@ -245,7 +245,7 @@ function component_boxes(A::AbstractArray{T,N}) where {T<:Integer,N}
     end
 
     # convert to CartesianIndices
-    return boxes = [boxes[i, 1]:boxes[i, 2] for i in axes(boxes, 1)]
+    return [boxes[i, 1]:boxes[i, 2] for i in axes(boxes, 1)]
 end
 
 """
