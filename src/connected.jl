@@ -229,7 +229,7 @@ function component_boxes(A::AbstractArray{T,N}) where {T<:Integer,N}
     end
     boxes = if mn == 1
         OffsetArray(Matrix{CartesianIndex{N}}(undef, mx, 2), 0, 0)
-    elseif mn == 0
+    else
         OffsetArray(Matrix{CartesianIndex{N}}(undef, 1 + mx, 2), -1, 0)
     end
     R = CartesianIndices(A)
