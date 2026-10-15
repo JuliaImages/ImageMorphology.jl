@@ -194,7 +194,7 @@ A function g is a leveling of a function f if and only if it is both an upper an
 This algorithm modify g (a copy of the marker) to become a leveling of f (the ref)
 
  # See also
- [`low_leveling](@ref),[`high_leveling`](@ref),
+ [`low_leveling`](@ref),[`high_leveling`](@ref),
  [`underbuild`](@ref),[`overbuild`](@ref)
  
  # References
