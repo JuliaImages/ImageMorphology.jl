@@ -1,4 +1,28 @@
 @testset "Connected components" begin
+    @testset "Find Root" begin
+        # can't find the root of an empty set
+        sets = ImageMorphology.DisjointMinSets()
+        @test_throws BoundsError ImageMorphology.find_root!(sets, 1)
+
+        # verify that unions/roots work as intended
+        sets = ImageMorphology.DisjointMinSets{Int}(6)
+        ImageMorphology.union!(sets, 1, 2)
+        @test ImageMorphology.find_root!(sets, 1) == 1
+        @test ImageMorphology.find_root!(sets, 2) == 1
+        ImageMorphology.union!(sets, 3, 4)
+        @test ImageMorphology.find_root!(sets, 3) == 3
+        @test ImageMorphology.find_root!(sets, 4) == 3
+        ImageMorphology.union!(sets, 5, 6)
+        @test ImageMorphology.find_root!(sets, 5) == 5
+        @test ImageMorphology.find_root!(sets, 6) == 5
+        ImageMorphology.union!(sets, 4, 5)
+        ImageMorphology.union!(sets, 2, 3)
+        #= now test that everything belongs to the same set - reverse order
+            to verify that we do the recursive search from the bottom levels correctly=# 
+        for i ∈ 6:-1:1
+            @test ImageMorphology.find_root!(sets, i) == 1
+        end
+    end
     @testset "label_components" begin
         @testset "interface" begin
             for T in (Bool, N0f8, Float64, Gray{N0f8})
@@ -29,6 +53,9 @@
 
             msg = "axes of input and output must match, got (Base.OneTo(11), Base.OneTo(11)) and (-1:1, -1:1). The second argument seems to be a structuring element, it is expected to be the input array."
             @test_throws DimensionMismatch(msg) label_components!(rand(Bool, 11, 11), strel_diamond((3, 3)))
+
+            msg = "axes of input and output must match, got (Base.OneTo(5), Base.OneTo(5)) and (Base.OneTo(11), Base.OneTo(11))"
+            @test_throws DimensionMismatch(msg) label_components!(rand(Bool, 5, 5), rand(Bool, 11, 11), strel_diamond((3, 3)))
 
             msg = "labels exhausted, use a larger integer type"
             @test_throws ErrorException(msg) label_components!(zeros(Bool, 4, 4), rand(4, 4))

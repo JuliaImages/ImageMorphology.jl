@@ -1,17 +1,16 @@
 using ImageMorphology
 using ImageCore
 using ImageCore.PaddedViews
+using LoopVectorization
 using Test
 using OffsetArrays
 using ImageMetadata
 using Suppressor
+using Documenter
 
 @test isempty(detect_ambiguities(ImageMorphology))
 
-if Base.VERSION >= v"1.8"
-	using Documenter
-    doctest(ImageMorphology; manual=false)
-end
+doctest(ImageMorphology; manual=false)
 
 include("testutils.jl")
 

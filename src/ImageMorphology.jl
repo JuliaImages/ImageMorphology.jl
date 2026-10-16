@@ -7,8 +7,6 @@ using OffsetArrays
 using OffsetArrays: centered
 using LinearAlgebra
 using TiledIteration: EdgeIterator, SplitAxis, SplitAxes
-using Requires
-using LoopVectorization
 
 const _docstring_se = """
 `se` is the structuring element that defines the neighborhood of the image. See
@@ -18,6 +16,9 @@ and half-size `r` to control the diamond size.
 """
 include("StructuringElements/StructuringElements.jl")
 using .StructuringElements
+
+# flag indicating whether or not to use LoopVectorization for SIMD acceleration - will be triggered when users explicitly load LoopVectorization
+const USE_SIMD = Ref(false)
 
 include("convexhull.jl")
 include("connected.jl")
@@ -148,19 +149,5 @@ export
     regional_maxima!,
     regional_minima,
     regional_minima!
-
-function __init__()
-    @require ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49" begin
-        # morphological operations for ImageMeta
-        function dilate(img::ImageMetadata.ImageMeta; kwargs...)
-            out = dilate!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
-            return ImageMetadata.shareproperties(img, out)
-        end
-        function erode(img::ImageMetadata.ImageMeta; kwargs...)
-            out = erode!(similar(ImageMetadata.arraydata(img)), img; kwargs...)
-            return ImageMetadata.shareproperties(img, out)
-        end
-    end
-end
 
 end # module

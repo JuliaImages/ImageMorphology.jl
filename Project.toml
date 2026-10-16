@@ -8,8 +8,13 @@ ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 TiledIteration = "06e1c1a7-607b-532d-9fad-de7d9aa2abac"
+
+[weakdeps]
+LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
+
+[extensions]
+ImageMorphologyLoopVectorizationExt = "LoopVectorization"
 
 [compat]
 DataStructures = "0.19"
@@ -17,16 +22,16 @@ Documenter = "0.24, 0.25, 0.26, 0.27"
 ImageCore = "0.9, 0.10"
 LoopVectorization = "0.12"
 OffsetArrays = "1.9"
-Requires = "1"
 TiledIteration = "0.3.1, 0.4, 0.5"
-julia = "1.6"
+julia = "1.9"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 ImageMetadata = "bc367c6b-8a6b-528e-b4bd-a4b897500b49"
+LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Documenter", "ImageMetadata", "OffsetArrays", "Suppressor", "Test"]
+test = ["Documenter", "ImageMetadata", "LoopVectorization", "OffsetArrays", "Suppressor", "Test"]
