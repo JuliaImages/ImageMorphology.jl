@@ -101,7 +101,7 @@ end
 
 _extreme_filter!(::MorphologySE, f, out, A, Ω, ::Bool) = _extreme_filter_generic!(f, out, A, Ω)
 _extreme_filter!(::SEDiamond, f, out, A, Ω, use_simd::Bool) = _extreme_filter_diamond!(f, out, A, Ω, Val(false))
-function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω, ::Symbol) where {T<:Union{Gray{Bool},Bool}}
+function _extreme_filter!(::MorphologySE, f::MAX_OR_MIN, out, A::AbstractArray{T}, Ω, ::Bool) where {T<:Union{Gray{Bool},Bool}}
     # NOTE(johnnychen94): empirical choice based on benchmark results (intel i9-12900k)
     true_ratio = gray(sum(A) / length(A)) # this usually takes <2% of the time but gives a pretty good hint to do the decision
     true_ratio == 1 && (out.=true; return out)
