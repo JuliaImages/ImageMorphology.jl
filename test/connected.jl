@@ -30,6 +30,9 @@
             msg = "axes of input and output must match, got (Base.OneTo(11), Base.OneTo(11)) and (-1:1, -1:1). The second argument seems to be a structuring element, it is expected to be the input array."
             @test_throws DimensionMismatch(msg) label_components!(rand(Bool, 11, 11), strel_diamond((3, 3)))
 
+            msg = "axes of input and output must match, got (Base.OneTo(5), Base.OneTo(5)) and (Base.OneTo(11), Base.OneTo(11))"
+            @test_throws DimensionMismatch(msg) label_components!(rand(Bool, 5, 5), rand(Bool, 11, 11), strel_diamond((3, 3)))
+
             msg = "labels exhausted, use a larger integer type"
             @test_throws ErrorException(msg) label_components!(zeros(Bool, 4, 4), rand(4, 4))
         end
