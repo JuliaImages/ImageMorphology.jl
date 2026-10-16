@@ -127,7 +127,7 @@ struct DisjointMinSets{T<:Integer}
     DisjointMinSets{T}(n::Integer) where {T} = new([T(1):T(n);])
 end
 DisjointMinSets{T}() where {T<:Integer} = DisjointMinSets{T}(T(0))
-DisjointMinSets() = DisjointMinSets{INt}()
+DisjointMinSets() = DisjointMinSets{Int}()
 
 Base.@propagate_inbounds function find_root!(sets::DisjointMinSets, m::Integer)
     p = sets.parents[m]   # don't use @inbounds here, it might not be safe
